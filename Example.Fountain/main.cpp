@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
 	}
 
 	Input::setMousePosition(Device::getWidth() / 2, Device::getHeight() / 2, false);
-	Input::Clear();
 	while (!Input::getQuit() && !Input::getKeyDown(SDLK_ESCAPE))
 	{
 		float time = SDL_GetTicks() * .05f;
@@ -79,9 +78,7 @@ int main(int argc, char *argv[])
 		Examples::DrawPosition(font, freelookManager->getPosition());
 		Device::Present();
 		Input::Update();
-
 		Input::setMousePosition(Device::getWidth() / 2, Device::getHeight() / 2, true);
-		Input::Clear();
 	}
 
 	delete fpsCounter, freelookManager, font;

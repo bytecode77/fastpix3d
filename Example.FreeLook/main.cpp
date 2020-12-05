@@ -56,7 +56,7 @@ void LoadMap(int32 index, Mesh **map, Mesh **skybox, FreelookManager *freelookMa
 
 int main(int argc, char *argv[])
 {
-	Device::Initialize(Examples::DefaultLargeWidth, Examples::DefaultLargeHeight);
+	Device::Initialize(Examples::DefaultWidth, Examples::DefaultHeight);
 	Light::AmbientColor = Color(255, 255, 255);
 
 	FPSCounter *fpsCounter = new FPSCounter(500);
@@ -68,7 +68,6 @@ int main(int argc, char *argv[])
 	LoadMap(currentIndex, &map, &skybox, freelookManager);
 
 	Input::setMousePosition(Device::getWidth() / 2, Device::getHeight() / 2, false);
-	Input::Clear();
 	while (!Input::getQuit() && !Input::getKeyDown(SDLK_ESCAPE))
 	{
 		for (int32 i = 1; i <= 9; i++)
@@ -106,9 +105,7 @@ int main(int argc, char *argv[])
 		Examples::DrawPosition(font, freelookManager->getPosition());
 		Device::Present();
 		Input::Update();
-
 		Input::setMousePosition(Device::getWidth() / 2, Device::getHeight() / 2, true);
-		Input::Clear();
 	}
 
 	delete fpsCounter, freelookManager, font;

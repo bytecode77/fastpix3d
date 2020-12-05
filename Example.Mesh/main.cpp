@@ -38,7 +38,7 @@ void LoadMesh(int32 index, Mesh **mesh)
 
 int main(int argc, char *argv[])
 {
-	Device::Initialize(Examples::DefaultLargeWidth, Examples::DefaultLargeHeight);
+	Device::Initialize(Examples::DefaultWidth, Examples::DefaultHeight);
 	RenderStates::ClipNear = .1f;
 
 	FPSCounter *fpsCounter = new FPSCounter(500);
@@ -53,7 +53,6 @@ int main(int argc, char *argv[])
 	Light::AmbientColor = Color(19, 21, 23);
 
 	Input::setMousePosition(Device::getWidth() / 2, Device::getHeight() / 2, false);
-	Input::Clear();
 	Matrix rotation = Matrix::Identity();
 	float x = 0, y = 0, z = 10, vrx = 0, vry = 0, vrz = 0;
 

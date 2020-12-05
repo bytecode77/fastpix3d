@@ -13,19 +13,19 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9C7A3F17-54A7-488B-9CD3-9635D7B5E0AD}</ProjectGuid>
     <RootNamespace>ExampleGears</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -57,6 +57,14 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)$Build\$(Configuration)\bin"
+mkdir "$(SolutionDir)$Build\$(Configuration)\lib"
+mkdir "$(SolutionDir)$Build\$(Configuration)\inc\SDL"
+
+copy "$(TargetPath)" "$(SolutionDir)$Build\$(Configuration)\bin\$(TargetFileName)"
+xcopy /I /E /Y "$(ProjectDir)Media" "$(SolutionDir)$Build\$(Configuration)\bin\Media"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -72,6 +80,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)$Build\$(Configuration)\bin"
+mkdir "$(SolutionDir)$Build\$(Configuration)\lib"
+mkdir "$(SolutionDir)$Build\$(Configuration)\inc\SDL"
+
+copy "$(TargetPath)" "$(SolutionDir)$Build\$(Configuration)\bin\$(TargetFileName)"
+xcopy /I /E /Y "$(ProjectDir)Media" "$(SolutionDir)$Build\$(Configuration)\bin\Media"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

@@ -23,11 +23,6 @@ void Input::Destroy()
 	delete[] KeyDown;
 }
 
-void Input::Clear()
-{
-	SDL_Event e;
-	while (SDL_PollEvent(&e));
-}
 void Input::Update()
 {
 	MouseXSpeed = 0;
@@ -61,10 +56,10 @@ void Input::Update()
 				}
 				break;
 			case SDL_MOUSEMOTION:
+				MouseXSpeed += (e.motion.x - MouseX);
+				MouseYSpeed += (e.motion.y - MouseY);
 				MouseX = e.motion.x;
 				MouseY = e.motion.y;
-				MouseXSpeed += e.motion.xrel;
-				MouseYSpeed += e.motion.yrel;
 				break;
 			case SDL_MOUSEWHEEL:
 				MouseZ += e.wheel.y;

@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[])
 {
-	Device::Initialize(Examples::DefaultLargeWidth, Examples::DefaultLargeHeight);
+	Device::Initialize(Examples::DefaultWidth, Examples::DefaultHeight);
 	RenderStates::ClipNear = 3;
 	RenderStates::Zoom = 1.5f;
 	Light::AmbientColor = Color(80, 80, 130);
@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 	RenderStates::Lights[0]->Intensity = 20;
 	RenderStates::Lights[0]->DiffuseColor = Color(255, 255, 240);
 
-	Input::Clear();
 	while (!Input::getQuit() && !Input::getKeyDown(SDLK_ESCAPE))
 	{
 		float time = SDL_GetTicks() * .1f;

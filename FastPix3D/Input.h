@@ -14,7 +14,6 @@ private:
 	static void Initialize();
 	static void Destroy();
 public:
-	static void Clear();
 	static void Update();
 
 	static bool getQuit();

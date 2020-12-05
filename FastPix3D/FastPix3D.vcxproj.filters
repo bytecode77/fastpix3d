@@ -195,9 +195,6 @@
     <ClInclude Include="Point.h">
       <Filter>Engine</Filter>
     </ClInclude>
-    <ClInclude Include="SDL\SDL_clipboard.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
     <ClInclude Include="SDL\SDL_config.h">
       <Filter>SDL</Filter>
     </ClInclude>
@@ -285,6 +282,9 @@
     <ClInclude Include="SDL\SDL_messagebox.h">
       <Filter>SDL</Filter>
     </ClInclude>
+    <ClInclude Include="SDL\SDL_metal.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
     <ClInclude Include="SDL\SDL_mouse.h">
       <Filter>SDL</Filter>
     </ClInclude>
@@ -343,6 +343,9 @@
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="SDL\SDL_scancode.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL\SDL_sensor.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="SDL\SDL_shape.h">
@@ -442,6 +445,9 @@
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="SDL\SDL_blendmode.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL\SDL_clipboard.h">
       <Filter>SDL</Filter>
     </ClInclude>
   </ItemGroup>

@@ -102,6 +102,7 @@
     <ClInclude Include="SDL\SDL_log.h" />
     <ClInclude Include="SDL\SDL_main.h" />
     <ClInclude Include="SDL\SDL_messagebox.h" />
+    <ClInclude Include="SDL\SDL_metal.h" />
     <ClInclude Include="SDL\SDL_mouse.h" />
     <ClInclude Include="SDL\SDL_mutex.h" />
     <ClInclude Include="SDL\SDL_name.h" />
@@ -122,6 +123,7 @@
     <ClInclude Include="SDL\SDL_revision.h" />
     <ClInclude Include="SDL\SDL_rwops.h" />
     <ClInclude Include="SDL\SDL_scancode.h" />
+    <ClInclude Include="SDL\SDL_sensor.h" />
     <ClInclude Include="SDL\SDL_shape.h" />
     <ClInclude Include="SDL\SDL_stdinc.h" />
     <ClInclude Include="SDL\SDL_surface.h" />
@@ -161,19 +163,19 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C6FF67A2-57DF-442F-8044-ABBED57D2FDC}</ProjectGuid>
     <RootNamespace>FastPix3D</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -206,11 +208,6 @@
 mkdir "$(SolutionDir)$Build\$(Configuration)\lib"
 mkdir "$(SolutionDir)$Build\$(Configuration)\inc\SDL"
 
-del "$(SolutionDir)$Build\$(Configuration)\bin\*.dll"
-del "$(SolutionDir)$Build\$(Configuration)\lib\*.lib"
-del "$(SolutionDir)$Build\$(Configuration)\inc\*.h"
-del "$(SolutionDir)$Build\$(Configuration)\inc\SDL\*.h"
-
 copy "$(TargetPath)" "$(SolutionDir)$Build\$(Configuration)\bin\$(TargetFileName)"
 copy "$(ProjectDir)*.dll" "$(SolutionDir)$Build\$(Configuration)\bin"
 
@@ -241,11 +238,6 @@ copy "$(ProjectDir)SDL\*.h" "$(SolutionDir)$Build\$(Configuration)\inc\SDL"</Com
       <Command>mkdir "$(SolutionDir)$Build\$(Configuration)\bin"
 mkdir "$(SolutionDir)$Build\$(Configuration)\lib"
 mkdir "$(SolutionDir)$Build\$(Configuration)\inc\SDL"
-
-del "$(SolutionDir)$Build\$(Configuration)\bin\*.dll"
-del "$(SolutionDir)$Build\$(Configuration)\lib\*.lib"
-del "$(SolutionDir)$Build\$(Configuration)\inc\*.h"
-del "$(SolutionDir)$Build\$(Configuration)\inc\SDL\*.h"
 
 copy "$(TargetPath)" "$(SolutionDir)$Build\$(Configuration)\bin\$(TargetFileName)"
 copy "$(ProjectDir)*.dll" "$(SolutionDir)$Build\$(Configuration)\bin"

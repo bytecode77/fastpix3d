@@ -1,9 +1,7 @@
 #include "ExampleLibrary.h"
 
-const int32 Examples::DefaultWidth = 720;
-const int32 Examples::DefaultHeight = 405;
-const int32 Examples::DefaultLargeWidth = 1280;
-const int32 Examples::DefaultLargeHeight = 720;
+const int32 Examples::DefaultWidth = 1280;
+const int32 Examples::DefaultHeight = 720;
 const int32 Examples::DefaultRectangularResolution = 720;
 
 void Examples::DrawRenderingInformation(Font *font, FPSCounter *fpsCounter, int triangleCount, bool fillBackGround)
