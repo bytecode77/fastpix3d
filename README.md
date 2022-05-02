@@ -25,7 +25,7 @@ In times of Direct3D and OpenGL, writing a software rasterizer is a mathematical
 
 ## Downloads
 
-[![](http://bytecode77.com/public/fileicons/zip.png) FastPix3D 3.1.1.zip](https://bytecode77.com/downloads/FastPix3D%203.1.1.zip)
+[![](http://bytecode77.com/public/fileicons/zip.png) FastPix3D 3.1.1.zip](https://downloads.bytecode77.com/FastPix3D%203.1.1.zip)
 
 ## Project Page
 
