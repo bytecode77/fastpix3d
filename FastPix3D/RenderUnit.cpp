@@ -1,0 +1,180 @@
+#include "RenderUnit.h"
+#include "Math_.h"
+#include "Vector2i.h"
+#include "Vector3f.h"
+#include "RasterizerMath.h"
+#include "Rasterizer/Rasterizer.h"
+#include "Rasterizer/ShadowMapRasterizer.h"
+#include "Rasterizer/ShadowMapStencilRasterizer.h"
+
+void RenderUnit::ClearFrameBuffer() const
+{
+	memset(RenderStates.FrameBuffer.Buffer, 0, RenderStates.FrameBuffer.Width * RenderStates.FrameBuffer.Height * 4);
+}
+void RenderUnit::ClearFrameBuffer(int32 r, int32 g, int32 b) const
+{
+	ClearFrameBuffer(Color(r, g, b));
+}
+void RenderUnit::ClearFrameBuffer(const Color &color) const
+{
+	std::fill_n(RenderStates.FrameBuffer.GetBuffer<int32>(), RenderStates.FrameBuffer.Width * RenderStates.FrameBuffer.Height, color.RGB);
+}
+void RenderUnit::ClearDepthBuffer() const
+{
+	std::fill_n(RenderStates.DepthBuffer.GetBuffer<float>(), RenderStates.DepthBuffer.Width * RenderStates.DepthBuffer.Height, 0.0f);
+}
+void RenderUnit::ClearStencilBuffer() const
+{
+	memset(RenderStates.StencilBuffer.Buffer, 0, RenderStates.StencilBuffer.Width * RenderStates.StencilBuffer.Height);
+}
+void RenderUnit::ClearShadowMap() const
+{
+	std::fill_n(RenderStates.ShadowMap.GetBuffer<float>(), RenderStates.ShadowMap.Width * RenderStates.ShadowMap.Height, 0.0f);
+}
+
+void RenderUnit::DrawMesh(const Mesh& mesh, const Matrix4f &modelSpace)
+{
+	Matrix4f worldSpace = modelSpace * RenderStates.CameraSpace;
+	Matrix4f shadowLightSpace = modelSpace * RenderStates.ShadowLightMatrix;
+
+	::RenderStates previousRenderStates = RenderStates;
+	bool hasTransparentSurfaces = false;
+
+	// 1.) Render opaque surfaces first.
+	for (int32 i = 0; i < mesh.SurfaceCount; i++)
+	{
+		Surface *surface = mesh.GetSurface(i);
+
+		if (surface->Opacity >= 1)
+		{
+			RenderStates.CullMode = surface->CullMode;
+			RenderStates.Texture = surface->Texture;
+			RenderStates.TextureSize = surface->TextureSize;
+			RenderStates.BlendMode = RenderStates.Texture && RenderStates.Texture->HasTransparencyKey ? BlendMode::TransparencyKey : BlendMode::None;
+
+			for (int32 j = 0; j < surface->TriangleCount; j++)
+			{
+				DrawTriangle(
+					worldSpace,
+					shadowLightSpace,
+					*surface->GetTriangleVertex(j, 0),
+					*surface->GetTriangleVertex(j, 1),
+					*surface->GetTriangleVertex(j, 2)
+				);
+			}
+
+			Statistics.TotalTriangleCount += surface->TriangleCount;
+		}
+		else
+		{
+			hasTransparentSurfaces = true;
+		}
+	}
+
+	// 2.) Render transparent surfaces with z-writes disabled.
+	if (hasTransparentSurfaces)
+	{
+		RenderStates.ZWriteEnable = false;
+		RenderStates.BlendMode = BlendMode::Alpha;
+
+		for (int32 i = 0; i < mesh.SurfaceCount; i++)
+		{
+			Surface *surface = mesh.GetSurface(i);
+
+			if (surface->Opacity < 1)
+			{
+				RenderStates.CullMode = surface->CullMode;
+				RenderStates.Texture = surface->Texture;
+				RenderStates.TextureSize = surface->TextureSize;
+				RenderStates.Alpha = surface->Opacity;
+
+				for (int32 j = 0; j < surface->TriangleCount; j++)
+				{
+					DrawTriangle(
+						worldSpace,
+						shadowLightSpace,
+						*surface->GetTriangleVertex(j, 0),
+						*surface->GetTriangleVertex(j, 1),
+						*surface->GetTriangleVertex(j, 2)
+					);
+				}
+
+				Statistics.TotalTriangleCount += surface->TriangleCount;
+			}
+		}
+	}
+
+	RenderStates = previousRenderStates;
+}
+void RenderUnit::DrawTriangle(const Matrix4f &worldSpace, const Matrix4f &shadowLightSpace, const Vertex &v1, const Vertex &v2, const Vertex &v3)
+{
+	switch (RenderStates.RenderPass)
+	{
+		case RenderPass::Fragments:
+		{
+			Rasterizer rasterizer = Rasterizer(RenderStates, Statistics);
+			rasterizer.DrawTriangle(worldSpace, v1, v2, v3);
+			break;
+		}
+		case RenderPass::ShadowMap:
+		{
+			ShadowMapRasterizer rasterizer = ShadowMapRasterizer(RenderStates, Statistics);
+			rasterizer.DrawTriangle(shadowLightSpace, v1, v2, v3);
+			break;
+		}
+		case RenderPass::ShadowMapStencil:
+		{
+			ShadowMapStencilRasterizer rasterizer = ShadowMapStencilRasterizer(RenderStates, Statistics);
+			rasterizer.DrawTriangle(worldSpace, shadowLightSpace, v1, v2, v3);
+			break;
+		}
+	}
+}
+void RenderUnit::RenderDeferredPass()
+{
+	if (RenderStates.FogEnable)
+	{
+		int32 frameYFrom;
+		int32 frameYHeight;
+		RasterizerMath::GetWorkloadScreenPart(RenderStates.Workload, RenderStates.FrameBuffer.Height, frameYFrom, frameYHeight);
+
+		int32 *frameBuffer = RenderStates.FrameBuffer.GetBuffer<int32>(frameYFrom * RenderStates.FrameBuffer.Width);
+		float *depthBuffer = RenderStates.DepthBuffer.GetBuffer<float>(frameYFrom * RenderStates.FrameBuffer.Width);
+
+		int32 pixelCount = RenderStates.FrameBuffer.Width * frameYHeight;
+		float d = 255 / (RenderStates.FogFar - RenderStates.FogNear);
+		float e = RenderStates.ClipNear * d;
+		float f = RenderStates.FogNear * d;
+
+		// depthMin and depthMax are Z-Buffer equvalents of FogNear and FogFar.
+		float depthMin = e / f;
+		float depthMax = e / (f + 255);
+		int32 fogColorRgb = RenderStates.FogColor.RGB;
+
+		for (int32 i = 0; i < pixelCount; i++)
+		{
+			if (*depthBuffer > 0 && *depthBuffer < depthMin)
+			{
+				if (*depthBuffer < depthMax)
+				{
+					// > FogFar
+					*frameBuffer = fogColorRgb;
+				}
+				else
+				{
+					// > FogNear and < FogFar
+					int32 fog = (int32)(e / *depthBuffer - f);
+					int32 inverseFog = 255 - fog;
+
+					*frameBuffer =
+						(((byte*)frameBuffer)[2] * inverseFog + RenderStates.FogColor.R * fog) >> 8 << 16 |
+						(((byte*)frameBuffer)[1] * inverseFog + RenderStates.FogColor.G * fog) >> 8 << 8 |
+						(((byte*)frameBuffer)[0] * inverseFog + RenderStates.FogColor.B * fog) >> 8;
+				}
+			}
+
+			frameBuffer++;
+			depthBuffer++;
+		}
+	}
+}

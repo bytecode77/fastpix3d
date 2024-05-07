@@ -1,8 +1,10 @@
-struct FASTPIX3D_API Triangle
-{
-public:
-	Vertex *Vertex1, *Vertex2, *Vertex3;
+#pragma once
+#include "FastPix3D.h"
+#include "Vertex.h"
 
-	Triangle();
-	Triangle(Vertex *vertex1, Vertex *vertex2, Vertex *vertex3);
+struct Triangle
+{
+	Vertex *Vertex1 = nullptr;
+	Vertex *Vertex2 = nullptr;
+	Vertex *Vertex3 = nullptr;
 };

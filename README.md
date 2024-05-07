@@ -2,7 +2,7 @@
 
 ## Software Rasterizer
 
-FastPix3D is a software rasterizer written in C++. Software rendering is based on software graphics processing without utilizing hardware acceleration, such as Direct3D or OpenGL. CPU rendering is slow, yet FastPix3D is performing well enough. It even supports vertex lights and stencil shadows at a quite acceptable frame rate. Many optimizations are implemented in order to achieve such performance.
+FastPix3D is a high performance software rasterizer written in C++ with a wide variety of features.
 
 [![](/.github/screenshots/001.thumb.jpg)](/.github/screenshots/001.jpg)
 [![](/.github/screenshots/002.thumb.jpg)](/.github/screenshots/002.jpg)
@@ -11,18 +11,30 @@ FastPix3D is a software rasterizer written in C++. Software rendering is based o
 [![](/.github/screenshots/005.thumb.jpg)](/.github/screenshots/005.jpg)
 [![](/.github/screenshots/006.thumb.jpg)](/.github/screenshots/006.jpg)
 
-In times of Direct3D and OpenGL, writing a software rasterizer is a mathematical challenge rather than a graphics engine for actual game development. You will not achieve high quality graphics with acceptable performance using software rendering. But you will definitely get a better understanding for polygon-based 3D graphics when writing one yourself.
-
 ## Features
 
-- Textured & colored polygons
-- Z-buffering
-- Vertex lights
-- Stencil buffer, shadow volume creation & stencil shadows using Z-Fail algorithm
-- Meshes
-- Highly optimized, native C++ code
-- HUD & bitmap fonts
+- Depth shadows (point lights)
+- Mip mapping
+- Sphere mapping
+- Texture blend modes
+- Vertex lighting
+- Fog
+- Bitmap fonts
+
+## Performance
+
+- Branchless render states by leveraging C++ template parameters
+- Multithreaded scanline rasterization
+- SIMD optimized
+- Rendering of scene and shadow map in parallel
+- Perspective correction only once per 16 pixels
+
+## Potential for improvement
+
+- Replace the scanline algorithm with something more parallelizable
+- Fixed point maths
+- More visual effects, such as bump mapping, refraction, or SSAO
 
 ## Downloads
 
-[![](http://bytecode77.com/public/fileicons/zip.png) FastPix3D 3.1.1.zip](/.github/downloads/FastPix3D%203.1.1.zip)
+[![](http://bytecode77.com/public/fileicons/zip.png) FastPix3D 4.0.0.zip](/.github/downloads/FastPix3D%204.0.0.zip)

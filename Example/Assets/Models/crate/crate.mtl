@@ -1,0 +1,10 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v4.1.0)
+
+newmtl orig_orig_04 - Default
+Kd 0.5882353186607361 0.5882353186607361 0.5882353186607361
+Ks 0 0 0
+d 1
+illum 1
+map_Kd crate.jpg            
+

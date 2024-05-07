@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{262f29e5-5a2b-4101-9b1d-83e1a1ea7c26}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Box3f.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Color.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FPSCounter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math_.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Matrix4f.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Vector2f.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Vector2i.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Vector3f.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Vector3i.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)FPSCounter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math_.cpp" />
+  </ItemGroup>
+</Project>

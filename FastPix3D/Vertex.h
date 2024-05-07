@@ -1,14 +1,13 @@
-struct FASTPIX3D_API Vertex
+#pragma once
+#include "FastPix3D.h"
+#include "Vector2f.h"
+#include "Vector3f.h"
+#include "Color.h"
+
+struct Vertex
 {
-public:
 	Vector3f Position;
 	Vector3f Normals;
 	Vector2f TextureCoordinates;
-	Color VertexColor;
-
-	Vertex();
-	Vertex(Vector3f position);
-	Vertex(Vector3f position, Vector3f normals);
-	Vertex(Vector3f position, Vector3f normals, Vector2f textureCoordinates);
-	Vertex(Vector3f position, Vector3f normals, Vector2f textureCoordinates, Color vertexColor);
+	Color Color = ::Color(255, 255, 255);
 };

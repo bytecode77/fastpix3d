@@ -1,16 +1,28 @@
-class FASTPIX3D_API Font
+#pragma once
+#include "FastPix3D.h"
+#include "Vector2i.h"
+
+class Font
 {
 private:
-	int32 Width, Height, CharacterSpacing;
+	int32 Width;
+	int32 Height;
+	int32 CharacterSpacing;
 	byte *Buffer;
-	Point *CharacterDimensions;
+	Vector2i *CharacterDimensions;
+
 public:
-	Font(string path);
+	property_getset(int32, CharacterSpacing)
+	{
+		return CharacterSpacing;
+	}
+	property_set(int32, CharacterSpacing)
+	{
+		CharacterSpacing = value;
+	}
+
+	explicit Font(const char *path);
 	~Font();
-
-	int32 getCharacterSpacing();
-
-	void setCharacterSpacing(int32 characterSpacing);
 
 	friend class Graphics;
 };

@@ -1,20 +1,62 @@
-class FASTPIX3D_API Texture
+#pragma once
+#include "FastPix3D.h"
+
+enum class TextureType
+{
+	ColorMap,
+	SphereMap
+};
+
+class Texture
 {
 private:
-	string FileName;
-	int32 Width, Height, WidthExponent;
-	int32 *Buffer;
+	static std::vector<Texture*> AllTextures;
+	const char *_Path;
+	TextureType _Type;
+	int32 _Width;
+	int32 _Height;
+	int32 _MipLevels;
+	int32 **_MipMaps;
+	bool _HasTransparencyKey;
 
-	static int32 GetLogarithmicCeiling(int32 number);
-	static int32 GetExponent(int32 number);
 public:
-	Texture(string path);
+	property_getset(TextureType, Type)
+	{
+		return _Type;
+	}
+	property_set(TextureType, Type)
+	{
+		_Type = value;
+	}
+	property_get(int32, Width)
+	{
+		return _Width;
+	}
+	property_get(int32, Height)
+	{
+		return _Height;
+	}
+	property_get(int32, MipLevels)
+	{
+		return _MipLevels;
+	}
+	property_get(int32**, MipMaps)
+	{
+		return _MipMaps;
+	}
+	property_get(bool, HasTransparencyKey)
+	{
+		return _HasTransparencyKey;
+	}
+
+	explicit Texture(int32 width, int32 height);
 	~Texture();
 
-	int32 getWidth();
-	int32 getHeight();
-	int32* getBuffer();
-	string getFileName();
+	static Texture* Load(const char *path);
 
-	friend class Drawer;
+private:
+	static Texture* GetExistingTexture(const char *path);
+	static void ResizeImage(int32 *src, int32 srcWidth, int32 srcHeight, int32 *dest, int32 destWidth, int32 destHeight, bool bilinearFilter);
+	static bool DetectTransparencyKey(int32 *image, int32 width, int32 height);
+	void GenerateMipMaps();
 };

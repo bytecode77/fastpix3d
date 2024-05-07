@@ -1,0 +1,213 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v4.1.0)
+
+newmtl Sci2_Hand1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci2_Hand1.png
+
+newmtl Sci2_Knuckles_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci2_Knuckles.png
+
+newmtl SCI3_LegBack1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd SCI3_LegBack1.png
+
+newmtl SCI3_Collar1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd SCI3_Collar1.png
+
+newmtl Sci3_R-Leg__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3RLeg.png
+
+newmtl Sci3_R-Arm__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_RArm.png
+
+newmtl Sci3_L-Arm__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_LArm.png
+
+newmtl Hair_Side2_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Hair_Side2.png
+
+newmtl Face1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Face1.png
+
+newmtl Hair_Side1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Hair_Side1.png
+
+newmtl Stache1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Hair_Side1.png
+
+newmtl Sci2_Tounge_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci2_Tounge.png
+
+newmtl SCI2_Needle1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd SCI2_Needle1.png
+
+newmtl Sci2_Teeth_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci2_Teeth.png
+
+newmtl Sci2_Chrome1_bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci2_Chrome1.png
+
+newmtl Sci3_Back2__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_Back2.png
+
+newmtl Sci3_L-Leg__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_LLeg.png
+
+newmtl Sci3_Shoe__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_Shoe.png
+
+newmtl Sci3_Chest__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_Chest.png
+
+newmtl Sci3_Pelvis__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_Pelvis.png
+
+newmtl Sci3_C-Tail__bmp
+Kd 1 1 1
+Ka 0 0 0
+Ks 1 1 1
+Ke 0 0 0
+d 1
+Ni 1.549999952316284
+illum 1
+map_Kd Sci3_CTail.png
+

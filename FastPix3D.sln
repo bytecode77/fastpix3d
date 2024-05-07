@@ -1,41 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2003
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastPix3D", "FastPix3D\FastPix3D.vcxproj", "{C6FF67A2-57DF-442F-8044-ABBED57D2FDC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Math", "Math\Math.vcxitems", "{262F29E5-5A2B-4101-9B1D-83E1A1EA7C26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeshConverter", "MeshConverter\MeshConverter.csproj", "{C1F8DA2C-C601-47C6-B7E9-BBFA48B1CF0D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Interop", "Interop\Interop.vcxitems", "{AA1404C4-B35B-4826-A024-EC917A42295E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example.Mesh", "Example.Mesh\Example.Mesh.vcxproj", "{3B029242-DA9E-46A6-A813-8DA5B6AA754E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A} = {1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example", "Example\Example.vcxproj", "{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example.Gears", "Example.Gears\Example.Gears.vcxproj", "{9C7A3F17-54A7-488B-9CD3-9635D7B5E0AD}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A} = {1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example.FreeLook", "Example.FreeLook\Example.FreeLook.vcxproj", "{FE007135-05AC-4A0E-98E5-ACB2AACCA72B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A} = {1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleLibrary", "ExampleLibrary\ExampleLibrary.vcxproj", "{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C6FF67A2-57DF-442F-8044-ABBED57D2FDC} = {C6FF67A2-57DF-442F-8044-ABBED57D2FDC}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example.Fountain", "Example.Fountain\Example.Fountain.vcxproj", "{6EC784A9-5F17-4051-BB1F-9546465B737B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A} = {1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example.Swift", "Example.Swift\Example.Swift.vcxproj", "{01D1E24A-B058-4E53-B505-8D18F6A3F68A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A} = {1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastPix3D", "FastPix3D\FastPix3D.vcxitems", "{D8B148AA-A494-43E2-BFDD-48727EEA71CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,43 +17,23 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C6FF67A2-57DF-442F-8044-ABBED57D2FDC}.Debug|x64.ActiveCfg = Debug|x64
-		{C6FF67A2-57DF-442F-8044-ABBED57D2FDC}.Debug|x64.Build.0 = Debug|x64
-		{C6FF67A2-57DF-442F-8044-ABBED57D2FDC}.Release|x64.ActiveCfg = Release|x64
-		{C6FF67A2-57DF-442F-8044-ABBED57D2FDC}.Release|x64.Build.0 = Release|x64
-		{C1F8DA2C-C601-47C6-B7E9-BBFA48B1CF0D}.Debug|x64.ActiveCfg = Debug|x86
-		{C1F8DA2C-C601-47C6-B7E9-BBFA48B1CF0D}.Debug|x64.Build.0 = Debug|x86
-		{C1F8DA2C-C601-47C6-B7E9-BBFA48B1CF0D}.Release|x64.ActiveCfg = Release|x86
-		{C1F8DA2C-C601-47C6-B7E9-BBFA48B1CF0D}.Release|x64.Build.0 = Release|x86
-		{3B029242-DA9E-46A6-A813-8DA5B6AA754E}.Debug|x64.ActiveCfg = Debug|x64
-		{3B029242-DA9E-46A6-A813-8DA5B6AA754E}.Debug|x64.Build.0 = Debug|x64
-		{3B029242-DA9E-46A6-A813-8DA5B6AA754E}.Release|x64.ActiveCfg = Release|x64
-		{3B029242-DA9E-46A6-A813-8DA5B6AA754E}.Release|x64.Build.0 = Release|x64
-		{9C7A3F17-54A7-488B-9CD3-9635D7B5E0AD}.Debug|x64.ActiveCfg = Debug|x64
-		{9C7A3F17-54A7-488B-9CD3-9635D7B5E0AD}.Debug|x64.Build.0 = Debug|x64
-		{9C7A3F17-54A7-488B-9CD3-9635D7B5E0AD}.Release|x64.ActiveCfg = Release|x64
-		{9C7A3F17-54A7-488B-9CD3-9635D7B5E0AD}.Release|x64.Build.0 = Release|x64
-		{FE007135-05AC-4A0E-98E5-ACB2AACCA72B}.Debug|x64.ActiveCfg = Debug|x64
-		{FE007135-05AC-4A0E-98E5-ACB2AACCA72B}.Debug|x64.Build.0 = Debug|x64
-		{FE007135-05AC-4A0E-98E5-ACB2AACCA72B}.Release|x64.ActiveCfg = Release|x64
-		{FE007135-05AC-4A0E-98E5-ACB2AACCA72B}.Release|x64.Build.0 = Release|x64
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}.Debug|x64.ActiveCfg = Debug|x64
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}.Debug|x64.Build.0 = Debug|x64
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}.Release|x64.ActiveCfg = Release|x64
-		{1490C3C9-15A3-4985-B320-A4AC5F6B5C1A}.Release|x64.Build.0 = Release|x64
-		{6EC784A9-5F17-4051-BB1F-9546465B737B}.Debug|x64.ActiveCfg = Debug|x64
-		{6EC784A9-5F17-4051-BB1F-9546465B737B}.Debug|x64.Build.0 = Debug|x64
-		{6EC784A9-5F17-4051-BB1F-9546465B737B}.Release|x64.ActiveCfg = Release|x64
-		{6EC784A9-5F17-4051-BB1F-9546465B737B}.Release|x64.Build.0 = Release|x64
-		{01D1E24A-B058-4E53-B505-8D18F6A3F68A}.Debug|x64.ActiveCfg = Debug|x64
-		{01D1E24A-B058-4E53-B505-8D18F6A3F68A}.Debug|x64.Build.0 = Debug|x64
-		{01D1E24A-B058-4E53-B505-8D18F6A3F68A}.Release|x64.ActiveCfg = Release|x64
-		{01D1E24A-B058-4E53-B505-8D18F6A3F68A}.Release|x64.Build.0 = Release|x64
+		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Debug|x64.ActiveCfg = Debug|x64
+		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Debug|x64.Build.0 = Debug|x64
+		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Release|x64.ActiveCfg = Release|x64
+		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {40081BA5-A4C6-455A-8C8A-BBC2ABC1A8BD}
+		SolutionGuid = {A5D5B532-1CC1-4496-ACA3-C12BF67DADD0}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Math\Math.vcxitems*{262f29e5-5a2b-4101-9b1d-83e1a1ea7c26}*SharedItemsImports = 9
+		FastPix3D\FastPix3D.vcxitems*{9c31b43b-7f7d-47a8-b6ea-57b91a93db39}*SharedItemsImports = 4
+		Interop\Interop.vcxitems*{9c31b43b-7f7d-47a8-b6ea-57b91a93db39}*SharedItemsImports = 4
+		Math\Math.vcxitems*{9c31b43b-7f7d-47a8-b6ea-57b91a93db39}*SharedItemsImports = 4
+		Interop\Interop.vcxitems*{aa1404c4-b35b-4826-a024-ec917a42295e}*SharedItemsImports = 9
+		FastPix3D\FastPix3D.vcxitems*{d8b148aa-a494-43e2-bfdd-48727eea71ce}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
