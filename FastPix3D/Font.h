@@ -7,18 +7,18 @@ class Font
 private:
 	int32 Width;
 	int32 Height;
-	int32 CharacterSpacing;
+	int32 _CharacterSpacing;
 	byte *Buffer;
 	Vector2i *CharacterDimensions;
 
 public:
 	property_getset(int32, CharacterSpacing)
 	{
-		return CharacterSpacing;
+		return _CharacterSpacing;
 	}
 	property_set(int32, CharacterSpacing)
 	{
-		CharacterSpacing = value;
+		_CharacterSpacing = value;
 	}
 
 	explicit Font(const char *path);

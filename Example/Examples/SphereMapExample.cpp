@@ -70,8 +70,4 @@ void SphereMapExample::ThreadFunc(int32 threadNumber)
 	{
 		RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
 	}
-	else
-	{
-		RenderUnit->Statistics.RenderedTriangleCount += renderUnitCopy.Statistics.RenderedTriangleCount;
-	}
 }

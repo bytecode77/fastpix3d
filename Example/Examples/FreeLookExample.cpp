@@ -4,7 +4,7 @@ FreeLookExample::FreeLookExample(int32 width, int32 height) : Example(width, hei
 {
 	RenderUnit->RenderStates.ClipNear = .5f;
 
-	for (int32 i = 0; i < 8; i++)
+	for (int32 i = 0; i < 4; i++)
 	{
 		Threads[i] = new Thread([](void *sender, void *parameter)
 		{
@@ -25,27 +25,11 @@ void FreeLookExample::Run()
 		RenderUnit->ClearDepthBuffer();
 		RenderUnit->Statistics.Clear();
 
-		if (Skybox)
-		{
-			RenderUnit->RenderStates.CameraSpace = FreeLook->CameraSpace.RotationPart;
-			RenderUnit->RenderStates.ZEnable = false;
-			RenderUnit->RenderStates.ZWriteEnable = false;
-
-			for (int32 i = 0; i < 4; i++) Threads[i]->Start();
-			for (int32 i = 0; i < 4; i++) Threads[i]->Join();
-
-			RenderUnit->RenderStates.ZEnable = true;
-			RenderUnit->RenderStates.ZWriteEnable = true;
-		}
-		else
-		{
-			RenderUnit->ClearFrameBuffer();
-		}
-
+		if (!Skybox) RenderUnit->ClearFrameBuffer();
 		RenderUnit->RenderStates.CameraSpace = FreeLook->CameraSpace;
 
-		for (int32 i = 4; i < 8; i++) Threads[i]->Start();
-		for (int32 i = 4; i < 8; i++) Threads[i]->Join();
+		for (int32 i = 0; i < 4; i++) Threads[i]->Start();
+		for (int32 i = 0; i < 4; i++) Threads[i]->Join();
 
 		DrawStatisticsBox(10, 10);
 		DrawPositionBox(360, 10, FreeLook->Position);
@@ -180,26 +164,48 @@ void FreeLookExample::DrawScene(::RenderUnit &renderUnit, int32 part)
 }
 void FreeLookExample::ThreadFunc(int32 threadNumber)
 {
-	::RenderUnit renderUnitCopy = *RenderUnit;
-	renderUnitCopy.Statistics.Clear();
-
-	switch (threadNumber % 4)
+	if (Skybox)
 	{
-		case 0: renderUnitCopy.RenderStates.Workload = Workload::Quarter1; break;
-		case 1: renderUnitCopy.RenderStates.Workload = Workload::Quarter2; break;
-		case 2: renderUnitCopy.RenderStates.Workload = Workload::Quarter3; break;
-		case 3: renderUnitCopy.RenderStates.Workload = Workload::Quarter4; break;
+		::RenderUnit skyboxRenderUnit = *RenderUnit;
+		skyboxRenderUnit.Statistics.Clear();
+
+		skyboxRenderUnit.RenderStates.CameraSpace = FreeLook->CameraSpace.RotationPart;
+		skyboxRenderUnit.RenderStates.ZEnable = false;
+		skyboxRenderUnit.RenderStates.ZWriteEnable = false;
+
+		switch (threadNumber)
+		{
+			case 0: skyboxRenderUnit.RenderStates.Workload = Workload::Quarter1; break;
+			case 1: skyboxRenderUnit.RenderStates.Workload = Workload::Quarter2; break;
+			case 2: skyboxRenderUnit.RenderStates.Workload = Workload::Quarter3; break;
+			case 3: skyboxRenderUnit.RenderStates.Workload = Workload::Quarter4; break;
+		}
+
+		DrawScene(skyboxRenderUnit, 0);
+
+		if (threadNumber == 0)
+		{
+			RenderUnit->Statistics.Merge(skyboxRenderUnit.Statistics);
+		}
 	}
 
-	DrawScene(renderUnitCopy, threadNumber / 4);
-	renderUnitCopy.RenderDeferredPass();
+	::RenderUnit mapRenderUnitCopy = *RenderUnit;
+	mapRenderUnitCopy.Statistics.Clear();
 
-	if (renderUnitCopy.RenderStates.Workload == Workload::Quarter1)
+	switch (threadNumber)
 	{
-		RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
+		case 0: mapRenderUnitCopy.RenderStates.Workload = Workload::Quarter1; break;
+		case 1: mapRenderUnitCopy.RenderStates.Workload = Workload::Quarter2; break;
+		case 2: mapRenderUnitCopy.RenderStates.Workload = Workload::Quarter3; break;
+		case 3: mapRenderUnitCopy.RenderStates.Workload = Workload::Quarter4; break;
 	}
-	else
+
+	DrawScene(mapRenderUnitCopy, 1);
+
+	mapRenderUnitCopy.RenderDeferredPass();
+
+	if (threadNumber == 0)
 	{
-		RenderUnit->Statistics.RenderedTriangleCount += renderUnitCopy.Statistics.RenderedTriangleCount;
+		RenderUnit->Statistics.Merge(mapRenderUnitCopy.Statistics);
 	}
 }

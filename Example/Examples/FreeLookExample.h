@@ -4,7 +4,7 @@
 class FreeLookExample : public Example
 {
 private:
-	Thread *Threads[8] = { };
+	Thread *Threads[4] = { };
 	Mesh *Map = nullptr;
 	Mesh *Skybox = nullptr;
 

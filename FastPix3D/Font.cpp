@@ -8,7 +8,7 @@ Font::Font(const char *path)
 
 	Width = bitmap->Width / 16;
 	Height = bitmap->Height / 16;
-	CharacterSpacing = 2;
+	_CharacterSpacing = 2;
 	Buffer = new byte[bitmap->Width * bitmap->Height];
 	CharacterDimensions = new Vector2i[256];
 
@@ -27,7 +27,7 @@ Font::Font(const char *path)
 	// Compute character dimensions (Vector2i.X is the leftmost pixel, Vector2i.Y is the rightmost pixel).
 	for (int32 i = 0; i < 256; i++)
 	{
-		CharacterDimensions[i] = Vector2i(0, CharacterSpacing * 3);
+		CharacterDimensions[i] = Vector2i(0, _CharacterSpacing * 3);
 		int32 characterX = i % 16 * Width;
 		int32 characterY = i / 16 * Height;
 

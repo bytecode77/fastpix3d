@@ -12,6 +12,10 @@ class RasterizerMath
 public:
 	RasterizerMath() = delete;
 
+	static bool IsTriangleCulled(CullMode cullMode, const Vector3f &v1, const Vector3f &v2, const Vector3f &v3)
+	{
+		return cullMode != CullMode::None && (cullMode != CullMode::Front) != RasterizerMath::IsTriangleFrontFace(v1, v2, v3);
+	}
 	static bool IsTriangleFrontFace(const Vector3f &v1, const Vector3f &v2, const Vector3f &v3)
 	{
 		Vector3f normal = v1 * (v3 - v2).CrossProduct(v2 - v1);
@@ -34,13 +38,13 @@ public:
 			-(screenY - screenHeight / 2) / d,
 			1 / depthBufferValue);
 	}
-	static bool ClipTriangleScreenSpace(int32 x, int32 y, int32 width, int32 height, const Vector2i &v1, const Vector2i &v2, const Vector2i &v3)
+	static bool ClipTriangleScreenSpace(int32 width, int32 height, const Vector2i &v1, const Vector2i &v2, const Vector2i &v3)
 	{
 		return
-			v1.X < x && v2.X < x && v3.X < x ||
-			v1.Y < y && v2.Y < y && v3.Y < y ||
-			v1.X >= x + width && v2.X >= x + width && v3.X >= x + width ||
-			v1.Y >= y + height && v2.Y >= y + height && v3.Y >= y + height;
+			v1.X < 0 && v2.X < 0 && v3.X < 0 ||
+			v1.Y < 0 && v2.Y < 0 && v3.Y < 0 ||
+			v1.X >= width && v2.X >= width && v3.X >= width ||
+			v1.Y >= height && v2.Y >= height && v3.Y >= height;
 	}
 	static void MakeTextureCoordinatesPositive(Vector2f &v1, Vector2f &v2, Vector2f &v3)
 	{
@@ -56,39 +60,18 @@ public:
 		v2.Y += offset;
 		v3.Y += offset;
 	}
-	static void GetWorkloadScreenPart(Workload workload, int32 screenHeight, int32 &from, int32 &height)
+	static void GetWorkloadParameters(Workload workload, int32 y, int32 &workloadOffset, int32 &workloadIncrement)
 	{
-		switch (workload)
-		{
-			case Workload::Full:
-				from = 0;
-				height = screenHeight;
-				break;
-			case Workload::Half1:
-				from = 0;
-				height = screenHeight / 2;
-				break;
-			case Workload::Half2:
-				from = screenHeight / 2;
-				height = screenHeight - from;
-				break;
-			case Workload::Quarter1:
-				from = 0;
-				height = screenHeight / 4;
-				break;
-			case Workload::Quarter2:
-				from = screenHeight / 4;
-				height = screenHeight / 4;
-				break;
-			case Workload::Quarter3:
-				from = screenHeight / 4 * 2;
-				height = screenHeight / 4;
-				break;
-			case Workload::Quarter4:
-				from = screenHeight / 4 * 3;
-				height = screenHeight - from;
-				break;
-		}
+		// Distribute the workload so that every thread renders every n'th scanline.
+		// offset: The first scanline that the thread will render.
+		// increment: The vertical increment after each scanline is rendered.
+
+		int32 threadIndex = (int32)workload & 0xff;
+		int32 threadCount = ((int32)workload >> 8) & 0xff;
+		int32 threadCountMinusOne = (int32)workload >> 16;
+
+		workloadOffset = (threadIndex - (y & threadCountMinusOne)) & threadCountMinusOne;
+		workloadIncrement = threadCount;
 	}
 	static int32 GetMipLevel(const Vector2f &inverseTextureCoordinates, int32 maxMipLevels)
 	{

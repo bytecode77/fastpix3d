@@ -24,12 +24,9 @@ void Rasterizer::DrawTriangle(const Matrix4f &worldSpace, const Vertex &_v1, con
 	v3.Position = worldSpace * v3.Position;
 
 	// Back-face culling.
-	if (RenderStates.CullMode != CullMode::None)
+	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1.Position, v2.Position, v3.Position))
 	{
-		if (((RenderStates.CullMode == CullMode::Back) ^ RasterizerMath::IsTriangleFrontFace(v1.Position, v2.Position, v3.Position)) != 0)
-		{
-			return;
-		}
+		return;
 	}
 
 	// Clip along near clipping plane.
@@ -241,12 +238,7 @@ bool Rasterizer::DrawClippedTriangleT(RasterizerVertex v1, RasterizerVertex v2, 
 	Vector2i v2Screen = RasterizerMath::ProjectVertex(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v2.Position, RenderStates.Zoom);
 	Vector2i v3Screen = RasterizerMath::ProjectVertex(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v3.Position, RenderStates.Zoom);
 
-	// Clip to the region of the screen that is being rendered by this thread.
-	int32 frameYFrom;
-	int32 frameYHeight;
-	RasterizerMath::GetWorkloadScreenPart(RenderStates.Workload, RenderStates.FrameBuffer.Height, frameYFrom, frameYHeight);
-
-	if (RasterizerMath::ClipTriangleScreenSpace(0, frameYFrom, RenderStates.FrameBuffer.Width, frameYHeight, v1Screen, v2Screen, v3Screen))
+	if (RasterizerMath::ClipTriangleScreenSpace(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v1Screen, v2Screen, v3Screen))
 	{
 		// All projected screen coordinates are ouside of the screen.
 		return false;
@@ -345,10 +337,14 @@ bool Rasterizer::DrawClippedTriangleT(RasterizerVertex v1, RasterizerVertex v2, 
 	if (hasTexture) p.DeltaTextureSubdiv = (v13Texture - v2.TextureCoordinates) * (d * Subdiv1);
 	if (hasColors) p.DeltaColorSubdiv = (v13Color - v2.Color) * (d * Subdiv1);
 
-	int32 yStart = Math::Clamp(v1Screen.Y, frameYFrom, frameYFrom + frameYHeight);
-	int32 yEnd = Math::Clamp(v2Screen.Y, frameYFrom, frameYFrom + frameYHeight);
+	int32 yStart = Math::Clamp(v1Screen.Y, 0, RenderStates.FrameBuffer.Height);
+	int32 yEnd = Math::Clamp(v2Screen.Y, 0, RenderStates.FrameBuffer.Height);
 
-	for (p.Y = yStart; p.Y < yEnd; p.Y++)
+	int32 workloadOffset;
+	int32 workloadIncrement;
+	RasterizerMath::GetWorkloadParameters(RenderStates.Workload, yStart, workloadOffset, workloadIncrement);
+
+	for (p.Y = yStart + workloadOffset; p.Y < yEnd; p.Y += workloadIncrement)
 	{
 		float d1 = (float)(p.Y - v1Screen.Y) / (v2Screen.Y - v1Screen.Y);
 		float d2 = (float)(p.Y - v1Screen.Y) / (v3Screen.Y - v1Screen.Y);
@@ -366,10 +362,12 @@ bool Rasterizer::DrawClippedTriangleT(RasterizerVertex v1, RasterizerVertex v2, 
 		DrawScanline<hasTexture, hasColors>(p);
 	}
 
-	yStart = Math::Clamp(v2Screen.Y, frameYFrom, frameYFrom + frameYHeight);
-	yEnd = Math::Clamp(v3Screen.Y, frameYFrom, frameYFrom + frameYHeight);
+	yStart = Math::Clamp(v2Screen.Y, 0, RenderStates.FrameBuffer.Height);
+	yEnd = Math::Clamp(v3Screen.Y, 0, RenderStates.FrameBuffer.Height);
 
-	for (p.Y = yStart; p.Y < yEnd; p.Y++)
+	RasterizerMath::GetWorkloadParameters(RenderStates.Workload, yStart, workloadOffset, workloadIncrement);
+
+	for (p.Y = yStart + workloadOffset; p.Y < yEnd; p.Y += workloadIncrement)
 	{
 		float d1 = (float)(p.Y - v2Screen.Y) / (v3Screen.Y - v2Screen.Y);
 		float d2 = (float)(p.Y - v1Screen.Y) / (v3Screen.Y - v1Screen.Y);
@@ -434,7 +432,6 @@ void Rasterizer::DrawScanline(const ScanlineParameters &p) const
 		}
 		else
 		{
-
 			switch (RenderStates.StencilFunc)
 			{
 				case StencilFunc::Always:
@@ -636,25 +633,15 @@ void Rasterizer::DrawScanlineT(ScanlineParameters p) const
 					stencilFunc == StencilFunc::NotZero && *stencilBuffer ||
 					stencilFunc == StencilFunc::Zero && !*stencilBuffer)
 				{
-					if (hasTexture && hasColors)
+					if (hasTexture)
 					{
 						byte *texel = (byte*)&textureBuffer[(int32)subdivTexture.X & textureWidthMask | ((int32)subdivTexture.Y & textureHeightMask) << textureWidthExponent];
 
-						switch (blendMode)
+						if (hasColors)
 						{
-							case BlendMode::None:
+							switch (blendMode)
 							{
-								*frameBuffer =
-									texel[2] * (int32)subdivColor.X >> 8 << 16 |
-									texel[1] * (int32)subdivColor.Y >> 8 << 8 |
-									texel[0] * (int32)subdivColor.Z >> 8;
-
-								if (zWriteEnable) *depthBuffer = z;
-								break;
-							}
-							case BlendMode::TransparencyKey:
-							{
-								if (*(int32*)texel != 0xff00ff)
+								case BlendMode::None:
 								{
 									*frameBuffer =
 										texel[2] * (int32)subdivColor.X >> 8 << 16 |
@@ -662,101 +649,106 @@ void Rasterizer::DrawScanlineT(ScanlineParameters p) const
 										texel[0] * (int32)subdivColor.Z >> 8;
 
 									if (zWriteEnable) *depthBuffer = z;
+									break;
 								}
-								break;
-							}
-							case BlendMode::Alpha:
-							{
-								int32 r = ((texel[2] * (int32)subdivColor.X >> 8) * alpha + ((byte*)frameBuffer)[2] * inverseAlpha) >> 8;
-								int32 g = ((texel[1] * (int32)subdivColor.Y >> 8) * alpha + ((byte*)frameBuffer)[1] * inverseAlpha) >> 8;
-								int32 b = ((texel[0] * (int32)subdivColor.Z >> 8) * alpha + ((byte*)frameBuffer)[0] * inverseAlpha) >> 8;
+								case BlendMode::TransparencyKey:
+								{
+									if (*(int32*)texel != 0xff00ff)
+									{
+										*frameBuffer =
+											texel[2] * (int32)subdivColor.X >> 8 << 16 |
+											texel[1] * (int32)subdivColor.Y >> 8 << 8 |
+											texel[0] * (int32)subdivColor.Z >> 8;
 
-								*frameBuffer = r << 16 | g << 8 | b;
+										if (zWriteEnable) *depthBuffer = z;
+									}
+									break;
+								}
+								case BlendMode::Alpha:
+								{
+									int32 r = ((texel[2] * (int32)subdivColor.X >> 8) * alpha + ((byte*)frameBuffer)[2] * inverseAlpha) >> 8;
+									int32 g = ((texel[1] * (int32)subdivColor.Y >> 8) * alpha + ((byte*)frameBuffer)[1] * inverseAlpha) >> 8;
+									int32 b = ((texel[0] * (int32)subdivColor.Z >> 8) * alpha + ((byte*)frameBuffer)[0] * inverseAlpha) >> 8;
 
-								if (zWriteEnable) *depthBuffer = z;
-								break;
-							}
-							case BlendMode::Multiply:
-							{
-								int32 r = texel[2] * (int32)subdivColor.X * ((byte*)frameBuffer)[2] >> 16;
-								int32 g = texel[1] * (int32)subdivColor.Y * ((byte*)frameBuffer)[1] >> 16;
-								int32 b = texel[0] * (int32)subdivColor.Z * ((byte*)frameBuffer)[0] >> 16;
+									*frameBuffer = r << 16 | g << 8 | b;
+									if (zWriteEnable) *depthBuffer = z;
+									break;
+								}
+								case BlendMode::Multiply:
+								{
+									int32 r = texel[2] * (int32)subdivColor.X * ((byte*)frameBuffer)[2] >> 16;
+									int32 g = texel[1] * (int32)subdivColor.Y * ((byte*)frameBuffer)[1] >> 16;
+									int32 b = texel[0] * (int32)subdivColor.Z * ((byte*)frameBuffer)[0] >> 16;
 
-								*frameBuffer = r << 16 | g << 8 | b;
+									*frameBuffer = r << 16 | g << 8 | b;
+									if (zWriteEnable) *depthBuffer = z;
+									break;
+								}
+								case BlendMode::Add:
+								{
+									int32 r = Math::Min((texel[2] * (int32)subdivColor.X >> 8) + ((byte*)frameBuffer)[2], 255);
+									int32 g = Math::Min((texel[1] * (int32)subdivColor.Y >> 8) + ((byte*)frameBuffer)[1], 255);
+									int32 b = Math::Min((texel[0] * (int32)subdivColor.Z >> 8) + ((byte*)frameBuffer)[0], 255);
 
-								if (zWriteEnable) *depthBuffer = z;
-								break;
-							}
-							case BlendMode::Add:
-							{
-								int32 r = Math::Min((texel[2] * (int32)subdivColor.X >> 8) + ((byte*)frameBuffer)[2], 255);
-								int32 g = Math::Min((texel[1] * (int32)subdivColor.Y >> 8) + ((byte*)frameBuffer)[1], 255);
-								int32 b = Math::Min((texel[0] * (int32)subdivColor.Z >> 8) + ((byte*)frameBuffer)[0], 255);
-
-								*frameBuffer = r << 16 | g << 8 | b;
-
-								if (zWriteEnable) *depthBuffer = z;
-								break;
+									*frameBuffer = r << 16 | g << 8 | b;
+									if (zWriteEnable) *depthBuffer = z;
+									break;
+								}
 							}
 						}
-					}
-					else if (hasTexture)
-					{
-						byte *texel = (byte*)&textureBuffer[(int32)subdivTexture.X & textureWidthMask | ((int32)subdivTexture.Y & textureHeightMask) << textureWidthExponent];
-
-						switch (blendMode)
+						else
 						{
-							case BlendMode::None:
+							switch (blendMode)
 							{
-								*frameBuffer = *(int32*)texel;
-								if (zWriteEnable) *depthBuffer = z;
-								break;
-							}
-							case BlendMode::TransparencyKey:
-							{
-								if (*(int32*)texel != 0xff00ff)
+								case BlendMode::None:
 								{
 									*frameBuffer = *(int32*)texel;
 									if (zWriteEnable) *depthBuffer = z;
+									break;
 								}
-								break;
-							}
-							case BlendMode::Alpha:
-							{
-								int32 r = (texel[2] * alpha + ((byte*)frameBuffer)[2] * inverseAlpha) >> 8;
-								int32 g = (texel[1] * alpha + ((byte*)frameBuffer)[1] * inverseAlpha) >> 8;
-								int32 b = (texel[0] * alpha + ((byte*)frameBuffer)[0] * inverseAlpha) >> 8;
+								case BlendMode::TransparencyKey:
+								{
+									if (*(int32*)texel != 0xff00ff)
+									{
+										*frameBuffer = *(int32*)texel;
+										if (zWriteEnable) *depthBuffer = z;
+									}
+									break;
+								}
+								case BlendMode::Alpha:
+								{
+									int32 r = (texel[2] * alpha + ((byte*)frameBuffer)[2] * inverseAlpha) >> 8;
+									int32 g = (texel[1] * alpha + ((byte*)frameBuffer)[1] * inverseAlpha) >> 8;
+									int32 b = (texel[0] * alpha + ((byte*)frameBuffer)[0] * inverseAlpha) >> 8;
 
-								*frameBuffer = r << 16 | g << 8 | b;
+									*frameBuffer = r << 16 | g << 8 | b;
+									if (zWriteEnable) *depthBuffer = z;
+									break;
+								}
+								case BlendMode::Multiply:
+								{
+									int32 r = texel[2] * ((byte*)frameBuffer)[2] >> 8;
+									int32 g = texel[1] * ((byte*)frameBuffer)[1] >> 8;
+									int32 b = texel[0] * ((byte*)frameBuffer)[0] >> 8;
 
-								if (zWriteEnable) *depthBuffer = z;
-								break;
-							}
-							case BlendMode::Multiply:
-							{
-								int32 r = texel[2] * ((byte*)frameBuffer)[2] >> 8;
-								int32 g = texel[1] * ((byte*)frameBuffer)[1] >> 8;
-								int32 b = texel[0] * ((byte*)frameBuffer)[0] >> 8;
+									*frameBuffer = r << 16 | g << 8 | b;
+									if (zWriteEnable) *depthBuffer = z;
+									break;
+								}
+								case BlendMode::Add:
+								{
+									int32 r = Math::Min(texel[2] + ((byte*)frameBuffer)[2], 255);
+									int32 g = Math::Min(texel[1] + ((byte*)frameBuffer)[1], 255);
+									int32 b = Math::Min(texel[0] + ((byte*)frameBuffer)[0], 255);
 
-								*frameBuffer = r << 16 | g << 8 | b;
-
-								if (zWriteEnable) *depthBuffer = z;
-								break;
-							}
-							case BlendMode::Add:
-							{
-								int32 r = Math::Min(texel[2] + ((byte*)frameBuffer)[2], 255);
-								int32 g = Math::Min(texel[1] + ((byte*)frameBuffer)[1], 255);
-								int32 b = Math::Min(texel[0] + ((byte*)frameBuffer)[0], 255);
-
-								*frameBuffer = r << 16 | g << 8 | b;
-
-								if (zWriteEnable) *depthBuffer = z;
-								break;
+									*frameBuffer = r << 16 | g << 8 | b;
+									if (zWriteEnable) *depthBuffer = z;
+									break;
+								}
 							}
 						}
 					}
-					else if (hasColors)
+					else
 					{
 						switch (blendMode)
 						{

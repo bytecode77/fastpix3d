@@ -56,10 +56,10 @@ void ShadowMapExample::Run()
 				Matrix4f::RotateX(-20);
 		}
 
-		Threads[0]->Start(); // Fragments with ambient light only (upper screen half)
-		Threads[1]->Start(); // (lower screen half)
-		Threads[2]->Start(); // Shadow map (upper screen half)
-		Threads[3]->Start(); // (lower screen half)
+		Threads[0]->Start(); // Fragments with ambient light only (1)
+		Threads[1]->Start(); // (2)
+		Threads[2]->Start(); // Shadow map (1)
+		Threads[3]->Start(); // (2)
 		Threads[0]->Join();
 		Threads[1]->Join();
 		Threads[2]->Join();
@@ -229,9 +229,10 @@ void ShadowMapExample::ThreadFunc(int32 threadNumber)
 
 	if (threadNumber == 0)
 	{
-		RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
+		RenderUnit->Statistics.TotalTriangleCount += renderUnitCopy.Statistics.TotalTriangleCount;
 	}
-	else
+
+	if (threadNumber == 0 || threadNumber == 2 || threadNumber == 4)
 	{
 		RenderUnit->Statistics.RenderedTriangleCount += renderUnitCopy.Statistics.RenderedTriangleCount;
 	}

@@ -27,7 +27,8 @@ void PrimitivesExample::Run()
 		RenderUnit->ClearDepthBuffer();
 		RenderUnit->Statistics.Clear();
 
-		// Since none of the meshes intersect, this makes it an embarrassingly parallel problem.
+		// Since none of the meshes intersect, this makes it an embarrassingly parallel problem,
+		// by rendering each mesh in a seperate thread.
 		for (int32 i = 0; i < 4; i++) Threads[i]->Start();
 		for (int32 i = 0; i < 4; i++) Threads[i]->Join();
 

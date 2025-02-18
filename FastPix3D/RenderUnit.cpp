@@ -134,14 +134,10 @@ void RenderUnit::RenderDeferredPass()
 {
 	if (RenderStates.FogEnable)
 	{
-		int32 frameYFrom;
-		int32 frameYHeight;
-		RasterizerMath::GetWorkloadScreenPart(RenderStates.Workload, RenderStates.FrameBuffer.Height, frameYFrom, frameYHeight);
+		int32 workloadOffset;
+		int32 workloadIncrement;
+		RasterizerMath::GetWorkloadParameters(RenderStates.Workload, 0, workloadOffset, workloadIncrement);
 
-		int32 *frameBuffer = RenderStates.FrameBuffer.GetBuffer<int32>(frameYFrom * RenderStates.FrameBuffer.Width);
-		float *depthBuffer = RenderStates.DepthBuffer.GetBuffer<float>(frameYFrom * RenderStates.FrameBuffer.Width);
-
-		int32 pixelCount = RenderStates.FrameBuffer.Width * frameYHeight;
 		float d = 255 / (RenderStates.FogFar - RenderStates.FogNear);
 		float e = RenderStates.ClipNear * d;
 		float f = RenderStates.FogNear * d;
@@ -151,30 +147,36 @@ void RenderUnit::RenderDeferredPass()
 		float depthMax = e / (f + 255);
 		int32 fogColorRgb = RenderStates.FogColor.RGB;
 
-		for (int32 i = 0; i < pixelCount; i++)
+		for (int32 y = workloadOffset; y < RenderStates.FrameBuffer.Height; y += workloadIncrement)
 		{
-			if (*depthBuffer > 0 && *depthBuffer < depthMin)
+			int32 *frameBuffer = RenderStates.FrameBuffer.GetBuffer<int32>(y * RenderStates.FrameBuffer.Width);
+			float *depthBuffer = RenderStates.DepthBuffer.GetBuffer<float>(y * RenderStates.FrameBuffer.Width);
+
+			for (int32 x = 0; x < RenderStates.FrameBuffer.Width; x++)
 			{
-				if (*depthBuffer < depthMax)
+				if (*depthBuffer > 0 && *depthBuffer < depthMin)
 				{
-					// > FogFar
-					*frameBuffer = fogColorRgb;
-				}
-				else
-				{
-					// > FogNear and < FogFar
-					int32 fog = (int32)(e / *depthBuffer - f);
-					int32 inverseFog = 255 - fog;
+					if (*depthBuffer < depthMax)
+					{
+						// > FogFar
+						*frameBuffer = fogColorRgb;
+					}
+					else
+					{
+						// > FogNear and < FogFar
+						int32 fog = (int32)(e / *depthBuffer - f);
+						int32 inverseFog = 255 - fog;
 
-					*frameBuffer =
-						(((byte*)frameBuffer)[2] * inverseFog + RenderStates.FogColor.R * fog) >> 8 << 16 |
-						(((byte*)frameBuffer)[1] * inverseFog + RenderStates.FogColor.G * fog) >> 8 << 8 |
-						(((byte*)frameBuffer)[0] * inverseFog + RenderStates.FogColor.B * fog) >> 8;
+						*frameBuffer =
+							(((byte*)frameBuffer)[2] * inverseFog + RenderStates.FogColor.R * fog) >> 8 << 16 |
+							(((byte*)frameBuffer)[1] * inverseFog + RenderStates.FogColor.G * fog) >> 8 << 8 |
+							(((byte*)frameBuffer)[0] * inverseFog + RenderStates.FogColor.B * fog) >> 8;
+					}
 				}
+
+				frameBuffer++;
+				depthBuffer++;
 			}
-
-			frameBuffer++;
-			depthBuffer++;
 		}
 	}
 }

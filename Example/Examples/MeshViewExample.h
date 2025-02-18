@@ -4,7 +4,7 @@
 class MeshViewExample : public Example
 {
 private:
-	Thread *Threads[2] = { };
+	Thread *Threads[4] = { };
 	Mesh *Meshes[4] = { };
 	int32 CurrentMesh = 0;
 	Vector3f Position;

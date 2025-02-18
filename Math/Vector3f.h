@@ -27,6 +27,10 @@ _MM_ALIGN16 struct Vector3f
 		MM(_mm_setzero_ps())
 	{
 	}
+	Vector3f(const Vector3f &other) :
+		MM(other.MM)
+	{
+	}
 	Vector3f(__m128 mm) :
 		MM(mm)
 	{
@@ -56,6 +60,11 @@ _MM_ALIGN16 struct Vector3f
 		);
 	}
 
+	Vector3f& operator =(const Vector3f &other)
+	{
+		MM = other.MM;
+		return *this;
+	}
 	Vector3f operator +(const Vector3f &other) const
 	{
 		return _mm_add_ps(MM, other.MM);
@@ -116,11 +125,11 @@ _MM_ALIGN16 struct Vector3f
 	}
 	bool operator ==(const Vector3f &other) const
 	{
-		return X == other.X && Y == other.Y && Z == other.Z;
+		return _mm_movemask_ps(_mm_cmpeq_ps(MM, other.MM)) == 0xf;
 	}
 	bool operator !=(const Vector3f &other) const
 	{
-		return X != other.X || Y != other.Y || Z != other.Z;
+		return _mm_movemask_ps(_mm_cmpeq_ps(MM, other.MM)) != 0xf;
 	}
 	void* operator new[](size_t size)
 	{

@@ -8,7 +8,7 @@ MeshViewExample::MeshViewExample(int32 width, int32 height) : Example(width, hei
 	RenderUnit->RenderStates.Lights[0].Enabled = true;
 	RenderUnit->RenderStates.Lights[0].Color = Color(255, 252, 245);
 
-	for (int32 i = 0; i < 2; i++)
+	for (int32 i = 0; i < 4; i++)
 	{
 		Threads[i] = new Thread([](void *sender, void *parameter)
 		{
@@ -48,8 +48,8 @@ void MeshViewExample::Run()
 		Position = Position * (1 - speed) + positionVelocity * speed;
 		Rotation *= Matrix4f::RotateY(rotationVelocity.Y) * Matrix4f::RotateX(rotationVelocity.X);
 
-		for (int32 i = 0; i < 2; i++) Threads[i]->Start();
-		for (int32 i = 0; i < 2; i++) Threads[i]->Join();
+		for (int32 i = 0; i < 4; i++) Threads[i]->Start();
+		for (int32 i = 0; i < 4; i++) Threads[i]->Join();
 
 		DrawStatisticsBox(10, 10);
 		DrawFieldSet(360, 10, 0, 0, 30, "Move mouse", "move object ", "Click right/left", "rotate X/Y", "Key 1-4", "choose mesh ", nullptr);
@@ -96,15 +96,18 @@ void MeshViewExample::ThreadFunc(int32 threadNumber)
 	::RenderUnit renderUnitCopy = *RenderUnit;
 	renderUnitCopy.Statistics.Clear();
 
-	renderUnitCopy.RenderStates.Workload = threadNumber == 0 ? Workload::Half1 : Workload::Half2;
+	switch (threadNumber)
+	{
+		case 0: renderUnitCopy.RenderStates.Workload = Workload::Quarter1; break;
+		case 1: renderUnitCopy.RenderStates.Workload = Workload::Quarter2; break;
+		case 2: renderUnitCopy.RenderStates.Workload = Workload::Quarter3; break;
+		case 3: renderUnitCopy.RenderStates.Workload = Workload::Quarter4; break;
+	}
+
 	DrawScene(renderUnitCopy);
 
 	if (threadNumber == 0)
 	{
 		RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
-	}
-	else
-	{
-		RenderUnit->Statistics.RenderedTriangleCount += renderUnitCopy.Statistics.RenderedTriangleCount;
 	}
 }

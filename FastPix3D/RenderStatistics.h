@@ -11,12 +11,12 @@ public:
 	{
 		Clear();
 	}
+
 	void Clear()
 	{
 		TotalTriangleCount = 0;
 		RenderedTriangleCount = 0;
 	}
-
 	void Merge(const RenderStatistics &statistics)
 	{
 		TotalTriangleCount += statistics.TotalTriangleCount;

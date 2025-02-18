@@ -27,12 +27,9 @@ void ShadowMapStencilRasterizer::DrawTriangle(const Matrix4f &worldSpace, const 
 	v3.Uvw = shadowLightSpace * v3.Uvw;
 
 	// Back-face culling.
-	if (RenderStates.CullMode != CullMode::None)
+	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1.Position, v2.Position, v3.Position))
 	{
-		if (((RenderStates.CullMode == CullMode::Back) ^ RasterizerMath::IsTriangleFrontFace(v1.Position, v2.Position, v3.Position)) != 0)
-		{
-			return;
-		}
+		return;
 	}
 
 	// Clip along near clipping plane.
@@ -133,12 +130,7 @@ bool ShadowMapStencilRasterizer::DrawClippedTriangleT(ShadowMapStencilVertex v1,
 	Vector2i v2Screen = RasterizerMath::ProjectVertex(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v2.Position, RenderStates.Zoom);
 	Vector2i v3Screen = RasterizerMath::ProjectVertex(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v3.Position, RenderStates.Zoom);
 
-	// Clip to the region of the screen that is being rendered by this thread.
-	int32 frameYFrom;
-	int32 frameYHeight;
-	RasterizerMath::GetWorkloadScreenPart(RenderStates.Workload, RenderStates.FrameBuffer.Height, frameYFrom, frameYHeight);
-
-	if (RasterizerMath::ClipTriangleScreenSpace(0, frameYFrom, RenderStates.FrameBuffer.Width, frameYHeight, v1Screen, v2Screen, v3Screen))
+	if (RasterizerMath::ClipTriangleScreenSpace(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v1Screen, v2Screen, v3Screen))
 	{
 		// All projected screen coordinates are ouside of the screen.
 		return false;
@@ -237,10 +229,14 @@ bool ShadowMapStencilRasterizer::DrawClippedTriangleT(ShadowMapStencilVertex v1,
 	if (hasTexture) p.DeltaTextureSubdiv = (v13Texture - v2.TextureCoordinates) * (d * Subdiv1);
 	p.DeltaUvwSubdiv = (v13Uvw - v2.Uvw) * (d * Subdiv1);
 
-	int32 yStart = Math::Clamp(v1Screen.Y, frameYFrom, frameYFrom + frameYHeight);
-	int32 yEnd = Math::Clamp(v2Screen.Y, frameYFrom, frameYFrom + frameYHeight);
+	int32 yStart = Math::Clamp(v1Screen.Y, 0, RenderStates.FrameBuffer.Height);
+	int32 yEnd = Math::Clamp(v2Screen.Y, 0, RenderStates.FrameBuffer.Height);
 
-	for (p.Y = yStart; p.Y < yEnd; p.Y++)
+	int32 workloadOffset;
+	int32 workloadIncrement;
+	RasterizerMath::GetWorkloadParameters(RenderStates.Workload, yStart, workloadOffset, workloadIncrement);
+
+	for (p.Y = yStart + workloadOffset; p.Y < yEnd; p.Y += workloadIncrement)
 	{
 		float d1 = (float)(p.Y - v1Screen.Y) / (v2Screen.Y - v1Screen.Y);
 		float d2 = (float)(p.Y - v1Screen.Y) / (v3Screen.Y - v1Screen.Y);
@@ -258,10 +254,12 @@ bool ShadowMapStencilRasterizer::DrawClippedTriangleT(ShadowMapStencilVertex v1,
 		DrawScanlineT<hasTexture>(p);
 	}
 
-	yStart = Math::Clamp(v2Screen.Y, frameYFrom, frameYFrom + frameYHeight);
-	yEnd = Math::Clamp(v3Screen.Y, frameYFrom, frameYFrom + frameYHeight);
+	yStart = Math::Clamp(v2Screen.Y, 0, RenderStates.FrameBuffer.Height);
+	yEnd = Math::Clamp(v3Screen.Y, 0, RenderStates.FrameBuffer.Height);
 
-	for (p.Y = yStart; p.Y < yEnd; p.Y++)
+	RasterizerMath::GetWorkloadParameters(RenderStates.Workload, yStart, workloadOffset, workloadIncrement);
+
+	for (p.Y = yStart + workloadOffset; p.Y < yEnd; p.Y += workloadIncrement)
 	{
 		float d1 = (float)(p.Y - v2Screen.Y) / (v3Screen.Y - v2Screen.Y);
 		float d2 = (float)(p.Y - v1Screen.Y) / (v3Screen.Y - v1Screen.Y);

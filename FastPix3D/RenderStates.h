@@ -9,13 +9,16 @@
 
 enum class Workload
 {
-	Full,
-	Half1,
-	Half2,
-	Quarter1,
-	Quarter2,
-	Quarter3,
-	Quarter4
+	// Byte 1: Thread index
+	// Byte 2: Thread count
+	// Byte 3: Thread count - 1
+	Full = 0 | 1 << 8 | 0 << 16,
+	Half1 = 1 | 2 << 8 | 1 << 16,
+	Half2 = 0 | 2 << 8 | 1 << 16,
+	Quarter1 = 4 | 4 << 8 | 3 << 16,
+	Quarter2 = 3 | 4 << 8 | 3 << 16,
+	Quarter3 = 2 | 4 << 8 | 3 << 16,
+	Quarter4 = 1 | 4 << 8 | 3 << 16
 };
 
 enum class RenderPass
