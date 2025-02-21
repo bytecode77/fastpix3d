@@ -24,7 +24,7 @@ void HighPolyBenchmarkExample::Run()
 	bool rotate = false;
 	int64 rotationStart = 0;
 
-	while (!Input::HasExited() && !Input::GetKeyDown(SDLK_ESCAPE))
+	while (!Input::HasExited() && !Input::GetKeyDown(Scancode::Escape))
 	{
 		Window->Lock();
 		RenderUnit->ClearFrameBuffer(0, 100, 170);
@@ -47,7 +47,7 @@ void HighPolyBenchmarkExample::Run()
 		Input::Update();
 		FPSCounter->Frame();
 
-		if (Input::GetKeyDown(SDLK_SPACE))
+		if (Input::GetKeyDown(Scancode::Space))
 		{
 			rotate = true;
 			rotationStart = Math::Time();

@@ -25,7 +25,7 @@ void MeshViewExample::Run()
 	Vector2f rotationVelocity;
 
 	Input::CenterMouse(*Window);
-	while (!Input::HasExited() && !Input::GetKeyDown(SDLK_ESCAPE))
+	while (!Input::HasExited() && !Input::GetKeyDown(Scancode::Escape))
 	{
 		Window->Lock();
 		RenderUnit->ClearFrameBuffer(0, 100, 170);
@@ -61,7 +61,7 @@ void MeshViewExample::Run()
 
 		for (int32 i = 1; i <= sizeof(Meshes) / sizeof(Mesh*); i++)
 		{
-			if (Input::GetKeyDown(SDLK_0 + i) && CurrentMesh != i - 1)
+			if (Input::GetKeyDown((Scancode)((int32)Scancode::D1 - 1 + i)) && CurrentMesh != i - 1)
 			{
 				CurrentMesh = i - 1;
 				Rotation = Matrix4f::Identity();

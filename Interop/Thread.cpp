@@ -5,7 +5,7 @@ Thread::Thread(ThreadFunction function, void *sender, void *parameter) :
 	Sender(sender),
 	Parameter(parameter),
 	Mutex(SDL_CreateMutex()),
-	Cond(SDL_CreateCond()),
+	Cond(SDL_CreateCondition()),
 	SDLThread(SDL_CreateThread(ThreadFunc, nullptr, this)),
 	IsRunning(false)
 {
@@ -13,7 +13,7 @@ Thread::Thread(ThreadFunction function, void *sender, void *parameter) :
 Thread::~Thread()
 {
 	SDL_DestroyMutex(Mutex);
-	SDL_DestroyCond(Cond);
+	SDL_DestroyCondition(Cond);
 }
 
 void Thread::Start()
@@ -21,7 +21,7 @@ void Thread::Start()
 	IsRunning = true;
 
 	SDL_LockMutex(Mutex);
-	SDL_CondSignal(Cond);
+	SDL_SignalCondition(Cond);
 	SDL_UnlockMutex(Mutex);
 }
 void Thread::Join()
@@ -30,7 +30,7 @@ void Thread::Join()
 
 	while (IsRunning)
 	{
-		SDL_CondWait(Cond, Mutex);
+		SDL_WaitCondition(Cond, Mutex);
 	}
 
 	SDL_UnlockMutex(Mutex);
@@ -45,7 +45,7 @@ int Thread::ThreadFunc(void *data)
 
 		while (!self->IsRunning)
 		{
-			SDL_CondWait(self->Cond, self->Mutex);
+			SDL_WaitCondition(self->Cond, self->Mutex);
 		}
 
 		SDL_UnlockMutex(self->Mutex);
@@ -54,7 +54,7 @@ int Thread::ThreadFunc(void *data)
 		self->IsRunning = false;
 
 		SDL_LockMutex(self->Mutex);
-		SDL_CondSignal(self->Cond);
+		SDL_SignalCondition(self->Cond);
 		SDL_UnlockMutex(self->Mutex);
 	}
 

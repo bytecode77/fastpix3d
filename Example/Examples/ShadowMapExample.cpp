@@ -27,9 +27,9 @@ void ShadowMapExample::Run()
 	bool isFreeLook = false;
 	FreeLook->Speed = .1f;
 
-	Input::SetRelativeMouseMode(true);
+	Window->SetRelativeMouseMode(true);
 	Input::CenterMouse(*Window);
-	while (!Input::HasExited() && !Input::GetKeyDown(SDLK_ESCAPE))
+	while (!Input::HasExited() && !Input::GetKeyDown(Scancode::Escape))
 	{
 		int64 time = Math::Time() + 5000;
 
@@ -93,11 +93,11 @@ void ShadowMapExample::Run()
 		}
 		FPSCounter->Frame();
 
-		if (Input::GetKeyDown(SDLK_1)) RenderUnit->RenderStates.ShadowMap = RenderTarget(1024, 1024, ShadowMapBuffer);
-		else if (Input::GetKeyDown(SDLK_2)) RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048, ShadowMapBuffer);
-		else if (Input::GetKeyDown(SDLK_3)) RenderUnit->RenderStates.ShadowMap = RenderTarget(4096, 4096, ShadowMapBuffer);
+		if (Input::GetKeyDown(Scancode::D1)) RenderUnit->RenderStates.ShadowMap = RenderTarget(1024, 1024, ShadowMapBuffer);
+		else if (Input::GetKeyDown(Scancode::D2)) RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048, ShadowMapBuffer);
+		else if (Input::GetKeyDown(Scancode::D3)) RenderUnit->RenderStates.ShadowMap = RenderTarget(4096, 4096, ShadowMapBuffer);
 
-		if (Input::GetKeyDown(SDLK_SPACE) && !isFreeLook)
+		if (Input::GetKeyDown(Scancode::Space) && !isFreeLook)
 		{
 			isFreeLook = true;
 			FreeLook->Position = Vector3f(0, 1, -2.2f);

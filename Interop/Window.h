@@ -33,6 +33,7 @@ public:
 	explicit Window(int32 width, int32 height, const char *title);
 	~Window();
 
+	void SetRelativeMouseMode(bool enabled);
 	void Lock();
 	void Unlock();
 	void Flip();

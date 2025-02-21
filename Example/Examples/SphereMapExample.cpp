@@ -20,7 +20,7 @@ void SphereMapExample::Run()
 {
 	LoadScene();
 
-	while (!Input::HasExited() && !Input::GetKeyDown(SDLK_ESCAPE))
+	while (!Input::HasExited() && !Input::GetKeyDown(Scancode::Escape))
 	{
 		Window->Lock();
 		RenderUnit->ClearFrameBuffer();

@@ -1,3 +1,4 @@
+#include "SDL/SDL_main.h"
 #include "Examples/PrimitivesExample.h"
 #include "Examples/MeshViewExample.h"
 #include "Examples/FreeLookExample.h"

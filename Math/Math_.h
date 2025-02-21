@@ -102,7 +102,7 @@ public:
 
 	static int64 Time()
 	{
-		return SDL_GetTicks64();
+		return SDL_GetTicks();
 	}
 	static int32 Random(int32 min, int32 maxExclusive)
 	{

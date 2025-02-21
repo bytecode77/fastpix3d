@@ -31,14 +31,14 @@ FreeLook::FreeLook(const Vector3f &position, const Vector2f &rotation, float spe
 void FreeLook::Update()
 {
 	int64 time = Math::Time();
-	float speed = (time - _LastTime) * _Speed * .003f * (Input::GetKeyDown(SDLK_LSHIFT) + 1);
+	float speed = (time - _LastTime) * _Speed * .003f * (Input::GetKeyDown(Scancode::LeftShift) + 1);
 	_LastTime = time;
 
 	Matrix4f walkMatrix =
 		Matrix4f::Translate(
-			(Input::GetKeyDown(SDLK_d) - Input::GetKeyDown(SDLK_a)) * speed,
+			(Input::GetKeyDown(Scancode::D) - Input::GetKeyDown(Scancode::A)) * speed,
 			0,
-			(Input::GetKeyDown(SDLK_w) - Input::GetKeyDown(SDLK_s)) * speed
+			(Input::GetKeyDown(Scancode::W) - Input::GetKeyDown(Scancode::S)) * speed
 		) *
 		Matrix4f::RotateX(_Rotation.Y) *
 		Matrix4f::RotateY(_Rotation.X);

@@ -17,9 +17,9 @@ void FreeLookExample::Run()
 	int32 currentMap = 0;
 	LoadScene(currentMap);
 
-	Input::SetRelativeMouseMode(true);
+	Window->SetRelativeMouseMode(true);
 	Input::CenterMouse(*Window);
-	while (!Input::HasExited() && !Input::GetKeyDown(SDLK_ESCAPE))
+	while (!Input::HasExited() && !Input::GetKeyDown(Scancode::Escape))
 	{
 		Window->Lock();
 		RenderUnit->ClearDepthBuffer();
@@ -44,7 +44,7 @@ void FreeLookExample::Run()
 
 		for (int32 i = 1; i <= 7; i++)
 		{
-			if (Input::GetKeyDown(SDLK_0 + i) && currentMap != i - 1)
+			if (Input::GetKeyDown((Scancode)((int32)Scancode::D1 - 1 + i)) && currentMap != i - 1)
 			{
 				currentMap = i - 1;
 				LoadScene(currentMap);

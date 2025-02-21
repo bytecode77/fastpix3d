@@ -15,9 +15,8 @@
 #endif
 
 #pragma comment(lib, "Shlwapi.lib")
-#pragma comment(lib, "SDL2.lib")
-#pragma comment(lib, "SDL2main.lib")
-#pragma comment(lib, "SDL2_image.lib")
+#pragma comment(lib, "SDL3.lib")
+#pragma comment(lib, "SDL3_image.lib")
 
 using sbyte = signed __int8;
 using int16 = signed __int16;

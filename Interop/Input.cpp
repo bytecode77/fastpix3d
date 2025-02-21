@@ -18,12 +18,12 @@ void Input::Update()
 	{
 		switch (e.type)
 		{
-			case SDL_QUIT:
+			case SDL_EVENT_QUIT:
 			{
 				Exited = true;
 				break;
 			}
-			case SDL_MOUSEBUTTONDOWN:
+			case SDL_EVENT_MOUSE_BUTTON_DOWN:
 			{
 				switch (e.button.button)
 				{
@@ -33,7 +33,7 @@ void Input::Update()
 				}
 				break;
 			}
-			case SDL_MOUSEBUTTONUP:
+			case SDL_EVENT_MOUSE_BUTTON_UP:
 			{
 				switch (e.button.button)
 				{
@@ -43,7 +43,7 @@ void Input::Update()
 				}
 				break;
 			}
-			case SDL_MOUSEMOTION:
+			case SDL_EVENT_MOUSE_MOTION:
 			{
 				MouseSpeed.X += e.motion.x - MousePosition.X;
 				MouseSpeed.Y += e.motion.y - MousePosition.Y;
@@ -51,32 +51,30 @@ void Input::Update()
 				MousePosition.Y = e.motion.y;
 				break;
 			}
-			case SDL_MOUSEWHEEL:
+			case SDL_EVENT_MOUSE_WHEEL:
 			{
 				MouseSpeed.Z += e.wheel.y;
 				MousePosition.Z += e.wheel.y;
 				break;
 			}
-			case SDL_KEYDOWN:
+			case SDL_EVENT_KEY_DOWN:
 			{
-				int32 key = e.key.keysym.sym;
-				if ((key & SDLK_SCANCODE_MASK) == SDLK_SCANCODE_MASK) key += 1024 - SDLK_SCANCODE_MASK;
-				if (key < 2048) KeyDown[key] = true;
+				if (e.key.scancode < 512)
+				{
+					KeyDown[e.key.scancode] = true;
+				}
 				break;
 			}
-			case SDL_KEYUP:
+			case SDL_EVENT_KEY_UP:
 			{
-				int32 key = e.key.keysym.sym;
-				if ((key & SDLK_SCANCODE_MASK) == SDLK_SCANCODE_MASK) key += 1024 - SDLK_SCANCODE_MASK;
-				if (key < 2048) KeyDown[key] = false;
+				if (e.key.scancode < 512)
+				{
+					KeyDown[e.key.scancode] = false;
+				}
 				break;
 			}
 		}
 	}
-}
-void Input::SetRelativeMouseMode(bool enabled)
-{
-	SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE);
 }
 void Input::SetMousePosition(const Window &window, int32 x, int32 y)
 {
@@ -97,7 +95,7 @@ void Input::EnsureInitialized()
 	if (!IsInitialized)
 	{
 		MouseDown = new bool[3]();
-		KeyDown = new bool[2048]();
+		KeyDown = new bool[512]();
 		IsInitialized = true;
 	}
 }

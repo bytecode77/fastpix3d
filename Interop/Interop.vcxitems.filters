@@ -6,16 +6,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\begin_code.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\close_code.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Bitmap.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_assert.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_asyncio.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_atomic.h">
@@ -24,19 +26,31 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_audio.h">
       <Filter>SDL</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_begin_code.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_bits.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_blendmode.h">
       <Filter>SDL</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_camera.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_clipboard.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_config.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_close_code.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_copying.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_cpuinfo.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_dialog.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_egl.h">
@@ -54,10 +68,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_filesystem.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_gamecontroller.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_gamepad.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_gesture.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_gpu.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_guid.h">
@@ -70,6 +84,18 @@
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_hints.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_image.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_init.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_intrin.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_iostream.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_joystick.h">
@@ -93,6 +119,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_main.h">
       <Filter>SDL</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_main_impl.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_messagebox.h">
       <Filter>SDL</Filter>
     </ClInclude>
@@ -108,7 +137,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_mutex.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_name.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_oldnames.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_opengl.h">
@@ -135,16 +164,25 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_opengles2_khrplatform.h">
       <Filter>SDL</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_pen.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_pixels.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_platform.h">
       <Filter>SDL</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_platform_defines.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_power.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_quit.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_process.h">
+      <Filter>SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_properties.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_rect.h">
@@ -156,28 +194,22 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_revision.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_rwops.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_scancode.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_sensor.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_shape.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_stdinc.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_stdinc.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_storage.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_surface.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_system.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_syswm.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_test.h">
@@ -204,9 +236,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_test_harness.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_test_images.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_test_log.h">
       <Filter>SDL</Filter>
     </ClInclude>
@@ -216,10 +245,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_test_memory.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_test_random.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_thread.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_thread.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_time.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_timer.h">
@@ -228,7 +257,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_touch.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_types.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_tray.h">
       <Filter>SDL</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_version.h">
@@ -240,14 +269,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_vulkan.h">
       <Filter>SDL</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Window.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Input.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)SDL\SDL_image.h">
-      <Filter>SDL</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Bitmap.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)FileReader.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Window.cpp" />
@@ -257,8 +278,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="$(MSBuildThisFileDirectory)SDL2.lib" />
-    <Library Include="$(MSBuildThisFileDirectory)SDL2_image.lib" />
-    <Library Include="$(MSBuildThisFileDirectory)SDL2main.lib" />
+    <None Include="$(MSBuildThisFileDirectory)SDL3.dll" />
+    <None Include="$(MSBuildThisFileDirectory)SDL3_image.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="$(MSBuildThisFileDirectory)SDL3.lib" />
+    <Library Include="$(MSBuildThisFileDirectory)SDL3_image.lib" />
   </ItemGroup>
 </Project>

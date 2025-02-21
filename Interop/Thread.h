@@ -10,8 +10,8 @@ private:
 	void *Sender;
 	void *Parameter;
 
-	SDL_mutex *Mutex;
-	SDL_cond *Cond;
+	SDL_Mutex *Mutex;
+	SDL_Condition *Cond;
 	SDL_Thread *SDLThread;
 	bool IsRunning;
 

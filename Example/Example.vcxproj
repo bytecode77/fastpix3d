@@ -59,8 +59,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)Interop\SDL2.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)Interop\SDL2_image.dll" "$(TargetDir)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)Interop\SDL3.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)Interop\SDL3_image.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -82,8 +82,8 @@ xcopy /Y "$(SolutionDir)Interop\SDL2_image.dll" "$(TargetDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)Interop\SDL2.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)Interop\SDL2_image.dll" "$(TargetDir)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)Interop\SDL3.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)Interop\SDL3_image.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -10,7 +10,7 @@ Window::Window(int32 width, int32 height, const char *title)
 		SDLInitialized = true;
 	}
 
-	SDLWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+	SDLWindow = SDL_CreateWindow(title, width, height, 0);
 	if (!SDLWindow) throw;
 
 	SDLSurface = SDL_GetWindowSurface(SDLWindow);
@@ -21,6 +21,10 @@ Window::~Window()
 	SDL_DestroyWindow(SDLWindow);
 }
 
+void Window::SetRelativeMouseMode(bool enabled)
+{
+	SDL_SetWindowRelativeMouseMode(SDLWindow, enabled);
+}
 void Window::Lock()
 {
 	SDL_LockSurface(SDLSurface);

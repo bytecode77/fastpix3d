@@ -20,7 +20,7 @@ void PrimitivesExample::Run()
 	LoadScene();
 
 	Input::CenterMouse(*Window);
-	while (!Input::HasExited() && !Input::GetKeyDown(SDLK_ESCAPE))
+	while (!Input::HasExited() && !Input::GetKeyDown(Scancode::Escape))
 	{
 		Window->Lock();
 		RenderUnit->ClearFrameBuffer(0, 100, 170);

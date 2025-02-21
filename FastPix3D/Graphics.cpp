@@ -23,7 +23,7 @@ void Graphics::FillRectangle(int32 x, int32 y, int32 width, int32 height, const 
 	int32 xTo = Math::Clamp(x + width, 0, Window.Width - 1);
 	int32 yTo = Math::Clamp(y + height, 0, Window.Width - 1);
 
-	int32 opacityA = (int32)(Math::Clamp(opacity, 0.0f, 1.0f) * 256);
+	int32 opacityA = Math::Clamp((int32)(opacity * 256), 0, 256);
 	int32 opacityB = 256 - opacityA;
 
 	for (int32 py = yFrom; py < yTo; py++)
