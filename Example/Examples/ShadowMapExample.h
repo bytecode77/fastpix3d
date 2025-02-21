@@ -4,6 +4,7 @@
 class ShadowMapExample : public Example
 {
 private:
+	bool IsPcf = true;
 	Thread *Threads[8] = { };
 	Mesh *Floor = nullptr;
 	Mesh *Ceiling = nullptr;

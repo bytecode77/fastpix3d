@@ -33,17 +33,28 @@ void PrimitivesExample::Run()
 		for (int32 i = 0; i < 4; i++) Threads[i]->Join();
 
 		DrawStatisticsBox(10, 10);
+		DrawFieldSet(360, 10, 0, 0, 30, "Space", UseTextures ? "Textures are ON" : "Textures are OFF", nullptr);
 		Window->Unlock();
 		Window->Flip();
 
 		Input::Update();
 		FPSCounter->Frame();
+
+		if (Input::GetKeyPressed(Scancode::Space))
+		{
+			UseTextures = !UseTextures;
+
+			for (int32 i = 0; i < 8; i++)
+			{
+				Meshes[i]->SetTexture(UseTextures ? Texture : nullptr);
+			}
+		}
 	}
 }
 
 void PrimitivesExample::LoadScene()
 {
-	Texture *texture = Texture::Load("Assets\\Textures\\Test64.png");
+	Texture = Texture::Load("Assets\\Textures\\Test64.png");
 	Meshes[0] = PrimitiveFactory::Cube();
 	Meshes[1] = PrimitiveFactory::Cylinder(16);
 	Meshes[2] = PrimitiveFactory::Tube(16, .6f);
@@ -55,7 +66,7 @@ void PrimitivesExample::LoadScene()
 
 	for (int32 i = 0; i < 8; i++)
 	{
-		Meshes[i]->SetTexture(texture);
+		Meshes[i]->SetTexture(Texture);
 	}
 }
 void PrimitivesExample::DrawScene(::RenderUnit &renderUnit, int32 meshIndex)
@@ -64,7 +75,7 @@ void PrimitivesExample::DrawScene(::RenderUnit &renderUnit, int32 meshIndex)
 	int32 y = meshIndex / 4;
 	Matrix4f rotation = Matrix4f::RotateY(Window->Width / 2 - Input::GetMousePosition().X) * Matrix4f::RotateX(Window->Height / 2 - Input::GetMousePosition().Y);
 
-	renderUnit.DrawMesh(*Meshes[meshIndex], rotation * Matrix4f::Translate((x - 1.5f) * 2, (y - .5f) * -2, 5));
+	renderUnit.DrawMesh(*Meshes[meshIndex], rotation * Matrix4f::Translate((x - 1.5f) * 1.7f, (y - .5f) * -1.7f, 3.8f));
 }
 void PrimitivesExample::ThreadFunc(int32 threadNumber)
 {

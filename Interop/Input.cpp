@@ -6,6 +6,7 @@ Vector3i Input::MousePosition;
 Vector3i Input::MouseSpeed;
 bool *Input::MouseDown;
 bool *Input::KeyDown;
+bool *Input::KeyPressed;
 
 void Input::Update()
 {
@@ -62,6 +63,7 @@ void Input::Update()
 				if (e.key.scancode < 512)
 				{
 					KeyDown[e.key.scancode] = true;
+					KeyPressed[e.key.scancode] = true;
 				}
 				break;
 			}
@@ -70,6 +72,7 @@ void Input::Update()
 				if (e.key.scancode < 512)
 				{
 					KeyDown[e.key.scancode] = false;
+					KeyPressed[e.key.scancode] = false;
 				}
 				break;
 			}
@@ -96,6 +99,7 @@ void Input::EnsureInitialized()
 	{
 		MouseDown = new bool[3]();
 		KeyDown = new bool[512]();
+		KeyPressed = new bool[512]();
 		IsInitialized = true;
 	}
 }

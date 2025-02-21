@@ -149,10 +149,6 @@ newmtl CEIL5_2
 Kd 1.0 1.0 1.0
 map_Kd CEIL5_2.PNG
 
-newmtl F_SKY1
-Kd 1.0 1.0 1.0
-map_Kd F_SKY1.PNG
-
 newmtl FLAT14
 Kd 1.0 1.0 1.0
 map_Kd FLAT14.PNG

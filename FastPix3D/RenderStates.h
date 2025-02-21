@@ -9,12 +9,12 @@
 
 enum class Workload
 {
-	// Byte 1: Thread index
+	// Byte 1: One-based thread index
 	// Byte 2: Thread count
 	// Byte 3: Thread count - 1
-	Full = 0 | 1 << 8 | 0 << 16,
-	Half1 = 1 | 2 << 8 | 1 << 16,
-	Half2 = 0 | 2 << 8 | 1 << 16,
+	Full = 1 | 1 << 8 | 0 << 16,
+	Half1 = 2 | 2 << 8 | 1 << 16,
+	Half2 = 1 | 2 << 8 | 1 << 16,
 	Quarter1 = 4 | 4 << 8 | 3 << 16,
 	Quarter2 = 3 | 4 << 8 | 3 << 16,
 	Quarter3 = 2 | 4 << 8 | 3 << 16,
@@ -39,7 +39,8 @@ enum class StencilFunc
 {
 	Always,
 	Zero,
-	NotZero
+	NotZero,
+	Pcf
 };
 
 enum class BlendMode

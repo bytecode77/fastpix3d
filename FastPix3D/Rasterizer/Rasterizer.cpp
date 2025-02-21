@@ -144,9 +144,9 @@ void Rasterizer::DrawTriangle(const Matrix4f &worldSpace, const Vertex &_v1, con
 	bool rendered = false;
 	bool hasColors =
 		!RenderStates.Texture ||
-		v1.Color.X != 255 || v1.Color.Y != 255 || v1.Color.Z != 255 ||
-		v2.Color.X != 255 || v2.Color.Y != 255 || v2.Color.Z != 255 ||
-		v3.Color.X != 255 || v3.Color.Y != 255 || v3.Color.Z != 255;
+		v1.Color.X < 254 || v1.Color.Y < 254 || v1.Color.Z < 254 ||
+		v2.Color.X < 254 || v2.Color.Y < 254 || v2.Color.Z < 254 ||
+		v3.Color.X < 254 || v3.Color.Y < 254 || v3.Color.Z < 254;
 
 	if (vertex1Visible && vertex2Visible && vertex3Visible)
 	{
@@ -218,20 +218,20 @@ bool Rasterizer::DrawClippedTriangle(const RasterizerVertex &v1, const Rasterize
 	{
 		if (hasColors)
 		{
-			return DrawClippedTriangleT<true, true>(v1, v2, v3);
+			return DrawClippedTriangle<true, true>(v1, v2, v3);
 		}
 		else
 		{
-			return DrawClippedTriangleT<true, false>(v1, v2, v3);
+			return DrawClippedTriangle<true, false>(v1, v2, v3);
 		}
 	}
 	else
 	{
-		return DrawClippedTriangleT<false, true>(v1, v2, v3);
+		return DrawClippedTriangle<false, true>(v1, v2, v3);
 	}
 }
 template<bool hasTexture, bool hasColors>
-bool Rasterizer::DrawClippedTriangleT(RasterizerVertex v1, RasterizerVertex v2, RasterizerVertex v3) const
+bool Rasterizer::DrawClippedTriangle(RasterizerVertex v1, RasterizerVertex v2, RasterizerVertex v3) const
 {
 	// Project vertices to screen space.
 	Vector2i v1Screen = RasterizerMath::ProjectVertex(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v1.Position, RenderStates.Zoom);
@@ -401,31 +401,41 @@ void Rasterizer::DrawScanline(const ScanlineParameters &p) const
 				case StencilFunc::Always:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::Zero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::NotZero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+					}
+					break;
+				case StencilFunc::Pcf:
+					switch (RenderStates.BlendMode)
+					{
+						case BlendMode::None: DrawScanline<true, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 			}
@@ -437,31 +447,41 @@ void Rasterizer::DrawScanline(const ScanlineParameters &p) const
 				case StencilFunc::Always:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::Zero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::NotZero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+					}
+					break;
+				case StencilFunc::Pcf:
+					switch (RenderStates.BlendMode)
+					{
+						case BlendMode::None: DrawScanline<true, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<true, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<true, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<true, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<true, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 			}
@@ -476,31 +496,41 @@ void Rasterizer::DrawScanline(const ScanlineParameters &p) const
 				case StencilFunc::Always:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, true, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::Zero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, true, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::NotZero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, true, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+					}
+					break;
+				case StencilFunc::Pcf:
+					switch (RenderStates.BlendMode)
+					{
+						case BlendMode::None: DrawScanline<false, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, true, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 			}
@@ -512,31 +542,41 @@ void Rasterizer::DrawScanline(const ScanlineParameters &p) const
 				case StencilFunc::Always:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, false, StencilFunc::Always, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::Zero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, false, StencilFunc::Zero, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 				case StencilFunc::NotZero:
 					switch (RenderStates.BlendMode)
 					{
-						case BlendMode::None: DrawScanlineT<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
-						case BlendMode::TransparencyKey: DrawScanlineT<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
-						case BlendMode::Alpha: DrawScanlineT<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
-						case BlendMode::Multiply: DrawScanlineT<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
-						case BlendMode::Add: DrawScanlineT<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+						case BlendMode::None: DrawScanline<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, false, StencilFunc::NotZero, hasTexture, hasColors, BlendMode::Add>(p); break;
+					}
+					break;
+				case StencilFunc::Pcf:
+					switch (RenderStates.BlendMode)
+					{
+						case BlendMode::None: DrawScanline<false, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::None>(p); break;
+						case BlendMode::TransparencyKey: DrawScanline<false, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::TransparencyKey>(p); break;
+						case BlendMode::Alpha: DrawScanline<false, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Alpha>(p); break;
+						case BlendMode::Multiply: DrawScanline<false, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Multiply>(p); break;
+						case BlendMode::Add: DrawScanline<false, false, StencilFunc::Pcf, hasTexture, hasColors, BlendMode::Add>(p); break;
 					}
 					break;
 			}
@@ -544,7 +584,7 @@ void Rasterizer::DrawScanline(const ScanlineParameters &p) const
 	}
 }
 template<bool zEnable, bool zWriteEnable, StencilFunc stencilFunc, bool hasTexture, bool hasColors, BlendMode blendMode>
-void Rasterizer::DrawScanlineT(ScanlineParameters p) const
+void Rasterizer::DrawScanline(ScanlineParameters p) const
 {
 	if (p.V1.X > p.V2.X)
 	{
@@ -631,7 +671,8 @@ void Rasterizer::DrawScanlineT(ScanlineParameters p) const
 			{
 				if (stencilFunc == StencilFunc::Always ||
 					stencilFunc == StencilFunc::NotZero && *stencilBuffer ||
-					stencilFunc == StencilFunc::Zero && !*stencilBuffer)
+					stencilFunc == StencilFunc::Zero && !*stencilBuffer ||
+					stencilFunc == StencilFunc::Pcf && *stencilBuffer)
 				{
 					if (hasTexture)
 					{
@@ -642,23 +683,25 @@ void Rasterizer::DrawScanlineT(ScanlineParameters p) const
 							switch (blendMode)
 							{
 								case BlendMode::None:
-								{
-									*frameBuffer =
-										texel[2] * (int32)subdivColor.X >> 8 << 16 |
-										texel[1] * (int32)subdivColor.Y >> 8 << 8 |
-										texel[0] * (int32)subdivColor.Z >> 8;
-
-									if (zWriteEnable) *depthBuffer = z;
-									break;
-								}
 								case BlendMode::TransparencyKey:
 								{
-									if (*(int32*)texel != 0xff00ff)
+									if (blendMode != BlendMode::TransparencyKey || *(int32*)texel != 0xff00ff)
 									{
-										*frameBuffer =
-											texel[2] * (int32)subdivColor.X >> 8 << 16 |
-											texel[1] * (int32)subdivColor.Y >> 8 << 8 |
-											texel[0] * (int32)subdivColor.Z >> 8;
+										if (stencilFunc == StencilFunc::Pcf)
+										{
+											int32 r = ((texel[2] * (int32)subdivColor.X >> 8) * *stencilBuffer + ((byte*)frameBuffer)[2] * (255 - *stencilBuffer)) >> 8;
+											int32 g = ((texel[1] * (int32)subdivColor.Y >> 8) * *stencilBuffer + ((byte*)frameBuffer)[1] * (255 - *stencilBuffer)) >> 8;
+											int32 b = ((texel[0] * (int32)subdivColor.Z >> 8) * *stencilBuffer + ((byte*)frameBuffer)[0] * (255 - *stencilBuffer)) >> 8;
+
+											*frameBuffer = r << 16 | g << 8 | b;
+										}
+										else
+										{
+											*frameBuffer =
+												texel[2] * (int32)subdivColor.X >> 8 << 16 |
+												texel[1] * (int32)subdivColor.Y >> 8 << 8 |
+												texel[0] * (int32)subdivColor.Z >> 8;
+										}
 
 										if (zWriteEnable) *depthBuffer = z;
 									}
@@ -701,16 +744,23 @@ void Rasterizer::DrawScanlineT(ScanlineParameters p) const
 							switch (blendMode)
 							{
 								case BlendMode::None:
-								{
-									*frameBuffer = *(int32*)texel;
-									if (zWriteEnable) *depthBuffer = z;
-									break;
-								}
 								case BlendMode::TransparencyKey:
 								{
-									if (*(int32*)texel != 0xff00ff)
+									if (blendMode != BlendMode::TransparencyKey || *(int32*)texel != 0xff00ff)
 									{
-										*frameBuffer = *(int32*)texel;
+										if (stencilFunc == StencilFunc::Pcf)
+										{
+											int32 r = (texel[2] * *stencilBuffer + ((byte*)frameBuffer)[2] * (255 - *stencilBuffer)) >> 8;
+											int32 g = (texel[1] * *stencilBuffer + ((byte*)frameBuffer)[1] * (255 - *stencilBuffer)) >> 8;
+											int32 b = (texel[0] * *stencilBuffer + ((byte*)frameBuffer)[0] * (255 - *stencilBuffer)) >> 8;
+
+											*frameBuffer = r << 16 | g << 8 | b;
+										}
+										else
+										{
+											*frameBuffer = *(int32*)texel;
+										}
+
 										if (zWriteEnable) *depthBuffer = z;
 									}
 									break;
@@ -754,7 +804,18 @@ void Rasterizer::DrawScanlineT(ScanlineParameters p) const
 						{
 							case BlendMode::None:
 							{
-								*frameBuffer = (int32)subdivColor.X << 16 | (int32)subdivColor.Y << 8 | (int32)subdivColor.Z;
+								if (stencilFunc == StencilFunc::Pcf)
+								{
+									int32 r = ((int32)subdivColor.X * *stencilBuffer + ((byte*)frameBuffer)[2] * (255 - *stencilBuffer)) >> 8;
+									int32 g = ((int32)subdivColor.Y * *stencilBuffer + ((byte*)frameBuffer)[1] * (255 - *stencilBuffer)) >> 8;
+									int32 b = ((int32)subdivColor.Z * *stencilBuffer + ((byte*)frameBuffer)[0] * (255 - *stencilBuffer)) >> 8;
+
+									*frameBuffer = r << 16 | g << 8 | b;
+								}
+								else
+								{
+									*frameBuffer = (int32)subdivColor.X << 16 | (int32)subdivColor.Y << 8 | (int32)subdivColor.Z;
+								}
 								break;
 							}
 							case BlendMode::Alpha:

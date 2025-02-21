@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	int32 height = 720;
 	Example *example;
 
-	switch (3)
+	switch (3) // Change this to run a different example.
 	{
 		case 1: example = new PrimitivesExample(width, height); break;
 		case 2: example = new MeshViewExample(width, height); break;

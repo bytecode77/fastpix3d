@@ -115,15 +115,29 @@ bool ShadowMapStencilRasterizer::DrawClippedTriangle(const ShadowMapStencilVerte
 {
 	if (RenderStates.Texture && RenderStates.Texture->HasTransparencyKey)
 	{
-		return DrawClippedTriangleT<true>(v1, v2, v3);
+		if (RenderStates.StencilFunc == StencilFunc::Pcf)
+		{
+			return DrawClippedTriangle<true, true>(v1, v2, v3);
+		}
+		else
+		{
+			return DrawClippedTriangle<true, false>(v1, v2, v3);
+		}
 	}
 	else
 	{
-		return DrawClippedTriangleT<false>(v1, v2, v3);
+		if (RenderStates.StencilFunc == StencilFunc::Pcf)
+		{
+			return DrawClippedTriangle<false, true>(v1, v2, v3);
+		}
+		else
+		{
+			return DrawClippedTriangle<false, false>(v1, v2, v3);
+		}
 	}
 }
-template<bool hasTexture>
-bool ShadowMapStencilRasterizer::DrawClippedTriangleT(ShadowMapStencilVertex v1, ShadowMapStencilVertex v2, ShadowMapStencilVertex v3) const
+template<bool hasTexture, bool pcf>
+bool ShadowMapStencilRasterizer::DrawClippedTriangle(ShadowMapStencilVertex v1, ShadowMapStencilVertex v2, ShadowMapStencilVertex v3) const
 {
 	// Project vertices to screen space.
 	Vector2i v1Screen = RasterizerMath::ProjectVertex(RenderStates.FrameBuffer.Width, RenderStates.FrameBuffer.Height, v1.Position, RenderStates.Zoom);
@@ -251,7 +265,7 @@ bool ShadowMapStencilRasterizer::DrawClippedTriangleT(ShadowMapStencilVertex v1,
 		if (hasTexture) p.V2.Texture = v1.TextureCoordinates + (v3.TextureCoordinates - v1.TextureCoordinates) * d2;
 		p.V2.Uvw = v1.Uvw + (v3.Uvw - v1.Uvw) * d2;
 
-		DrawScanlineT<hasTexture>(p);
+		DrawScanline<hasTexture, pcf>(p);
 	}
 
 	yStart = Math::Clamp(v2Screen.Y, 0, RenderStates.FrameBuffer.Height);
@@ -274,13 +288,13 @@ bool ShadowMapStencilRasterizer::DrawClippedTriangleT(ShadowMapStencilVertex v1,
 		if (hasTexture) p.V2.Texture = v1.TextureCoordinates + (v3.TextureCoordinates - v1.TextureCoordinates) * d2;
 		p.V2.Uvw = v1.Uvw + (v3.Uvw - v1.Uvw) * d2;
 
-		DrawScanlineT<hasTexture>(p);
+		DrawScanline<hasTexture, pcf>(p);
 	}
 
 	return true;
 }
-template<bool hasTexture>
-void ShadowMapStencilRasterizer::DrawScanlineT(ShadowMapStencilScanlineParameters p) const
+template<bool hasTexture, bool pcf>
+void ShadowMapStencilRasterizer::DrawScanline(ShadowMapStencilScanlineParameters p) const
 {
 	if (p.V1.X > p.V2.X)
 	{
@@ -315,7 +329,7 @@ void ShadowMapStencilRasterizer::DrawScanlineT(ShadowMapStencilScanlineParameter
 
 	float *depthBuffer = RenderStates.DepthBuffer.GetBuffer<float>(p.V1.X + p.Y * RenderStates.FrameBuffer.Width);
 	byte *stencilBuffer = RenderStates.StencilBuffer.GetBuffer<byte>(p.V1.X + p.Y * RenderStates.FrameBuffer.Width);
-	float *shadowMapBuffer = RenderStates.ShadowMap.GetBuffer<float>();
+	float *shadowMap = RenderStates.ShadowMap.GetBuffer<float>();
 	int32 shadowMapWidthMask = RenderStates.ShadowMap.Width - 1;
 	int32 shadowMapHeightMask = RenderStates.ShadowMap.Height - 1;
 	int32 shadowMapWidthExponent = RenderStates.Precomputed.ShadowMapWidthExponent;
@@ -358,16 +372,37 @@ void ShadowMapStencilRasterizer::DrawScanlineT(ShadowMapStencilScanlineParameter
 			{
 				if (!hasTexture || textureBuffer[(int32)subdivTexture.X & textureWidthMask | ((int32)subdivTexture.Y & textureHeightMask) << textureWidthExponent] != 0xff00ff)
 				{
-					int32 u = (int32)subdivUvw.X;
-					int32 v = (int32)subdivUvw.Y;
-
-					// We have zero overdraw here, because the depth buffer is already populated by the previous render pass.
+					// We have very little overdraw here, because the depth buffer is already populated by the previous render pass.
 					// Therefore, branching does not affect performance as much.
 
-					if (!(u >> shadowMapWidthExponent) && !(v >> shadowMapHeightExponent))
+					int32 u1 = (int32)subdivUvw.X;
+					int32 v1 = (int32)subdivUvw.Y;
+
+					if (!(u1 >> shadowMapWidthExponent) && !(v1 >> shadowMapHeightExponent))
 					{
-						float texel = shadowMapBuffer[u | v << shadowMapWidthExponent];
-						*stencilBuffer = subdivW - RenderStates.ClipNear / texel > RenderStates.ShadowMapDepthBias;
+						if (pcf)
+						{
+							int32 u2 = (u1 + 1) & shadowMapWidthMask;
+							int32 v2 = (v1 + 1) & shadowMapHeightMask;
+
+							int32 du1 = (int32)((subdivUvw.X - u1) * 255);
+							int32 dv1 = (int32)((subdivUvw.Y - v1) * 255);
+							int32 du2 = 255 - du1;
+							int32 dv2 = 255 - dv1;
+
+							bool texel00 = subdivW - RenderStates.ClipNear / shadowMap[u1 | v1 << shadowMapWidthExponent] > RenderStates.ShadowMapDepthBias;
+							bool texel01 = subdivW - RenderStates.ClipNear / shadowMap[u1 | v2 << shadowMapWidthExponent] > RenderStates.ShadowMapDepthBias;
+							bool texel10 = subdivW - RenderStates.ClipNear / shadowMap[u2 | v1 << shadowMapWidthExponent] > RenderStates.ShadowMapDepthBias;
+							bool texel11 = subdivW - RenderStates.ClipNear / shadowMap[u2 | v2 << shadowMapWidthExponent] > RenderStates.ShadowMapDepthBias;
+
+							// PCF: Bilinear interpolation between 4 texels, store an 8-bit value in the stencil buffer.
+							*stencilBuffer = ((texel00 * du2 + texel10 * du1) * dv2 + (texel01 * du2 + texel11 * du1) * dv1) >> 8;
+						}
+						else
+						{
+							// Store a 1-bit value in the stencil buffer.
+							*stencilBuffer = subdivW - RenderStates.ClipNear / shadowMap[u1 | v1 << shadowMapWidthExponent] > RenderStates.ShadowMapDepthBias;
+						}
 					}
 				}
 			}

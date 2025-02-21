@@ -4,7 +4,9 @@
 class PrimitivesExample : public Example
 {
 private:
+	bool UseTextures = true;
 	Thread *Threads[4] = { };
+	Texture *Texture = nullptr;
 	Mesh *Meshes[8] = { };
 
 public:

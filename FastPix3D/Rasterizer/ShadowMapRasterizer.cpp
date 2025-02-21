@@ -108,15 +108,15 @@ bool ShadowMapRasterizer::DrawClippedTriangle(const ShadowMapVertex &v1, const S
 {
 	if (RenderStates.Texture && RenderStates.Texture->HasTransparencyKey)
 	{
-		return DrawClippedTriangleT<true>(v1, v2, v3);
+		return DrawClippedTriangle<true>(v1, v2, v3);
 	}
 	else
 	{
-		return DrawClippedTriangleT<false>(v1, v2, v3);
+		return DrawClippedTriangle<false>(v1, v2, v3);
 	}
 }
 template<bool hasTexture>
-bool ShadowMapRasterizer::DrawClippedTriangleT(ShadowMapVertex v1, ShadowMapVertex v2, ShadowMapVertex v3) const
+bool ShadowMapRasterizer::DrawClippedTriangle(ShadowMapVertex v1, ShadowMapVertex v2, ShadowMapVertex v3) const
 {
 	// Project vertices to screen space.
 	Vector2i v1Screen = RasterizerMath::ProjectVertex(RenderStates.ShadowMap.Width, RenderStates.ShadowMap.Height, v1.Position, RenderStates.ShadowLightZoom);
@@ -210,7 +210,7 @@ bool ShadowMapRasterizer::DrawClippedTriangleT(ShadowMapVertex v1, ShadowMapVert
 		p.V2.Z = v1.Position.Z + (v3.Position.Z - v1.Position.Z) * d2;
 		if (hasTexture) p.V2.Texture = v1.TextureCoordinates + (v3.TextureCoordinates - v1.TextureCoordinates) * d2;
 
-		DrawScanlineT<hasTexture>(p);
+		DrawScanline<hasTexture>(p);
 	}
 
 	yStart = Math::Clamp(v2Screen.Y, 0, RenderStates.ShadowMap.Height);
@@ -231,13 +231,13 @@ bool ShadowMapRasterizer::DrawClippedTriangleT(ShadowMapVertex v1, ShadowMapVert
 		p.V2.Z = v1.Position.Z + (v3.Position.Z - v1.Position.Z) * d2;
 		if (hasTexture) p.V2.Texture = v1.TextureCoordinates + (v3.TextureCoordinates - v1.TextureCoordinates) * d2;
 
-		DrawScanlineT<hasTexture>(p);
+		DrawScanline<hasTexture>(p);
 	}
 
 	return true;
 }
 template<bool hasTexture>
-void ShadowMapRasterizer::DrawScanlineT(ShadowMapScanlineParameters p) const
+void ShadowMapRasterizer::DrawScanline(ShadowMapScanlineParameters p) const
 {
 	if (p.V1.X > p.V2.X)
 	{
@@ -268,7 +268,7 @@ void ShadowMapRasterizer::DrawScanlineT(ShadowMapScanlineParameters p) const
 		p.V2.X = RenderStates.ShadowMap.Width - 1;
 	}
 
-	float *shadowMapBuffer = RenderStates.ShadowMap.GetBuffer<float>(p.V1.X + p.Y * RenderStates.ShadowMap.Width);
+	float *shadowMap = RenderStates.ShadowMap.GetBuffer<float>(p.V1.X + p.Y * RenderStates.ShadowMap.Width);
 
 	float z = p.V1.Z;
 	Vector2f texture = p.V1.Texture;
@@ -292,17 +292,17 @@ void ShadowMapRasterizer::DrawScanlineT(ShadowMapScanlineParameters p) const
 
 			for (int32 j = 0; j < subdivSize; j++)
 			{
-				if (*shadowMapBuffer < z)
+				if (*shadowMap < z)
 				{
 					int32 texel = textureBuffer[(int32)subdivTexture.X & textureWidthMask | ((int32)subdivTexture.Y & textureHeightMask) << textureWidthExponent];
 
 					if (texel != 0xff00ff)
 					{
-						*shadowMapBuffer = z;
+						*shadowMap = z;
 					}
 				}
 
-				shadowMapBuffer++;
+				shadowMap++;
 				z += p.DeltaZ;
 				subdivTexture += subdivIncrementTexture;
 			}
@@ -315,12 +315,12 @@ void ShadowMapRasterizer::DrawScanlineT(ShadowMapScanlineParameters p) const
 		// No texture -> no subdivs!
 		for (int32 i = p.V1.X; i < p.V2.X; i++)
 		{
-			if (*shadowMapBuffer < z)
+			if (*shadowMap < z)
 			{
-				*shadowMapBuffer = z;
+				*shadowMap = z;
 			}
 
-			shadowMapBuffer++;
+			shadowMap++;
 			z += p.DeltaZ;
 		}
 	}

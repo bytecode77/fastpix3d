@@ -20,4 +20,9 @@ struct Box3f
 		Max(max)
 	{
 	}
+
+	bool Contains(const Vector3f &point) const
+	{
+		return point.X >= Min.X && point.X <= Max.X && point.Y >= Min.Y && point.Y <= Max.Y && point.Z >= Min.Z && point.Z <= Max.Z;
+	}
 };

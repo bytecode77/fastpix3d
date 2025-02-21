@@ -1,7 +1,4 @@
 #include "RenderUnit.h"
-#include "Math_.h"
-#include "Vector2i.h"
-#include "Vector3f.h"
 #include "RasterizerMath.h"
 #include "Rasterizer/Rasterizer.h"
 #include "Rasterizer/ShadowMapRasterizer.h"
@@ -21,7 +18,7 @@ void RenderUnit::ClearFrameBuffer(const Color &color) const
 }
 void RenderUnit::ClearDepthBuffer() const
 {
-	std::fill_n(RenderStates.DepthBuffer.GetBuffer<float>(), RenderStates.DepthBuffer.Width * RenderStates.DepthBuffer.Height, 0.0f);
+	memset(RenderStates.DepthBuffer.Buffer, 0, RenderStates.DepthBuffer.Width * RenderStates.DepthBuffer.Height * 4);
 }
 void RenderUnit::ClearStencilBuffer() const
 {
@@ -29,7 +26,7 @@ void RenderUnit::ClearStencilBuffer() const
 }
 void RenderUnit::ClearShadowMap() const
 {
-	std::fill_n(RenderStates.ShadowMap.GetBuffer<float>(), RenderStates.ShadowMap.Width * RenderStates.ShadowMap.Height, 0.0f);
+	memset(RenderStates.ShadowMap.Buffer, 0, RenderStates.ShadowMap.Width * RenderStates.ShadowMap.Height * 4);
 }
 
 void RenderUnit::DrawMesh(const Mesh& mesh, const Matrix4f &modelSpace)

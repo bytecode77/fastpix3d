@@ -57,9 +57,9 @@ public:
 private:
 	bool DrawClippedTriangle(const RasterizerVertex &v1, const RasterizerVertex &v2, const RasterizerVertex &v3, bool hasColors) const;
 	template<bool hasTexture, bool hasColors>
-	bool DrawClippedTriangleT(RasterizerVertex v1, RasterizerVertex v2, RasterizerVertex v3) const;
+	bool DrawClippedTriangle(RasterizerVertex v1, RasterizerVertex v2, RasterizerVertex v3) const;
 	template<bool hasTexture, bool hasColors>
 	void DrawScanline(const ScanlineParameters &p) const;
 	template<bool zEnable, bool zWriteEnable, StencilFunc stencilFunc, bool hasTexture, bool hasColors, BlendMode blendMode>
-	void DrawScanlineT(ScanlineParameters p) const;
+	void DrawScanline(ScanlineParameters p) const;
 };

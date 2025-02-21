@@ -1,6 +1,7 @@
 #pragma once
 #include "FastPix3D.h"
 #include "Vector2f.h"
+#include "Vector2i.h"
 #include "Math.h"
 
 // Commonly used algorithms.
@@ -14,7 +15,7 @@ public:
 
 	static bool IsTriangleCulled(CullMode cullMode, const Vector3f &v1, const Vector3f &v2, const Vector3f &v3)
 	{
-		return cullMode != CullMode::None && (cullMode != CullMode::Front) != RasterizerMath::IsTriangleFrontFace(v1, v2, v3);
+		return cullMode != CullMode::None && (cullMode == CullMode::Front) == RasterizerMath::IsTriangleFrontFace(v1, v2, v3);
 	}
 	static bool IsTriangleFrontFace(const Vector3f &v1, const Vector3f &v2, const Vector3f &v3)
 	{

@@ -269,6 +269,7 @@ private:
 	static Vector3i MouseSpeed;
 	static bool *MouseDown;
 	static bool *KeyDown;
+	static bool *KeyPressed;
 
 public:
 	Input() = delete;
@@ -302,6 +303,14 @@ public:
 		EnsureInitialized();
 
 		return KeyDown[(int32)scancode];
+	}
+	static bool GetKeyPressed(Scancode scancode)
+	{
+		EnsureInitialized();
+
+		bool pressed = KeyPressed[(int32)scancode];
+		KeyPressed[(int32)scancode] = false;
+		return pressed;
 	}
 
 	static void Update();

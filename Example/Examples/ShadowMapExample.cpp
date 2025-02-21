@@ -80,7 +80,8 @@ void ShadowMapExample::Run()
 		RenderUnit->RenderStates.LightsEnable = true;
 
 		DrawStatisticsBox(10, 10);
-		DrawFieldSet(360, 10, 0, 0, 30, "Move mouse", "rotation", "Key 1-3", "Shadow map resolution ", "Space", "Switch to freelook", nullptr);
+		DrawFieldSet(360, 10, 0, 0, 30, "Move mouse", "rotation", "Key 1-3", "Shadow map resolution ", nullptr);
+		DrawFieldSet(700, 10, 0, 0, 30, "Space", isFreeLook ? "Freelook is ON" : "Freelook is OFF", "P", IsPcf ? "PCF is ON" : "PCF is OFF", nullptr);
 		DebugShadowMap(Window->Width - 10 - 256, 10, 256, 256, .3f, 5);
 		Window->Unlock();
 		Window->Flip();
@@ -97,11 +98,16 @@ void ShadowMapExample::Run()
 		else if (Input::GetKeyDown(Scancode::D2)) RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048, ShadowMapBuffer);
 		else if (Input::GetKeyDown(Scancode::D3)) RenderUnit->RenderStates.ShadowMap = RenderTarget(4096, 4096, ShadowMapBuffer);
 
-		if (Input::GetKeyDown(Scancode::Space) && !isFreeLook)
+		if (Input::GetKeyPressed(Scancode::Space))
 		{
-			isFreeLook = true;
+			isFreeLook = !isFreeLook;
 			FreeLook->Position = Vector3f(0, 1, -2.2f);
 			FreeLook->Rotation = Vector2f(0, 20);
+		}
+
+		if (Input::GetKeyPressed(Scancode::P))
+		{
+			IsPcf = !IsPcf;
 		}
 	}
 }
@@ -183,7 +189,7 @@ void ShadowMapExample::DrawScene(::RenderUnit &renderUnit)
 
 	Matrix4f cageMatrix = Matrix4f::Translate(1.2f, 0, -.7f);
 	renderUnit.DrawMesh(*CageGround, Matrix4f::Scale(.7f, .1f, .7f) * cageMatrix);
-	renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.7f, .5f, .7f) * Matrix4f::Translate(0, .29f, 0) * cageMatrix);
+	renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .29f, 0) * cageMatrix);
 	renderUnit.DrawMesh(*HoundEye, Matrix4f::Scale(.5f) * Matrix4f::Translate(0, .25f, 0) * cageMatrix);
 }
 void ShadowMapExample::ThreadFunc(int32 threadNumber)
@@ -196,7 +202,6 @@ void ShadowMapExample::ThreadFunc(int32 threadNumber)
 		case 0:
 		case 1:
 			renderUnitCopy.RenderStates.Workload = threadNumber == 0 ? Workload::Half1 : Workload::Half2;
-			renderUnitCopy.RenderStates.Lights[0].Enabled = false;
 			DrawScene(renderUnitCopy);
 			break;
 		case 2:
@@ -218,10 +223,11 @@ void ShadowMapExample::ThreadFunc(int32 threadNumber)
 			}
 
 			renderUnitCopy.RenderStates.RenderPass = RenderPass::ShadowMapStencil;
+			renderUnitCopy.RenderStates.StencilFunc = IsPcf ? StencilFunc::Pcf : StencilFunc::NotZero;
 			DrawScene(renderUnitCopy);
 
+			renderUnitCopy.RenderStates.Lights[0].Enabled = false;
 			renderUnitCopy.RenderStates.RenderPass = RenderPass::Fragments;
-			renderUnitCopy.RenderStates.StencilFunc = StencilFunc::Zero;
 			renderUnitCopy.RenderStates.ZWriteEnable = false;
 			DrawScene(renderUnitCopy);
 			break;

@@ -51,7 +51,7 @@ public:
 private:
 	bool DrawClippedTriangle(const ShadowMapVertex &v1, const ShadowMapVertex &v2, const ShadowMapVertex &v3) const;
 	template<bool hasTexture>
-	bool DrawClippedTriangleT(ShadowMapVertex v1, ShadowMapVertex v2, ShadowMapVertex v3) const;
+	bool DrawClippedTriangle(ShadowMapVertex v1, ShadowMapVertex v2, ShadowMapVertex v3) const;
 	template<bool hasTexture>
-	void DrawScanlineT(ShadowMapScanlineParameters p) const;
+	void DrawScanline(ShadowMapScanlineParameters p) const;
 };
