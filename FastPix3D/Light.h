@@ -1,8 +1,7 @@
 #pragma once
 #include "FastPix3D.h"
-#include "Vector3f.h"
-#include "Color.h"
-#include "INotify.h"
+#include "Math/Color.h"
+#include "Math/VectorMath.h"
 
 enum class LightType
 {
@@ -11,16 +10,27 @@ enum class LightType
 	Spot
 };
 
+class PrecomputedLight
+{
+public:
+	float SpecularIntensity;
+	vfloat3 ColorF;
+	vfloat3 PositionViewSpace;
+	vfloat3 DirectionViewSpace;
+	float DirectionViewSpaceDotIntensity;
+};
+
 class Light
 {
 private:
+	PrecomputedLight Precomputed;
 	bool _Enabled;
 	LightType _Type;
 	float _Intensity;
 	Color _Color;
-	Vector3f _Position;
-	Vector3f _Rotation;
-	INotify *NotifyParent = nullptr;
+	vfloat3 _Position;
+	vfloat3 _Rotation;
+	std::function<void()> OnChanged;
 
 	Light() :
 		_Enabled(false),
@@ -31,60 +41,61 @@ private:
 	}
 
 public:
-	property_getset(bool, Enabled)
+	property_get(bool, Enabled)
 	{
 		return _Enabled;
 	}
 	property_set(bool, Enabled)
 	{
 		_Enabled = value;
-		NotifyParent->Notify();
+		if (OnChanged) OnChanged();
 	}
-	property_getset(LightType, Type)
+	property_get(LightType, Type)
 	{
 		return _Type;
 	}
 	property_set(LightType, Type)
 	{
 		_Type = value;
-		NotifyParent->Notify();
+		if (OnChanged) OnChanged();
 	}
-	property_getset(float, Intensity)
+	property_get(float, Intensity)
 	{
 		return _Intensity;
 	}
 	property_set(float, Intensity)
 	{
 		_Intensity = value;
-		NotifyParent->Notify();
+		if (OnChanged) OnChanged();
 	}
-	property_getset(::Color, Color)
+	property_get(::Color, Color)
 	{
 		return _Color;
 	}
 	property_set(const ::Color&, Color)
 	{
 		_Color = value;
-		NotifyParent->Notify();
+		if (OnChanged) OnChanged();
 	}
-	property_getset(Vector3f, Position)
+	property_get(vfloat3, Position)
 	{
 		return _Position;
 	}
-	property_set(const Vector3f&, Position)
+	property_set(const vfloat3&, Position)
 	{
 		_Position = value;
-		NotifyParent->Notify();
+		if (OnChanged) OnChanged();
 	}
-	property_getset(Vector3f, Rotation)
+	property_get(vfloat3, Rotation)
 	{
 		return _Rotation;
 	}
-	property_set(const Vector3f&, Rotation)
+	property_set(const vfloat3&, Rotation)
 	{
 		_Rotation = value;
-		NotifyParent->Notify();
+		if (OnChanged) OnChanged();
 	}
 
 	friend class RenderStates;
+	friend class FragmentRasterizer;
 };

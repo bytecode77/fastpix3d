@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="2D\Font.cpp" />
+    <ClCompile Include="2D\Graphics.cpp" />
+    <ClCompile Include="Helper\FreeLook.cpp" />
+    <ClCompile Include="Helper\PrimitiveFactory.cpp" />
+    <ClCompile Include="Interop\Bitmap.cpp" />
+    <ClCompile Include="Interop\FileReader.cpp" />
+    <ClCompile Include="Interop\FPSCounter.cpp" />
+    <ClCompile Include="Interop\Input.cpp" />
+    <ClCompile Include="Interop\Stopwatch.cpp" />
+    <ClCompile Include="Interop\System.cpp" />
+    <ClCompile Include="Interop\Thread.cpp" />
+    <ClCompile Include="Interop\ThreadPool.cpp" />
+    <ClCompile Include="Interop\Window.cpp" />
+    <ClCompile Include="Math\Math_.cpp" />
+    <ClCompile Include="Mesh\Mesh.cpp" />
+    <ClCompile Include="Mesh\Surface.cpp" />
+    <ClCompile Include="Rasterizer\FragmentRasterizer.cpp" />
+    <ClCompile Include="Rasterizer\ShadowMapRasterizer.cpp" />
+    <ClCompile Include="Rasterizer\WireframeRasterizer.cpp" />
+    <ClCompile Include="RenderStates.cpp" />
+    <ClCompile Include="RenderStatistics.cpp" />
+    <ClCompile Include="RenderUnit.cpp" />
+    <ClCompile Include="Texture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="2D\Font.h" />
+    <ClInclude Include="2D\Graphics.h" />
+    <ClInclude Include="FastPix3D.h" />
+    <ClInclude Include="Helper\FreeLook.h" />
+    <ClInclude Include="Helper\PrimitiveFactory.h" />
+    <ClInclude Include="Interop\Bitmap.h" />
+    <ClInclude Include="Interop\FileReader.h" />
+    <ClInclude Include="Interop\FPSCounter.h" />
+    <ClInclude Include="Interop\Input.h" />
+    <ClInclude Include="Interop\Stopwatch.h" />
+    <ClInclude Include="Interop\System.h" />
+    <ClInclude Include="Interop\Thread.h" />
+    <ClInclude Include="Interop\ThreadPool.h" />
+    <ClInclude Include="Interop\Window.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="Math\Box2f.h" />
+    <ClInclude Include="Math\Box2i.h" />
+    <ClInclude Include="Math\Box3f.h" />
+    <ClInclude Include="Math\Color.h" />
+    <ClInclude Include="Math\Math_.h" />
+    <ClInclude Include="Math\Matrix4f.h" />
+    <ClInclude Include="Math\vbyte32.h" />
+    <ClInclude Include="Math\VectorMath.h" />
+    <ClInclude Include="Math\vfloat2.h" />
+    <ClInclude Include="Math\vfloat3.h" />
+    <ClInclude Include="Math\vfloat4.h" />
+    <ClInclude Include="Math\vfloat8.h" />
+    <ClInclude Include="Math\vint2.h" />
+    <ClInclude Include="Math\vint3.h" />
+    <ClInclude Include="Math\vint4.h" />
+    <ClInclude Include="Math\vint8.h" />
+    <ClInclude Include="Math\vlong2.h" />
+    <ClInclude Include="Math\vlong4.h" />
+    <ClInclude Include="Math\vsbyte32.h" />
+    <ClInclude Include="Math\vshort16.h" />
+    <ClInclude Include="Math\vuint8.h" />
+    <ClInclude Include="Math\vushort16.h" />
+    <ClInclude Include="Mesh\Mesh.h" />
+    <ClInclude Include="Mesh\Surface.h" />
+    <ClInclude Include="Mesh\Triangle.h" />
+    <ClInclude Include="Mesh\Vertex.h" />
+    <ClInclude Include="RasterizerMath.h" />
+    <ClInclude Include="Rasterizer\FragmentRasterizer.h" />
+    <ClInclude Include="Rasterizer\ShadowMapRasterizer.h" />
+    <ClInclude Include="Rasterizer\WireframeRasterizer.h" />
+    <ClInclude Include="RenderStates.h" />
+    <ClInclude Include="RenderStatistics.h" />
+    <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="RenderUnit.h" />
+    <ClInclude Include="Texture.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{89b8b9cb-38bc-41e0-94f3-de67f7e74ff2}</ProjectGuid>
+    <RootNamespace>FastPix3D</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;FASTPIX3D_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>Shlwapi.lib;SDL3.lib;SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)$Build\FastPix3D\include"
+xcopy /S /Y /I "$(ProjectDir)*.h" "$(SolutionDir)$Build\FastPix3D\include\"
+
+mkdir "$(SolutionDir)$Build\FastPix3D\lib"
+copy /Y "$(TargetDir)FastPix3D.dll" "$(SolutionDir)$Build\FastPix3D\lib\"
+copy /Y "$(TargetDir)FastPix3D.lib" "$(SolutionDir)$Build\FastPix3D\lib\"
+xcopy /S /Y /I "$(SolutionDir)lib\*.dll" "$(SolutionDir)$Build\FastPix3D\lib\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;FASTPIX3D_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>Shlwapi.lib;SDL3.lib;SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)$Build\FastPix3D\include"
+xcopy /S /Y /I "$(ProjectDir)*.h" "$(SolutionDir)$Build\FastPix3D\include\"
+
+mkdir "$(SolutionDir)$Build\FastPix3D\lib"
+copy /Y "$(TargetDir)FastPix3D.dll" "$(SolutionDir)$Build\FastPix3D\lib\"
+copy /Y "$(TargetDir)FastPix3D.lib" "$(SolutionDir)$Build\FastPix3D\lib\"
+xcopy /S /Y /I "$(SolutionDir)lib\*.dll" "$(SolutionDir)$Build\FastPix3D\lib\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

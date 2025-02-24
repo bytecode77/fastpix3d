@@ -1,0 +1,25 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v4.1.0)
+
+newmtl Tyre
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd Tyre.jpg
+
+newmtl Wheel
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd Wheel.jpg
+
+newmtl Shine
+Kd 1 1 1
+Ks 1 1 1
+d 1
+Ns 128
+illum 2
+map_Kd Wheel.jpg
+

@@ -3,13 +3,44 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Math", "Math\Math.vcxitems", "{262F29E5-5A2B-4101-9B1D-83E1A1EA7C26}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastPix3D", "FastPix3D\FastPix3D.vcxproj", "{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Interop", "Interop\Interop.vcxitems", "{AA1404C4-B35B-4826-A024-EC917A42295E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleBase", "ExampleBase\ExampleBase.vcxitems", "{7E68BAD7-4CE3-4768-8247-C9FCD1E00DA5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example", "Example\Example.vcxproj", "{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_FreeLook", "Example_FreeLook\Example_FreeLook.vcxproj", "{5F96ADBB-F2DC-4B19-BDE3-9AF369379D6E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastPix3D", "FastPix3D\FastPix3D.vcxitems", "{D8B148AA-A494-43E2-BFDD-48727EEA71CE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_Primitives", "Example_Primitives\Example_Primitives.vcxproj", "{6BF3E863-648C-46E7-BD09-6877ED943F77}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_MeshView", "Example_MeshView\Example_MeshView.vcxproj", "{23C863CC-8A55-4912-9959-2B7224C0FEA0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_ShadowMap", "Example_ShadowMap\Example_ShadowMap.vcxproj", "{624C9CBA-B194-4C44-861C-86F2ED5CEF89}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_ShadowMapCubemap", "Example_ShadowMapCubemap\Example_ShadowMapCubemap.vcxproj", "{1F9FD4B7-529F-401E-9FB9-3D2BE5D2BDD4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_SphereMap", "Example_SphereMap\Example_SphereMap.vcxproj", "{23A2A8F0-C809-4473-B4BD-457ABCF4EFC3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_HighPolyBenchmark", "Example_HighPolyBenchmark\Example_HighPolyBenchmark.vcxproj", "{3B7CA055-836D-4327-94A0-32F24C79741D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +48,38 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Debug|x64.ActiveCfg = Debug|x64
-		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Debug|x64.Build.0 = Debug|x64
-		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Release|x64.ActiveCfg = Release|x64
-		{9C31B43B-7F7D-47A8-B6EA-57B91A93DB39}.Release|x64.Build.0 = Release|x64
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}.Debug|x64.ActiveCfg = Debug|x64
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}.Debug|x64.Build.0 = Debug|x64
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}.Release|x64.ActiveCfg = Release|x64
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}.Release|x64.Build.0 = Release|x64
+		{5F96ADBB-F2DC-4B19-BDE3-9AF369379D6E}.Debug|x64.ActiveCfg = Debug|x64
+		{5F96ADBB-F2DC-4B19-BDE3-9AF369379D6E}.Debug|x64.Build.0 = Debug|x64
+		{5F96ADBB-F2DC-4B19-BDE3-9AF369379D6E}.Release|x64.ActiveCfg = Release|x64
+		{5F96ADBB-F2DC-4B19-BDE3-9AF369379D6E}.Release|x64.Build.0 = Release|x64
+		{6BF3E863-648C-46E7-BD09-6877ED943F77}.Debug|x64.ActiveCfg = Debug|x64
+		{6BF3E863-648C-46E7-BD09-6877ED943F77}.Debug|x64.Build.0 = Debug|x64
+		{6BF3E863-648C-46E7-BD09-6877ED943F77}.Release|x64.ActiveCfg = Release|x64
+		{6BF3E863-648C-46E7-BD09-6877ED943F77}.Release|x64.Build.0 = Release|x64
+		{23C863CC-8A55-4912-9959-2B7224C0FEA0}.Debug|x64.ActiveCfg = Debug|x64
+		{23C863CC-8A55-4912-9959-2B7224C0FEA0}.Debug|x64.Build.0 = Debug|x64
+		{23C863CC-8A55-4912-9959-2B7224C0FEA0}.Release|x64.ActiveCfg = Release|x64
+		{23C863CC-8A55-4912-9959-2B7224C0FEA0}.Release|x64.Build.0 = Release|x64
+		{624C9CBA-B194-4C44-861C-86F2ED5CEF89}.Debug|x64.ActiveCfg = Debug|x64
+		{624C9CBA-B194-4C44-861C-86F2ED5CEF89}.Debug|x64.Build.0 = Debug|x64
+		{624C9CBA-B194-4C44-861C-86F2ED5CEF89}.Release|x64.ActiveCfg = Release|x64
+		{624C9CBA-B194-4C44-861C-86F2ED5CEF89}.Release|x64.Build.0 = Release|x64
+		{1F9FD4B7-529F-401E-9FB9-3D2BE5D2BDD4}.Debug|x64.ActiveCfg = Debug|x64
+		{1F9FD4B7-529F-401E-9FB9-3D2BE5D2BDD4}.Debug|x64.Build.0 = Debug|x64
+		{1F9FD4B7-529F-401E-9FB9-3D2BE5D2BDD4}.Release|x64.ActiveCfg = Release|x64
+		{1F9FD4B7-529F-401E-9FB9-3D2BE5D2BDD4}.Release|x64.Build.0 = Release|x64
+		{23A2A8F0-C809-4473-B4BD-457ABCF4EFC3}.Debug|x64.ActiveCfg = Debug|x64
+		{23A2A8F0-C809-4473-B4BD-457ABCF4EFC3}.Debug|x64.Build.0 = Debug|x64
+		{23A2A8F0-C809-4473-B4BD-457ABCF4EFC3}.Release|x64.ActiveCfg = Release|x64
+		{23A2A8F0-C809-4473-B4BD-457ABCF4EFC3}.Release|x64.Build.0 = Release|x64
+		{3B7CA055-836D-4327-94A0-32F24C79741D}.Debug|x64.ActiveCfg = Debug|x64
+		{3B7CA055-836D-4327-94A0-32F24C79741D}.Debug|x64.Build.0 = Debug|x64
+		{3B7CA055-836D-4327-94A0-32F24C79741D}.Release|x64.ActiveCfg = Release|x64
+		{3B7CA055-836D-4327-94A0-32F24C79741D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -29,11 +88,13 @@ Global
 		SolutionGuid = {A5D5B532-1CC1-4496-ACA3-C12BF67DADD0}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Math\Math.vcxitems*{262f29e5-5a2b-4101-9b1d-83e1a1ea7c26}*SharedItemsImports = 9
-		FastPix3D\FastPix3D.vcxitems*{9c31b43b-7f7d-47a8-b6ea-57b91a93db39}*SharedItemsImports = 4
-		Interop\Interop.vcxitems*{9c31b43b-7f7d-47a8-b6ea-57b91a93db39}*SharedItemsImports = 4
-		Math\Math.vcxitems*{9c31b43b-7f7d-47a8-b6ea-57b91a93db39}*SharedItemsImports = 4
-		Interop\Interop.vcxitems*{aa1404c4-b35b-4826-a024-ec917a42295e}*SharedItemsImports = 9
-		FastPix3D\FastPix3D.vcxitems*{d8b148aa-a494-43e2-bfdd-48727eea71ce}*SharedItemsImports = 9
+		ExampleBase\ExampleBase.vcxitems*{1f9fd4b7-529f-401e-9fb9-3d2be5d2bdd4}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{23a2a8f0-c809-4473-b4bd-457abcf4efc3}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{23c863cc-8a55-4912-9959-2b7224c0fea0}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{3b7ca055-836d-4327-94a0-32f24c79741d}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{5f96adbb-f2dc-4b19-bde3-9af369379d6e}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{624c9cba-b194-4c44-861c-86f2ed5cef89}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{6bf3e863-648c-46e7-bd09-6877ed943f77}*SharedItemsImports = 4
+		ExampleBase\ExampleBase.vcxitems*{7e68bad7-4ce3-4768-8247-c9fcd1e00da5}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
