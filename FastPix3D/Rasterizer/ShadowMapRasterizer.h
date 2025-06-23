@@ -1,40 +1,23 @@
 #pragma once
-#include "FastPix3D.h"
-#include "RenderStates.h"
-#include "RenderStatistics.h"
-#include "Vertex.h"
-#include "Vector3f.h"
+#include "../FastPix3D.h"
+#include "../Math/VectorMath.h"
+#include "../Mesh/Vertex.h"
+#include "../RenderStates.h"
+#include "../RenderStatistics.h"
 
-struct ShadowMapVertex
+struct ShadowMapRasterizerVertex
 {
-	Vector3f Position;
-	Vector2f TextureCoordinates;
+	vfloat3 Position;
+	vfloat2 TextureCoordinates;
 
-	ShadowMapVertex()
+	ShadowMapRasterizerVertex()
 	{
 	}
-	explicit ShadowMapVertex(const Vertex &vertex) :
+	explicit ShadowMapRasterizerVertex(const Vertex &vertex) :
 		Position(vertex.Position),
 		TextureCoordinates(vertex.TextureCoordinates)
 	{
 	}
-};
-
-struct ShadowMapScanlineEdge
-{
-	int32 X;
-	float Z;
-	Vector2f Texture;
-};
-
-struct ShadowMapScanlineParameters
-{
-	int32 Y;
-	ShadowMapScanlineEdge V1;
-	ShadowMapScanlineEdge V2;
-	float DeltaZ;
-	float DeltaZSubdiv;
-	Vector2f DeltaTextureSubdiv;
 };
 
 class ShadowMapRasterizer
@@ -44,14 +27,27 @@ private:
 	RenderStatistics &Statistics;
 
 public:
-	explicit ShadowMapRasterizer(const ::RenderStates &renderStates, RenderStatistics &statistics);
+	explicit ShadowMapRasterizer(const ::RenderStates &renderStates, RenderStatistics &statistics) :
+		RenderStates(renderStates),
+		Statistics(statistics)
+	{
+	}
 
-	void DrawTriangle(const Matrix4f &shadowLightSpace, const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
+	void DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
 
 private:
-	bool DrawClippedTriangle(const ShadowMapVertex &v1, const ShadowMapVertex &v2, const ShadowMapVertex &v3) const;
+	bool DrawClippedTriangle(const ShadowMapRasterizerVertex &v1, const ShadowMapRasterizerVertex &v2, const ShadowMapRasterizerVertex &v3) const;
 	template<bool hasTexture>
-	bool DrawClippedTriangleT(ShadowMapVertex v1, ShadowMapVertex v2, ShadowMapVertex v3) const;
+	bool DrawClippedTriangle(ShadowMapRasterizerVertex v1, ShadowMapRasterizerVertex v2, ShadowMapRasterizerVertex v3) const;
 	template<bool hasTexture>
-	void DrawScanlineT(ShadowMapScanlineParameters p) const;
+	__forceinline void DrawPixelRow(
+		vfloat8 *shadowMap,
+		vuint8 writeMask,
+		const vfloat8 &attributeZ,
+		const vfloat8 &attributeU,
+		const vfloat8 &attributeV,
+		const Color *textureBuffer,
+		int32 textureWidthMask,
+		int32 textureHeightMask,
+		int32 textureWidthExponent) const;
 };

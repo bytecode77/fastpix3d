@@ -1,28 +1,29 @@
 #pragma once
 #include "FastPix3D.h"
-#include "RenderTarget.h"
-#include "Matrix4f.h"
-#include "Vector3f.h"
 #include "Light.h"
+#include "Math/Matrix4f.h"
+#include "Math/VectorMath.h"
+#include "RenderTarget.h"
 #include "Texture.h"
-#include "INotify.h"
 
 enum class Workload
 {
-	Full,
-	Half1,
-	Half2,
-	Quarter1,
-	Quarter2,
-	Quarter3,
-	Quarter4
+	// Byte 1: Thread index
+	// Byte 2: Thread count
+	Full = 0 | 1 << 8,
+	Half1 = 0 | 2 << 8,
+	Half2 = 1 | 2 << 8,
+	Quarter1 = 0 | 4 << 8,
+	Quarter2 = 1 | 4 << 8,
+	Quarter3 = 2 | 4 << 8,
+	Quarter4 = 3 | 4 << 8
 };
 
-enum class RenderPass
+enum class Rasterizer
 {
 	Fragments,
-	ShadowMap,
-	ShadowMapStencil
+	Wireframe,
+	ShadowMap
 };
 
 enum class CullMode
@@ -30,13 +31,6 @@ enum class CullMode
 	None,
 	Back,
 	Front
-};
-
-enum class StencilFunc
-{
-	Always,
-	Zero,
-	NotZero
 };
 
 enum class BlendMode
@@ -48,54 +42,63 @@ enum class BlendMode
 	Add
 };
 
-class PrecomputedLightValues
+enum class ShadowMapFunc
 {
-public:
-	Vector3f PositionCameraSpace;
-	Vector3f CameraSpaceVector;
-	float CameraSpaceVectorDot;
-	float CameraSpaceVectorDotIntensity;
+	None,
+	Point,
+	Pcf
+};
+
+enum class ShadowMapProjection
+{
+	Perspective,
+	Cubemap
 };
 
 class PrecomputedRenderStates
 {
 public:
-	int32 ShadowMapWidthExponent;
-	int32 ShadowMapHeightExponent;
-	Matrix4f CameraSpaceRotationPart;
+	Matrix4f ModelViewMatrix;
+	Matrix4f NormalMatrix;
 	float InverseClipNear;
-	int32 TextureWidthExponent;
-	int32 TextureHeightExponent;
-	Vector2f InverseTextureSize;
-	PrecomputedLightValues Lights[8];
+	vfloat2 InverseTextureSize;
+	int32 LightsMaxIndex;
+	Matrix4f ShadowLightMatrix;
+	Matrix4f ShadowLightModelMatrix;
 };
 
-class RenderStates : public INotify
+class FASTPIX3D_API RenderStates
 {
 private:
 	PrecomputedRenderStates Precomputed;
 
 	Workload _Workload;
-	RenderPass _RenderPass;
+	Rasterizer _Rasterizer;
 
 	RenderTarget _FrameBuffer;
 	RenderTarget _DepthBuffer;
-	RenderTarget _StencilBuffer;
 	RenderTarget _ShadowMap;
 
-	Matrix4f _CameraSpace;
+	Matrix4f _ViewMatrix;
+	Matrix4f _ModelMatrix;
 	float _ClipNear;
+	float _ClipFar;
 	float _Zoom;
 	CullMode _CullMode;
+	Color _WireframeColor;
+	float _WireframeDepthBias;
 
 	bool _ZEnable;
 	bool _ZWriteEnable;
-	::StencilFunc _StencilFunc;
 
+	bool _TextureEnable;
 	const Texture *_Texture;
-	Vector2f _TextureSize;
+	bool _TextureFilteringEnable;
+	vfloat2 _TextureSize;
 	BlendMode _BlendMode;
 	float _Alpha;
+	float _SpecularExponent;
+	float _SpecularIntensity;
 
 	bool _FogEnable;
 	float _FogNear;
@@ -105,12 +108,14 @@ private:
 	bool _LightsEnable;
 	Color _AmbientLight;
 
-	Matrix4f _ShadowLightMatrix;
+	::ShadowMapFunc _ShadowMapFunc;
+	::ShadowMapProjection _ShadowMapProjection;
+	int32 _ShadowLightIndex;
 	float _ShadowLightZoom;
 	float _ShadowMapDepthBias;
 
 public:
-	property_getset(::Workload, Workload)
+	property_get(::Workload, Workload)
 	{
 		return _Workload;
 	}
@@ -118,16 +123,16 @@ public:
 	{
 		_Workload = value;
 	}
-	property_getset(::RenderPass, RenderPass)
+	property_get(::Rasterizer, Rasterizer)
 	{
-		return _RenderPass;
+		return _Rasterizer;
 	}
-	property_set(::RenderPass, RenderPass)
+	property_set(::Rasterizer, Rasterizer)
 	{
-		_RenderPass = value;
+		_Rasterizer = value;
 	}
 
-	property_getset(RenderTarget, FrameBuffer)
+	property_get(RenderTarget, FrameBuffer)
 	{
 		return _FrameBuffer;
 	}
@@ -135,7 +140,7 @@ public:
 	{
 		_FrameBuffer = value;
 	}
-	property_getset(RenderTarget, DepthBuffer)
+	property_get(RenderTarget, DepthBuffer)
 	{
 		return _DepthBuffer;
 	}
@@ -143,35 +148,36 @@ public:
 	{
 		_DepthBuffer = value;
 	}
-	property_getset(RenderTarget, StencilBuffer)
-	{
-		return _StencilBuffer;
-	}
-	property_set(const RenderTarget&, StencilBuffer)
-	{
-		_StencilBuffer = value;
-	}
-	property_getset(RenderTarget, ShadowMap)
+	property_get(RenderTarget, ShadowMap)
 	{
 		return _ShadowMap;
 	}
 	property_set(const RenderTarget&, ShadowMap)
 	{
 		_ShadowMap = value;
-		Precomputed.ShadowMapWidthExponent = Math::GetExponent(_ShadowMap.Width);
-		Precomputed.ShadowMapHeightExponent = Math::GetExponent(_ShadowMap.Height);
 	}
 
-	property_getset(Matrix4f, CameraSpace)
+	property_get(Matrix4f, ViewMatrix)
 	{
-		return _CameraSpace;
+		return _ViewMatrix;
 	}
-	property_set(const Matrix4f&, CameraSpace)
+	property_set(const Matrix4f&, ViewMatrix)
 	{
-		_CameraSpace = value;
-		Precomputed.CameraSpaceRotationPart = _CameraSpace.RotationPart;
+		_ViewMatrix = value;
+		UpdateModelViewMatrix();
+		PrecomputeLights();
 	}
-	property_getset(float, ClipNear)
+	property_get(Matrix4f, ModelMatrix)
+	{
+		return _ModelMatrix;
+	}
+	property_set(const Matrix4f&, ModelMatrix)
+	{
+		_ModelMatrix = value;
+		UpdateModelViewMatrix();
+		UpdateShadowLightMatrix();
+	}
+	property_get(float, ClipNear)
 	{
 		return _ClipNear;
 	}
@@ -180,7 +186,15 @@ public:
 		_ClipNear = value;
 		Precomputed.InverseClipNear = 1 / _ClipNear;
 	}
-	property_getset(float, Zoom)
+	property_get(float, ClipFar)
+	{
+		return _ClipFar;
+	}
+	property_set(float, ClipFar)
+	{
+		_ClipFar = value;
+	}
+	property_get(float, Zoom)
 	{
 		return _Zoom;
 	}
@@ -188,7 +202,7 @@ public:
 	{
 		_Zoom = value;
 	}
-	property_getset(::CullMode, CullMode)
+	property_get(::CullMode, CullMode)
 	{
 		return _CullMode;
 	}
@@ -196,8 +210,24 @@ public:
 	{
 		_CullMode = value;
 	}
+	property_get(Color, WireframeColor)
+	{
+		return _WireframeColor;
+	}
+	property_set(Color, WireframeColor)
+	{
+		_WireframeColor = value;
+	}
+	property_get(float, WireframeDepthBias)
+	{
+		return _WireframeDepthBias;
+	}
+	property_set(float, WireframeDepthBias)
+	{
+		_WireframeDepthBias = value;
+	}
 
-	property_getset(bool, ZEnable)
+	property_get(bool, ZEnable)
 	{
 		return _ZEnable;
 	}
@@ -205,7 +235,7 @@ public:
 	{
 		_ZEnable = value;
 	}
-	property_getset(bool, ZWriteEnable)
+	property_get(bool, ZWriteEnable)
 	{
 		return _ZWriteEnable;
 	}
@@ -213,35 +243,41 @@ public:
 	{
 		_ZWriteEnable = value;
 	}
-	property_getset(::StencilFunc, StencilFunc)
-	{
-		return _StencilFunc;
-	}
-	property_set(::StencilFunc, StencilFunc)
-	{
-		_StencilFunc = value;
-	}
 
-	property_getset(const ::Texture*, Texture)
+	property_get(bool, TextureEnable)
+	{
+		return _TextureEnable;
+	}
+	property_set(bool, TextureEnable)
+	{
+		_TextureEnable = value;
+	}
+	property_get(const ::Texture*, Texture)
 	{
 		return _Texture;
 	}
 	property_set(const ::Texture*, Texture)
 	{
 		_Texture = value;
-		Precomputed.TextureWidthExponent = Texture ? Math::GetExponent(Texture->Width) : 0;
-		Precomputed.TextureHeightExponent = Texture ? Math::GetExponent(Texture->Height) : 0;
 	}
-	property_getset(Vector2f, TextureSize)
+	property_get(bool, TextureFilteringEnable)
+	{
+		return _TextureFilteringEnable;
+	}
+	property_set(bool, TextureFilteringEnable)
+	{
+		_TextureFilteringEnable = value;
+	}
+	property_get(vfloat2, TextureSize)
 	{
 		return _TextureSize;
 	}
-	property_set(const Vector2f&, TextureSize)
+	property_set(const vfloat2&, TextureSize)
 	{
 		_TextureSize = value;
-		Precomputed.InverseTextureSize = Vector2f(1 / _TextureSize.X, 1 / _TextureSize.Y);
+		Precomputed.InverseTextureSize = vfloat2(1 / _TextureSize.X, 1 / _TextureSize.Y);
 	}
-	property_getset(::BlendMode, BlendMode)
+	property_get(::BlendMode, BlendMode)
 	{
 		return _BlendMode;
 	}
@@ -249,7 +285,7 @@ public:
 	{
 		_BlendMode = value;
 	}
-	property_getset(float, Alpha)
+	property_get(float, Alpha)
 	{
 		return _Alpha;
 	}
@@ -257,8 +293,25 @@ public:
 	{
 		_Alpha = value;
 	}
+	property_get(float, SpecularExponent)
+	{
+		return _SpecularExponent;
+	}
+	property_set(float, SpecularExponent)
+	{
+		_SpecularExponent = value;
+	}
+	property_get(float, SpecularIntensity)
+	{
+		return _SpecularIntensity;
+	}
+	property_set(float, SpecularIntensity)
+	{
+		_SpecularIntensity = value;
+		PrecomputeLights();
+	}
 
-	property_getset(bool, FogEnable)
+	property_get(bool, FogEnable)
 	{
 		return _FogEnable;
 	}
@@ -266,7 +319,7 @@ public:
 	{
 		_FogEnable = value;
 	}
-	property_getset(float, FogNear)
+	property_get(float, FogNear)
 	{
 		return _FogNear;
 	}
@@ -274,7 +327,7 @@ public:
 	{
 		_FogNear = value;
 	}
-	property_getset(float, FogFar)
+	property_get(float, FogFar)
 	{
 		return _FogFar;
 	}
@@ -282,7 +335,7 @@ public:
 	{
 		_FogFar = value;
 	}
-	property_getset(::Color, FogColor)
+	property_get(::Color, FogColor)
 	{
 		return _FogColor;
 	}
@@ -291,7 +344,7 @@ public:
 		_FogColor = value;
 	}
 
-	property_getset(bool, LightsEnable)
+	property_get(bool, LightsEnable)
 	{
 		return _LightsEnable;
 	}
@@ -299,7 +352,7 @@ public:
 	{
 		_LightsEnable = value;
 	}
-	property_getset(::Color, AmbientLight)
+	property_get(::Color, AmbientLight)
 	{
 		return _AmbientLight;
 	}
@@ -309,15 +362,32 @@ public:
 	}
 	Light Lights[8];
 
-	property_getset(Matrix4f, ShadowLightMatrix)
+	property_get(::ShadowMapFunc, ShadowMapFunc)
 	{
-		return _ShadowLightMatrix;
+		return _ShadowMapFunc;
 	}
-	property_set(const Matrix4f&, ShadowLightMatrix)
+	property_set(::ShadowMapFunc, ShadowMapFunc)
 	{
-		_ShadowLightMatrix = value;
+		_ShadowMapFunc = value;
 	}
-	property_getset(float, ShadowLightZoom)
+	property_get(::ShadowMapProjection, ShadowMapProjection)
+	{
+		return _ShadowMapProjection;
+	}
+	property_set(::ShadowMapProjection, ShadowMapProjection)
+	{
+		_ShadowMapProjection = value;
+	}
+	property_get(int32, ShadowLightIndex)
+	{
+		return _ShadowLightIndex;
+	}
+	property_set(int32, ShadowLightIndex)
+	{
+		_ShadowLightIndex = value;
+		UpdateShadowLightMatrix();
+	}
+	property_get(float, ShadowLightZoom)
 	{
 		return _ShadowLightZoom;
 	}
@@ -325,7 +395,7 @@ public:
 	{
 		_ShadowLightZoom = value;
 	}
-	property_getset(float, ShadowMapDepthBias)
+	property_get(float, ShadowMapDepthBias)
 	{
 		return _ShadowMapDepthBias;
 	}
@@ -334,61 +404,19 @@ public:
 		_ShadowMapDepthBias = value;
 	}
 
-	RenderStates()
-	{
-		Workload = Workload::Full;
-		RenderPass = RenderPass::Fragments;
-		CameraSpace = Matrix4f::Identity();
-		ClipNear = 1;
-		Zoom = 1;
-		CullMode = CullMode::Back;
-		ZEnable = true;
-		ZWriteEnable = true;
-		StencilFunc = StencilFunc::Always;
-		Texture = nullptr;
-		TextureSize = Vector2f(1);
-		BlendMode = BlendMode::None;
-		Alpha = 1;
-		FogEnable = false;
-		FogNear = 0;
-		FogFar = 1000;
-		LightsEnable = false;
-		AmbientLight = Color(127, 127, 127);
-		ShadowLightMatrix = Matrix4f::Identity();
-		ShadowLightZoom = 1;
-		ShadowMapDepthBias = 0;
+	RenderStates();
+	RenderStates(const RenderStates &renderStates);
 
-		for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
-		{
-			Lights[i].NotifyParent = this;
-		}
-	}
+	void SetWorkload(int32 threadIndex, int32 threadCount);
 
-	void SetShadowLightMatrixFromLight(int32 index)
-	{
-		ShadowLightMatrix = Matrix4f::Translate(-Lights[index].Position) * Matrix4f::RotateY(-Lights[index].Rotation.X) * Matrix4f::RotateX(-Lights[index].Rotation.Y);
-	}
+	RenderStates& operator=(const RenderStates& renderStates);
 
 private:
-	void Notify() override
-	{
-		for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
-		{
-			if (Lights[i].Enabled)
-			{
-				Precomputed.Lights[i].PositionCameraSpace = CameraSpace * Lights[i].Position;
-				Precomputed.Lights[i].CameraSpaceVector =
-					Matrix4f::RotateY(Lights[i].Rotation.X) *
-					Matrix4f::RotateX(Lights[i].Rotation.Y) *
-					Precomputed.CameraSpaceRotationPart *
-					Vector3f(0, 0, -1);
-				Precomputed.Lights[i].CameraSpaceVectorDot = Precomputed.Lights[i].CameraSpaceVector.DotProduct(Precomputed.Lights[i].CameraSpaceVector);
-				Precomputed.Lights[i].CameraSpaceVectorDotIntensity = Precomputed.Lights[i].CameraSpaceVectorDot * Lights[i].Intensity;
-			}
-		}
-	}
+	void UpdateModelViewMatrix();
+	void UpdateShadowLightMatrix();
+	void PrecomputeLights();
 
-	friend class Rasterizer;
+	friend class FragmentRasterizer;
+	friend class WireframeRasterizer;
 	friend class ShadowMapRasterizer;
-	friend class ShadowMapStencilRasterizer;
 };

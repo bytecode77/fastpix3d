@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="RenderStates.cpp" />
+    <ClCompile Include="RenderStatistics.cpp" />
+    <ClCompile Include="RenderUnit.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="2D\Font.cpp">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="2D\Graphics.cpp">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper\FreeLook.cpp">
+      <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper\PrimitiveFactory.cpp">
+      <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\Bitmap.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\FileReader.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\FPSCounter.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\Input.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\Stopwatch.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\System.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\Thread.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\ThreadPool.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Interop\Window.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Math_.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh\Mesh.cpp">
+      <Filter>Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh\Surface.cpp">
+      <Filter>Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Rasterizer\FragmentRasterizer.cpp">
+      <Filter>Rasterizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Rasterizer\ShadowMapRasterizer.cpp">
+      <Filter>Rasterizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Rasterizer\WireframeRasterizer.cpp">
+      <Filter>Rasterizer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FastPix3D.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="RasterizerMath.h" />
+    <ClInclude Include="RenderStates.h" />
+    <ClInclude Include="RenderStatistics.h" />
+    <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="RenderUnit.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="2D\Font.h">
+      <Filter>2D</Filter>
+    </ClInclude>
+    <ClInclude Include="2D\Graphics.h">
+      <Filter>2D</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper\FreeLook.h">
+      <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper\PrimitiveFactory.h">
+      <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\Bitmap.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\FileReader.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\FPSCounter.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\Input.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\Stopwatch.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\System.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\Thread.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\ThreadPool.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Interop\Window.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Box2f.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Box2i.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Box3f.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Color.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Matrix4f.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Math_.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vbyte32.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\VectorMath.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vfloat2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vfloat3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vfloat4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vfloat8.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vint2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vint3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vint4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vint8.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vlong2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vlong4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vsbyte32.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vshort16.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vuint8.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vushort16.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh\Mesh.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh\Surface.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh\Triangle.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh\Vertex.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Rasterizer\FragmentRasterizer.h">
+      <Filter>Rasterizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Rasterizer\ShadowMapRasterizer.h">
+      <Filter>Rasterizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Rasterizer\WireframeRasterizer.h">
+      <Filter>Rasterizer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="2D">
+      <UniqueIdentifier>{4f6df589-00f0-4398-9e6f-40bc4dbb8595}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper">
+      <UniqueIdentifier>{d9e09141-e5aa-4429-b2a5-0e36b650dffd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{57a4416e-e283-4e14-84c8-31d51332fd35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{f831dd89-4dd2-46cd-966d-210e2adaeff0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mesh">
+      <UniqueIdentifier>{460106a0-f204-4f4e-9e2e-03605a03d254}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rasterizer">
+      <UniqueIdentifier>{f58c0742-12ee-4502-b912-a4674a92d1a9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

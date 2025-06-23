@@ -1,9 +1,9 @@
 #pragma once
 #include "FastPix3D.h"
-#include "Window.h"
+#include "Interop/Window.h"
 #include "Texture.h"
 
-class RenderTarget
+class FASTPIX3D_API RenderTarget
 {
 private:
 	int32 _Width;
@@ -11,15 +11,15 @@ private:
 	void *_Buffer;
 
 public:
-	property_get(int32, Width)
+	readonly_property(int32, Width)
 	{
 		return _Width;
 	}
-	property_get(int32, Height)
+	readonly_property(int32, Height)
 	{
 		return _Height;
 	}
-	property_get(void*, Buffer)
+	readonly_property(void*, Buffer)
 	{
 		return _Buffer;
 	}
@@ -35,24 +35,21 @@ public:
 		_Height(height),
 		_Buffer(buffer)
 	{
+		AssertAlignment();
 	}
 	explicit RenderTarget(const Window &window) :
 		_Width(window.Width),
 		_Height(window.Height),
 		_Buffer(window.Pixels)
 	{
+		AssertAlignment();
 	}
 	explicit RenderTarget(const Texture &texture) :
 		_Width(texture.Width),
 		_Height(texture.Height),
-		_Buffer(texture.MipMaps[0])
+		_Buffer(texture.Mip0)
 	{
-	}
-
-	template<class T>
-	static RenderTarget Create(int32 width, int32 height)
-	{
-		return RenderTarget(width, height, new T[width * height]);
+		AssertAlignment();
 	}
 
 	template<class T>
@@ -64,5 +61,12 @@ public:
 	T* GetBuffer(int32 offset) const
 	{
 		return &((T*)_Buffer)[offset];
+	}
+
+private:
+	void AssertAlignment()
+	{
+		// Pixels must be aligned to 32 bytes to be used with AVX2.
+		if ((int64)_Buffer & 31) throw;
 	}
 };
