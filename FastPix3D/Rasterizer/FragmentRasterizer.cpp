@@ -310,14 +310,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 					switch (RenderStates.ShadowMapFunc)
 					{
 						case ShadowMapFunc::None:
-							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-							{
-								return DrawClippedTriangle<true, true, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-							}
-							else
-							{
-								return DrawClippedTriangle<true, true, true, true, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-							}
+							return DrawClippedTriangle<true, true, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 						case ShadowMapFunc::Point:
 							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 							{
@@ -343,14 +336,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 					switch (RenderStates.ShadowMapFunc)
 					{
 						case ShadowMapFunc::None:
-							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-							{
-								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-							}
-							else
-							{
-								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-							}
+							return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 						case ShadowMapFunc::Point:
 							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 							{
@@ -379,14 +365,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 					switch (RenderStates.ShadowMapFunc)
 					{
 						case ShadowMapFunc::None:
-							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-							{
-								return DrawClippedTriangle<true, true, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-							}
-							else
-							{
-								return DrawClippedTriangle<true, true, true, false, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-							}
+							return DrawClippedTriangle<true, true, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 						case ShadowMapFunc::Point:
 							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 							{
@@ -412,14 +391,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 					switch (RenderStates.ShadowMapFunc)
 					{
 						case ShadowMapFunc::None:
-							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-							{
-								return DrawClippedTriangle<true, false, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-							}
-							else
-							{
-								return DrawClippedTriangle<true, false, true, false, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-							}
+							return DrawClippedTriangle<true, false, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 						case ShadowMapFunc::Point:
 							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 							{
@@ -449,14 +421,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 				switch (RenderStates.ShadowMapFunc)
 				{
 					case ShadowMapFunc::None:
-						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-						{
-							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-						}
-						else
-						{
-							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-						}
+						return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 					case ShadowMapFunc::Point:
 						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 						{
@@ -482,14 +447,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 				switch (RenderStates.ShadowMapFunc)
 				{
 					case ShadowMapFunc::None:
-						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-						{
-							return DrawClippedTriangle<true, false, false, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-						}
-						else
-						{
-							return DrawClippedTriangle<true, false, false, false, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-						}
+						return DrawClippedTriangle<true, false, false, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 					case ShadowMapFunc::Point:
 						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 						{
@@ -519,14 +477,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 			switch (RenderStates.ShadowMapFunc)
 			{
 				case ShadowMapFunc::None:
-					if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-					{
-						return DrawClippedTriangle<false, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-					}
-					else
-					{
-						return DrawClippedTriangle<false, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-					}
+					return DrawClippedTriangle<false, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 				case ShadowMapFunc::Point:
 					if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 					{
@@ -552,14 +503,7 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 			switch (RenderStates.ShadowMapFunc)
 			{
 				case ShadowMapFunc::None:
-					if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-					{
-						return DrawClippedTriangle<false, false, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-					}
-					else
-					{
-						return DrawClippedTriangle<false, false, true, false, ShadowMapFunc::None, ShadowMapProjection::Cubemap>(v1, v2, v3);
-					}
+					return DrawClippedTriangle<false, false, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 				case ShadowMapFunc::Point:
 					if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
 					{
