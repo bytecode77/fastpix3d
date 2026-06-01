@@ -57,11 +57,17 @@ void Window::SetRelativeMouseMode(bool enabled)
 }
 void Window::Lock()
 {
-	SDL_LockSurface(SDLSurface);
+	if (SDL_MUSTLOCK(SDLSurface))
+	{
+		SDL_LockSurface(SDLSurface);
+	}
 }
 void Window::Unlock()
 {
-	SDL_UnlockSurface(SDLSurface);
+	if (SDL_MUSTLOCK(SDLSurface))
+	{
+		SDL_UnlockSurface(SDLSurface);
+	}
 }
 void Window::Flip()
 {
