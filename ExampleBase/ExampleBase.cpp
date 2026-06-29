@@ -23,7 +23,28 @@ ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 
 	FreeLook = new ::FreeLook();
 	FPSCounter = new ::FPSCounter(500);
-	Font = new ::Font("Assets\\Fonts\\16x16.png");
+	Font10 = new Font("Assets\\Fonts\\inter-10-light.png", 16, 6, 32, 0);
+	Font12 = new Font("Assets\\Fonts\\inter-12-light.png", 16, 6, 32, 1);
+	Font14 = new Font("Assets\\Fonts\\inter-14-light.png", 16, 6, 32, 1);
+	Font16 = new Font("Assets\\Fonts\\inter-16-light.png", 16, 6, 32, 2);
+	Font18 = new Font("Assets\\Fonts\\inter-18-light.png", 16, 6, 32, 2);
+	Font20 = new Font("Assets\\Fonts\\inter-20-light.png", 16, 6, 32, 2);
+	Font22 = new Font("Assets\\Fonts\\inter-22-light.png", 16, 6, 32, 3);
+	Font24 = new Font("Assets\\Fonts\\inter-24-light.png", 16, 6, 32, 3);
+	Font26 = new Font("Assets\\Fonts\\inter-26-light.png", 16, 6, 32, 4);
+	Font28 = new Font("Assets\\Fonts\\inter-28-light.png", 16, 6, 32, 4);
+	Font30 = new Font("Assets\\Fonts\\inter-30-light.png", 16, 6, 32, 4);
+	Font10Bold = new Font("Assets\\Fonts\\inter-10-bold.png", 16, 6, 32, 0);
+	Font12Bold = new Font("Assets\\Fonts\\inter-12-bold.png", 16, 6, 32, 1);
+	Font14Bold = new Font("Assets\\Fonts\\inter-14-bold.png", 16, 6, 32, 1);
+	Font16Bold = new Font("Assets\\Fonts\\inter-16-bold.png", 16, 6, 32, 2);
+	Font18Bold = new Font("Assets\\Fonts\\inter-18-bold.png", 16, 6, 32, 2);
+	Font20Bold = new Font("Assets\\Fonts\\inter-20-bold.png", 16, 6, 32, 2);
+	Font22Bold = new Font("Assets\\Fonts\\inter-22-bold.png", 16, 6, 32, 3);
+	Font24Bold = new Font("Assets\\Fonts\\inter-24-bold.png", 16, 6, 32, 3);
+	Font26Bold = new Font("Assets\\Fonts\\inter-26-bold.png", 16, 6, 32, 4);
+	Font28Bold = new Font("Assets\\Fonts\\inter-28-bold.png", 16, 6, 32, 4);
+	Font30Bold = new Font("Assets\\Fonts\\inter-30-bold.png", 16, 6, 32, 4);
 }
 ExampleBase::~ExampleBase()
 {
@@ -34,7 +55,28 @@ ExampleBase::~ExampleBase()
 
 	delete FreeLook;
 	delete FPSCounter;
-	delete Font;
+	delete Font10;
+	delete Font12;
+	delete Font14;
+	delete Font16;
+	delete Font18;
+	delete Font20;
+	delete Font22;
+	delete Font24;
+	delete Font26;
+	delete Font28;
+	delete Font30;
+	delete Font10Bold;
+	delete Font12Bold;
+	delete Font14Bold;
+	delete Font16Bold;
+	delete Font18Bold;
+	delete Font20Bold;
+	delete Font22Bold;
+	delete Font24Bold;
+	delete Font26Bold;
+	delete Font28Bold;
+	delete Font30Bold;
 }
 
 void ExampleBase::HandleBaseInput()
@@ -55,92 +97,200 @@ void ExampleBase::HandleBaseInput()
 	}
 }
 
-void ExampleBase::DrawStatisticsBox(int32 x, int32 y) const
+void ExampleBase::DrawPerformanceBox(int32 x, int32 y) const
 {
-	char text1[100];
-	char text2[100];
-	char text3[100];
-	char tmp[100];
-
-	_itoa(FPSCounter->MinFrameTime / 1000, text2, 10);
-	lstrcatA(text2, ".");
-	lstrcatA(text2, _itoa(FPSCounter->MinFrameTime % 1000, tmp, 10));
-	lstrcatA(text2, " ms");
-
-	_itoa(RenderUnit->Statistics.TotalTriangleCount, text3, 10);
-	lstrcatA(text3, " (");
-	lstrcatA(text3, _itoa(RenderUnit->Statistics.RenderedTriangleCount, tmp, 10));
-	lstrcatA(text3, ")");
-
-	DrawFieldSet(
-		x,
-		y,
-		230,
-		0,
-		20,
-		"FPS:",
-		_itoa(FPSCounter->FPS, text1, 10),
-		"min. Time:",
-		text2,
-		"Triangles:",
-		text3,
-		nullptr
-	);
+	DrawPerformanceBox(x, y, vfloat3());
 }
-void ExampleBase::DrawPositionBox(int32 x, int32 y, const vfloat3 &position) const
+void ExampleBase::DrawPerformanceBox(int32 x, int32 y, vfloat3 cameraPosition) const
 {
-	char buffer[100];
-	sprintf(buffer, "%d, %d, %d", (int32)position.X, (int32)position.Y, (int32)position.Z);
+	bool hasCameraPosition = cameraPosition.X != 0 || cameraPosition.Y != 0 || cameraPosition.Z != 0;
+	int32 width = 250;
+	int32 height = 115 + (hasCameraPosition ? 18 : 0);
 
-	DrawFieldSet(x, y, 190, 0, 20, "Camera:", buffer, "", "", nullptr);
-}
-void ExampleBase::DrawFieldSet(int32 x, int32 y, int32 minWidth, int32 minHeight, int32 labelTextSpace, ...) const
-{
-	va_list args;
-	va_start(args, labelTextSpace);
+	if (x < 0)
+	{
+		x = Window->Width - width + x;
+	}
+
+	if (y < 0)
+	{
+		y = Window->Height - height + y;
+	}
 
 	Graphics g = Graphics(*Window);
-	g.Font = Font;
+	char tmp[100];
+
+	char fpsString[10];
+	_itoa(FPSCounter->FPS, fpsString, 10);
+
+	char minFrameTimeString[10];
+	_itoa(FPSCounter->MinFrameTime / 1000, minFrameTimeString, 10);
+	lstrcatA(minFrameTimeString, ".");
+	lstrcatA(minFrameTimeString, _itoa(FPSCounter->MinFrameTime % 1000, tmp, 10));
+
+	char triangleCountString[20];
+	_itoa(RenderUnit->Statistics.TotalTriangleCount, triangleCountString, 10);
+
+	char renderedTriangleCountString[20];
+	lstrcpyA(renderedTriangleCountString, "(");
+	lstrcatA(renderedTriangleCountString, _itoa(RenderUnit->Statistics.RenderedTriangleCount, tmp, 10));
+	lstrcatA(renderedTriangleCountString, ")");
+
+	g.FillRectangle(x, y, width, height, Color(), .75f, 8);
+	g.DrawRectangle(x - 1, y - 1, width + 2, height + 2, Color(255, 255, 255), .3f, 8);
+	g.DrawString(x + 10, y + 10, *Font14Bold, "Performance");
+
+	g.DrawString(x + 10, y + 30, *Font30Bold, fpsString, Color(127, 255, 127));
+	g.DrawString(x + 18 + g.MeasureString(*Font30Bold, fpsString), y + 45, *Font14, "FPS");
+
+	g.DrawString(x + 10, y + 70, *Font12, "Best Frame Time", Color(230, 230, 230));
+	g.DrawString(x + 130, y + 70, *Font12, minFrameTimeString, Color(127, 255, 127));
+	g.DrawString(x + 135 + g.MeasureString(*Font12, minFrameTimeString), y + 70, *Font12, "ms", Color(230, 230, 230));
+
+	g.DrawString(x + 10, y + 90, *Font12, "Triangles", Color(230, 230, 230));
+	g.DrawString(x + 130, y + 90, *Font12, triangleCountString, Color(127, 255, 127));
+	g.DrawString(x + 135 + g.MeasureString(*Font12, triangleCountString), y + 90, *Font12, renderedTriangleCountString);
+
+	if (hasCameraPosition)
+	{
+
+		char cameraPositionString[20];
+		_itoa((int32)cameraPosition.X, cameraPositionString, 10);
+		lstrcatA(cameraPositionString, ", ");
+		lstrcatA(cameraPositionString, _itoa((int32)cameraPosition.Y, tmp, 10));
+		lstrcatA(cameraPositionString, ", ");
+		lstrcatA(cameraPositionString, _itoa((int32)cameraPosition.Z, tmp, 10));
+
+		g.DrawString(x + 10, y + 110, *Font12, "Camera", Color(230, 230, 230));
+		g.DrawString(x + 130, y + 110, *Font12, cameraPositionString, Color(127, 255, 127));
+	}
+}
+void ExampleBase::DrawControlsBox(const char *title, int32 x, int32 y, ...) const
+{
+	va_list args;
+	va_start(args, y);
+
+	Graphics g = Graphics(*Window);
 
 	int32 rows;
 	int32 labelWidth = 0;
 	int32 textWidth = 0;
-	const int32 paddingX = 10;
-	const int32 paddingY = 5;
+	bool hasCheckBoxes = 0;
 
 	const char *labels[10];
 	const char *texts[10];
+	int32 checkBoxes[10];
 
 	for (rows = 0; rows < 10; rows++)
 	{
 		labels[rows] = va_arg(args, const char*);
 		texts[rows] = va_arg(args, const char*);
+		checkBoxes[rows] = va_arg(args, int32);
 
 		if (!labels[rows] || !texts[rows])
 		{
 			break;
 		}
 
-		labelWidth = Math::Max(labelWidth, g.MeasureString(labels[rows]));
-		textWidth = Math::Max(textWidth, g.MeasureString(texts[rows]));
+		labelWidth = Math::Max(labelWidth, g.MeasureString(*Font12, labels[rows]));
+		textWidth = Math::Max(textWidth, g.MeasureString(*Font12, texts[rows]));
+		hasCheckBoxes |= checkBoxes[rows] == 0 || checkBoxes[rows] == 1;
 	}
 
 	va_end(args);
 
-	g.FillRectangle(
-		x,
-		y,
-		Math::Max(paddingX * 2 + labelWidth + labelTextSpace + textWidth, minWidth),
-		Math::Max(paddingY * 2 + rows * 20, minHeight),
-		Color(),
-		.5f
-	);
+	int32 width = 50 + labelWidth + textWidth + (hasCheckBoxes ? 20 : 0);
+	int32 height = 45 + rows * 25;
+
+	if (x < 0)
+	{
+		x = Window->Width - width + x;
+	}
+
+	if (y < 0)
+	{
+		y = Window->Height - height + y;
+	}
+
+	g.FillRectangle(x, y, width, height, Color(), .75f, 8);
+	g.DrawRectangle(x - 1, y - 1, width + 2, height + 2, Color(255, 255, 255), .3f, 8);
+	g.DrawString(x + 10, y + 10, *Font14Bold, title);
 
 	for (int32 i = 0; i < rows; i++)
 	{
-		g.DrawString(x + paddingX, y + paddingY + i * 20, labels[i]);
-		g.DrawString(x + paddingX + labelWidth + labelTextSpace, y + paddingY + i * 20, texts[i]);
+		g.FillRectangle(x + 10, y + 40 + i * 25, g.MeasureString(*Font12, labels[i]) + 10, 17, Color(255, 255, 255), .2f, 2);
+		g.DrawString(x + 15, y + 40 + i * 25, *Font12, labels[i], Color(127, 255, 127));
+		g.DrawString(x + 35 + labelWidth, y + 40 + i * 25, *Font12, texts[i]);
+
+		if (checkBoxes[i] == 0 || checkBoxes[i] == 1)
+		{
+			g.DrawRectangle(x + width - 22, y + 43 + i * 25, 12, 12, Color(255, 255, 255));
+
+			if (checkBoxes[i] == 1)
+			{
+				g.FillRectangle(x + width - 20, y + 45 + i * 25, 8, 8, Color(127, 255, 127));
+			}
+		}
 	}
+}
+void ExampleBase::DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const
+{
+	width = Math::Min(width, RenderUnit->RenderStates.FrameBuffer.Width - 1);
+	height = Math::Min(height, RenderUnit->RenderStates.FrameBuffer.Height - 1);
+	zFrom = RenderUnit->RenderStates.ClipNear / zFrom;
+	zTo = RenderUnit->RenderStates.ClipNear / zTo;
+
+	int32 scale = 0;
+	while (RenderUnit->RenderStates.ShadowMap.Width >> scale > width || RenderUnit->RenderStates.ShadowMap.Height >> scale > height)
+	{
+		scale++;
+	}
+
+	int32 renderWidth = RenderUnit->RenderStates.ShadowMap.Width >> scale;
+	int32 renderHeight = RenderUnit->RenderStates.ShadowMap.Height >> scale;
+
+	Color *frameBuffer = RenderUnit->RenderStates.FrameBuffer.GetBuffer<Color>(x + y * RenderUnit->RenderStates.FrameBuffer.Width);
+	float *shadowMap = RenderUnit->RenderStates.ShadowMap.GetBuffer<float>();
+
+	int32 frameBufferStrideY = RenderUnit->RenderStates.FrameBuffer.Width - renderWidth;
+	int32 shadowMapStrideX = 1 << scale;
+	int32 shadowMapStrideY = RenderUnit->RenderStates.ShadowMap.Width * (shadowMapStrideX - 1);
+
+	for (int32 py = 0; py < renderHeight; py++)
+	{
+		for (int32 px = 0; px < renderWidth; px++)
+		{
+			if (*shadowMap > 0)
+			{
+				int32 color = (int32)Math::Interpolate(*shadowMap, zFrom, zTo, 255.0f, 0.0f) & 0xff;
+				frameBuffer->B = color;
+				frameBuffer->G = color;
+				frameBuffer->R = color;
+			}
+			else
+			{
+				frameBuffer->B >>= 1;
+				frameBuffer->G >>= 1;
+				frameBuffer->R >>= 1;
+			}
+
+			frameBuffer++;
+			shadowMap += shadowMapStrideX;
+		}
+
+		frameBuffer += frameBufferStrideY;
+		shadowMap += shadowMapStrideY;
+	}
+
+	char title[100];
+	char tmp[100];
+	lstrcpyA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Width, tmp, 10));
+	lstrcatA(title, "x");
+	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Height, tmp, 10));
+
+	Graphics g = Graphics(*Window);
+	g.DrawString(x + 10, y + 10, *Font14Bold, "Shadow Map");
+	g.DrawString(x + renderWidth - 10 - g.MeasureString(*Font14, title), y + 10, *Font14, title, Color(127, 255, 127));
 }
 
 Mesh* ExampleBase::CreateSkybox(const char *path) const

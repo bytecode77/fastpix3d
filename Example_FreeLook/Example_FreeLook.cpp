@@ -26,10 +26,32 @@ void FreeLookExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawPositionBox(250, 10, FreeLook->Position);
-		DrawFieldSet(450, 10, 250, 0, 20, "WSAD + Mouse", "move", "Shift", "run", "Key 1-8", "choose map", nullptr);
-		DrawFieldSet(710, 10, 0, 0, 20, "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
+		DrawPerformanceBox(10, 10, FreeLook->Position);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"WSAD",
+			"Move",
+			-1,
+			"Shift",
+			"Run",
+			-1,
+			"1 - 8",
+			"Select Map",
+			-1,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
 
 		Window->Unlock();
 		Window->Flip();

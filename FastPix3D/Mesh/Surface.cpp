@@ -20,6 +20,28 @@ Surface::~Surface()
 	delete[] _Triangles;
 }
 
+void Surface::AutoNormals()
+{
+	for (int32 i = 0; i < _VertexCount; i++)
+	{
+		_Vertices[i].Normals = vfloat3();
+	}
+
+	for (int32 i = 0; i < TriangleCount; i++)
+	{
+		Vertex *vertex1 = &_Vertices[_Triangles[i].Vertex1Index];
+		Vertex *vertex2 = &_Vertices[_Triangles[i].Vertex2Index];
+		Vertex *vertex3 = &_Vertices[_Triangles[i].Vertex3Index];
+
+		vfloat3 normal = (vertex2->Position - vertex1->Position).CrossProduct(vertex3->Position - vertex1->Position);
+
+		vertex1->Normals += normal;
+		vertex2->Normals += normal;
+		vertex3->Normals += normal;
+	}
+
+	NormalizeNormals();
+}
 void Surface::NormalizeNormals()
 {
 	for (int32 i = 0; i < VertexCount; i++)

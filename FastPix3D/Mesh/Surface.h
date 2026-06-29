@@ -141,6 +141,7 @@ public:
 		_Triangles[triangleIndex].Vertex3Index = vertex3Index;
 	}
 
+	void AutoNormals();
 	void NormalizeNormals();
 	void FlipNormals();
 	void FlipTriangles();

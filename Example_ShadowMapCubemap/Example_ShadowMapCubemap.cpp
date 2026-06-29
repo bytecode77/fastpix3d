@@ -42,9 +42,35 @@ void ShadowMapCubemapExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 310, 0, 20, "Move mouse", "rotation", "Key 1-3", "Shadow map resolution", nullptr);
-		DrawFieldSet(570, 10, 0, 0, 20, "Space", LightMovementStopwatch.IsRunning ? "Light movement ON " : "Light movement OFF", "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "P", RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? "PCF is ON" : "PCF is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
+		DrawPerformanceBox(10, 10, FreeLook->Position);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"WSAD",
+			"Move",
+			-1,
+			"Space",
+			"Light Movement",
+			LightMovementStopwatch.IsRunning ? 1 : 0,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"1 - 3",
+			"Shadow Map Resolution",
+			-1,
+			"P",
+			"PCF",
+			RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
 
 		Window->Unlock();
 		Window->Flip();
@@ -69,14 +95,17 @@ void ShadowMapCubemapExample::HandleInput()
 	if (Input::GetKeyPressed(Scancode::D1))
 	{
 		RenderUnit->RenderStates.ShadowMap = RenderTarget(512, 512 * 6, RenderUnit->RenderStates.ShadowMap.Buffer);
+		ShadowMapResolutionChanged = true;
 	}
 	else if (Input::GetKeyPressed(Scancode::D2))
 	{
 		RenderUnit->RenderStates.ShadowMap = RenderTarget(1024, 1024 * 6, RenderUnit->RenderStates.ShadowMap.Buffer);
+		ShadowMapResolutionChanged = true;
 	}
 	else if (Input::GetKeyPressed(Scancode::D3))
 	{
 		RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048 * 6, RenderUnit->RenderStates.ShadowMap.Buffer);
+		ShadowMapResolutionChanged = true;
 	}
 
 	if (Input::GetKeyPressed(Scancode::P))
@@ -86,9 +115,12 @@ void ShadowMapCubemapExample::HandleInput()
 }
 void ShadowMapCubemapExample::Render()
 {
+	bool renderShadowMap = ShadowMapResolutionChanged || LightMovementStopwatch.IsRunning;
+	ShadowMapResolutionChanged = false;
+
 	RenderUnit->ClearFrameBuffer();
 	RenderUnit->ClearDepthBuffer();
-	RenderUnit->ClearShadowMap();
+	if (renderShadowMap) RenderUnit->ClearShadowMap();
 	RenderUnit->Statistics.Clear();
 
 	RenderUnit->RenderStates.ViewMatrix = FreeLook->ViewMatrix;
@@ -109,57 +141,60 @@ void ShadowMapCubemapExample::Render()
 	int32 threadIds[6];
 
 	// Render all 6 faces of shadow cubemap.
-	for (int32 i = 0; i < 6; i++)
+	if (renderShadowMap)
 	{
-		threadIds[i] = ThreadPool::Start([this, i]
+		for (int32 i = 0; i < 6; i++)
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			float directionX = 0;
-			float directionY = 0;
-
-			switch (i)
+			threadIds[i] = ThreadPool::Start([this, i]
 			{
-				case 0:
-					directionX = 90;
-					directionY = 0;
-					break;
-				case 1:
-					directionX = -90;
-					directionY = 0;
-					break;
-				case 2:
-					directionX = 0;
-					directionY = -90;
-					break;
-				case 3:
-					directionX = 0;
-					directionY = 90;
-					break;
-				case 4:
-					directionX = 0;
-					directionY = 0;
-					break;
-				case 5:
-					directionX = 180;
-					directionY = 0;
-					break;
-			}
+				::RenderUnit renderUnitCopy = *RenderUnit;
+				renderUnitCopy.Statistics.Clear();
 
-			int32 size = renderUnitCopy.RenderStates.ShadowMap.Width;
-			renderUnitCopy.RenderStates.ShadowMap = RenderTarget(size, size, RenderUnit->RenderStates.ShadowMap.GetBuffer<float>(size * size * i));
-			renderUnitCopy.RenderStates.Rasterizer = Rasterizer::ShadowMap;
-			renderUnitCopy.RenderStates.Lights[0].Rotation = vfloat3(directionX, directionY, 0);
-			DrawScene(renderUnitCopy, 0);
+				float directionX = 0;
+				float directionY = 0;
 
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics, false, true);
-		});
-	}
+				switch (i)
+				{
+					case 0:
+						directionX = 90;
+						directionY = 0;
+						break;
+					case 1:
+						directionX = -90;
+						directionY = 0;
+						break;
+					case 2:
+						directionX = 0;
+						directionY = -90;
+						break;
+					case 3:
+						directionX = 0;
+						directionY = 90;
+						break;
+					case 4:
+						directionX = 0;
+						directionY = 0;
+						break;
+					case 5:
+						directionX = 180;
+						directionY = 0;
+						break;
+				}
 
-	for (int32 i = 0; i < 6; i++)
-	{
-		ThreadPool::Join(threadIds[i]);
+				int32 size = renderUnitCopy.RenderStates.ShadowMap.Width;
+				renderUnitCopy.RenderStates.ShadowMap = RenderTarget(size, size, RenderUnit->RenderStates.ShadowMap.GetBuffer<float>(size * size * i));
+				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::ShadowMap;
+				renderUnitCopy.RenderStates.Lights[0].Rotation = vfloat3(directionX, directionY, 0);
+				DrawScene(renderUnitCopy, 0);
+
+				RenderUnit->Statistics.Merge(renderUnitCopy.Statistics, false, true);
+			});
+		}
+
+		for (int32 i = 0; i < 6; i++)
+		{
+			ThreadPool::Join(threadIds[i]);
+		}
 	}
 
 	// Render scene with and project shadow map.

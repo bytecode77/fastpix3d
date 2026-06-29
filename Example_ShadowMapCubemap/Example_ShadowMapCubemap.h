@@ -8,6 +8,7 @@ class ShadowMapCubemapExample : public ExampleBase
 private:
 	Mesh *Map = nullptr;
 	Mesh *LightBulb = nullptr;
+	bool ShadowMapResolutionChanged = false;
 	Stopwatch LightMovementStopwatch;
 
 public:

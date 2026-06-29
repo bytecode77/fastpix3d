@@ -41,10 +41,37 @@ void ShadowMapExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 310, 0, 20, "Move mouse", "rotation", "Key 1-3", "Shadow map resolution", nullptr);
-		DrawFieldSet(570, 10, 0, 0, 20, "Space", IsFreeLook ? "Freelook is ON" : "Freelook is OFF", "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "P", RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? "PCF is ON" : "PCF is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
-		DebugShadowMap(Window->Width - 10 - 256, 10, 256, 256, .3f, 5);
+		DrawPerformanceBox(10, 10, FreeLook->Position);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"Mouse",
+			"Rotate",
+			-1,
+			"Space",
+			"Freelook",
+			IsFreeLook ? 1 : 0,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"1 - 3",
+			"Shadow Map Resolution",
+			-1,
+			"P",
+			"PCF",
+			RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
+
+		DrawShadowMapImage(Window->Width - 10 - 256, 10, 256, 256, .3f, 5);
 
 		Window->Unlock();
 		Window->Flip();
@@ -279,64 +306,4 @@ void ShadowMapExample::DrawScene(::RenderUnit &renderUnit, int32 part)
 			break;
 		}
 	}
-}
-void ShadowMapExample::DebugShadowMap(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const
-{
-	width = Math::Min(width, RenderUnit->RenderStates.FrameBuffer.Width - 1);
-	height = Math::Min(height, RenderUnit->RenderStates.FrameBuffer.Height - 1);
-	zFrom = RenderUnit->RenderStates.ClipNear / zFrom;
-	zTo = RenderUnit->RenderStates.ClipNear / zTo;
-
-	int32 scale = 0;
-	while (RenderUnit->RenderStates.ShadowMap.Width >> scale > width || RenderUnit->RenderStates.ShadowMap.Height >> scale > height)
-	{
-		scale++;
-	}
-
-	int32 renderWidth = RenderUnit->RenderStates.ShadowMap.Width >> scale;
-	int32 renderHeight = RenderUnit->RenderStates.ShadowMap.Height >> scale;
-
-	Color *frameBuffer = RenderUnit->RenderStates.FrameBuffer.GetBuffer<Color>(x + y * RenderUnit->RenderStates.FrameBuffer.Width);
-	float *shadowMap = RenderUnit->RenderStates.ShadowMap.GetBuffer<float>();
-
-	int32 frameBufferStrideY = RenderUnit->RenderStates.FrameBuffer.Width - renderWidth;
-	int32 shadowMapStrideX = 1 << scale;
-	int32 shadowMapStrideY = RenderUnit->RenderStates.ShadowMap.Width * (shadowMapStrideX - 1);
-
-	for (int32 py = 0; py < renderHeight; py++)
-	{
-		for (int32 px = 0; px < renderWidth; px++)
-		{
-			if (*shadowMap > 0)
-			{
-				int32 color = (int32)Math::Interpolate(*shadowMap, zFrom, zTo, 255.0f, 0.0f) & 0xff;
-				frameBuffer->B = color;
-				frameBuffer->G = color;
-				frameBuffer->R = color;
-			}
-			else
-			{
-				frameBuffer->B >>= 1;
-				frameBuffer->G >>= 1;
-				frameBuffer->R >>= 1;
-			}
-
-			frameBuffer++;
-			shadowMap += shadowMapStrideX;
-		}
-
-		frameBuffer += frameBufferStrideY;
-		shadowMap += shadowMapStrideY;
-	}
-
-	char title[100];
-	char buffer[100];
-	lstrcpyA(title, "Shadow Map ");
-	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Width, buffer, 10));
-	lstrcatA(title, "x");
-	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Height, buffer, 10));
-
-	Graphics g = Graphics(*Window);
-	g.Font = Font;
-	g.DrawString(x + 10, y + 10, title);
 }

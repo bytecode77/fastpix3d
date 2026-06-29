@@ -16,6 +16,10 @@ public:
 	{
 		return powf(x, y);
 	}
+	__forceinline static float Sqrt(float x)
+	{
+		return sqrtf(x);
+	}
 	__forceinline static float Sin(float angle)
 	{
 		return sinf(angle * RadiansToDegrees);

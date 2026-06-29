@@ -35,5 +35,4 @@ private:
 
 	void LoadScene();
 	void DrawScene(::RenderUnit &renderUnit, int32 part);
-	void DebugShadowMap(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const;
 };

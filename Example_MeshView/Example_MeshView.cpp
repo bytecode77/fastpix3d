@@ -30,9 +30,32 @@ void MeshViewExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 250, 0, 20, "Move mouse", "move object", "Click right/left", "rotate X/Y", "Key 1-4", "choose mesh", nullptr);
-		DrawFieldSet(510, 10, 0, 0, 20, "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
+		DrawPerformanceBox(10, 10);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"Mouse",
+			"Move Object",
+			-1,
+			"Click right/left",
+			"Rotate X/Y",
+			-1,
+			"1 - 4",
+			"Select Mesh",
+			-1,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
 
 		Window->Unlock();
 		Window->Flip();

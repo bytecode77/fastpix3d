@@ -69,6 +69,7 @@ public:
 	void FitToBoundingBox(const Box3f &boundingBox, bool uniform);
 	void TransformVertices(const Matrix4f &matrix);
 	void TransformVertices(const Matrix4f &matrix, bool positions, bool normals);
+	void AutoNormals();
 	void NormalizeNormals();
 	void FlipNormals();
 	void FlipTriangles();
