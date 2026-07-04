@@ -231,19 +231,27 @@ void ShadowMapExample::LoadScene()
 
 	Cage = PrimitiveFactory::Cube(4);
 	Cage->SetCullMode(CullMode::None);
-	Cage->SetTexture(Texture::FromFile("Assets\\Textures\\c1a0a_material_75.png"));
-	Cage->SetTextureSize(.72f, .97f);
+	Cage->SetTexture(Texture::FromFile("Assets\\Textures\\grid1.png"));
+	Cage->GetSurface(0)->Texture = Texture::FromFile("Assets\\Textures\\grid2.png");
+	Cage->GetSurface(0)->TextureSize = vfloat2(.25f, .25f);
 	Cage->SetSpecular(40, .4f);
 
 	CageGround = PrimitiveFactory::Cube();
-	CageGround->SetTexture(Texture::FromFile("Assets\\Textures\\c1a0a_material_17.png"));
-	CageGround->GetSurface(2)->TextureSize = vfloat2(1, 10);
-	CageGround->GetSurface(3)->TextureSize = vfloat2(1, 10);
-	CageGround->GetSurface(4)->TextureSize = vfloat2(1, 10);
-	CageGround->GetSurface(5)->TextureSize = vfloat2(1, 10);
+	for (int32 i = 0; i <= 1; i++)
+	{
+		CageGround->GetSurface(i)->Texture = Texture::FromFile("Assets\\Textures\\c1a0a_material_17.png");
+	}
+	for (int32 i = 2; i <= 5; i++)
+	{
+		CageGround->GetSurface(i)->Texture = Texture::FromFile("Assets\\Textures\\crete2_flr03c.png");
+		CageGround->GetSurface(i)->TextureSize = vfloat2(.3f, 1);
+	}
 
 	Crate = PrimitiveFactory::Cube();
 	Crate->SetTexture(Texture::FromFile("Assets\\Textures\\c1a2_material_93.png"));
+
+	Crate2 = PrimitiveFactory::Cube();
+	Crate2->SetTexture(Texture::FromFile("Assets\\Textures\\crate02b.png"));
 
 	Scientist1 = Mesh::Load("Assets\\Models\\half-life-scientist-einstein\\einstein.obj");
 	Scientist1->FitToBoundingBox(Box3f(1), true);
@@ -285,18 +293,18 @@ void ShadowMapExample::DrawScene(::RenderUnit &renderUnit, int32 part)
 			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(-10) * Matrix4f::Translate(0, .15f, 0) * crateMatrix);
 			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(8) * Matrix4f::Translate(.2f, .45f, 0) * crateMatrix);
 
-			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(15) * Matrix4f::Translate(-1.4f, .15f, -.3f));
+			renderUnit.DrawMesh(*Crate2, Matrix4f::Scale(.3f) * Matrix4f::RotateY(15) * Matrix4f::Translate(-1.4f, .15f, -.3f));
 
 			renderUnit.DrawMesh(*Scientist1, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(-.7f, .5f, .7f));
 			renderUnit.DrawMesh(*Scientist2, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(0, .5f, .7f));
 			renderUnit.DrawMesh(*Scientist3, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(.7f, .5f, .7f));
 
-			Matrix4f cageMatrix = Matrix4f::Translate(1.2f, 0, -.7f);
-			renderUnit.DrawMesh(*CageGround, Matrix4f::Scale(.7f, .1f, .7f) * cageMatrix);
+			Matrix4f cageMatrix = Matrix4f::Translate(1.2f, .025f, -.7f);
+			renderUnit.DrawMesh(*CageGround, Matrix4f::Scale(.7f, .05f, .7f) * cageMatrix);
 			renderUnit.DrawMesh(*HoundEye, Matrix4f::Scale(.5f) * Matrix4f::Translate(0, .25f, 0) * cageMatrix);
 
 			// Draw textures that have a transparency key last.
-			renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .29f, 0) * cageMatrix);
+			renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .27f, 0) * cageMatrix);
 			renderUnit.DrawMesh(*Fence, Matrix4f::Scale(.05f, .5f, 3) * Matrix4f::Translate(-.975f, .25f, 1));
 			break;
 		}

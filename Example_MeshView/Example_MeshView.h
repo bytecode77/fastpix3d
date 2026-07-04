@@ -6,7 +6,7 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 class MeshViewExample : public ExampleBase
 {
 private:
-	Mesh *Meshes[4] = { };
+	Mesh *Meshes[6] = { };
 	int32 CurrentMesh = 0;
 	vfloat3 Position;
 	Matrix4f Rotation;

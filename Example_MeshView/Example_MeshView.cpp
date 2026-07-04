@@ -41,7 +41,7 @@ void MeshViewExample::Run()
 			"Click right/left",
 			"Rotate X/Y",
 			-1,
-			"1 - 4",
+			"1 - 6",
 			"Select Mesh",
 			-1,
 			nullptr);
@@ -138,13 +138,21 @@ void MeshViewExample::LoadScene()
 	Meshes[1]->TransformVertices(Matrix4f::RotateY(-90));
 	Meshes[1]->NormalizeNormals();
 
-	Meshes[2] = Mesh::Load("Assets\\Models\\half-life-headcrab\\half-life-headcrab.obj");
+	Meshes[2] = Mesh::Load("Assets\\Models\\Computer\\Computer.obj");
 	Meshes[2]->FitToBoundingBox(Box3f(2), true);
 	Meshes[2]->TransformVertices(Matrix4f::RotateY(180));
 
-	Meshes[3] = Mesh::Load("Assets\\Models\\half-life-houndeye\\half-life-houndeye.obj");
+	Meshes[3] = Mesh::Load("Assets\\Models\\half-life-2-dog\\scene.gltf");
 	Meshes[3]->FitToBoundingBox(Box3f(2), true);
 	Meshes[3]->TransformVertices(Matrix4f::RotateY(180));
+
+	Meshes[4] = Mesh::Load("Assets\\Models\\half-life-headcrab\\half-life-headcrab.obj");
+	Meshes[4]->FitToBoundingBox(Box3f(2), true);
+	Meshes[4]->TransformVertices(Matrix4f::RotateY(180));
+
+	Meshes[5] = Mesh::Load("Assets\\Models\\half-life-houndeye\\half-life-houndeye.obj");
+	Meshes[5]->FitToBoundingBox(Box3f(2), true);
+	Meshes[5]->TransformVertices(Matrix4f::RotateY(180));
 }
 void MeshViewExample::DrawScene(::RenderUnit &renderUnit)
 {

@@ -14,6 +14,7 @@ private:
 	Mesh *Cage = nullptr;
 	Mesh *CageGround = nullptr;
 	Mesh *Crate = nullptr;
+	Mesh *Crate2 = nullptr;
 	Mesh *Scientist1 = nullptr;
 	Mesh *Scientist2 = nullptr;
 	Mesh *Scientist3 = nullptr;
