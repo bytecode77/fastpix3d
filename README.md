@@ -74,4 +74,4 @@ With **cubemap shadow map projection**, it is possible to implement true indoor 
 
 All examples as compiled executables:
 
-[![](http://bytecode77.com/public/fileicons/zip.png) FastPix3D 4.1.0.zip](/.github/downloads/FastPix3D%204.1.0.zip)
+[![](http://bytecode77.com/public/fileicons/zip.png) FastPix3D 4.2.0.zip](/.github/downloads/FastPix3D%204.2.0.zip)
