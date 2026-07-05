@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34024.191
+# Visual Studio Version 18
+VisualStudioVersion = 18.7.11919.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastPix3D", "FastPix3D\FastPix3D.vcxproj", "{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}"
 EndProject
@@ -38,6 +38,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_SphereMap", "Exampl
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_HighPolyBenchmark", "Example_HighPolyBenchmark\Example_HighPolyBenchmark.vcxproj", "{3B7CA055-836D-4327-94A0-32F24C79741D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Example_ShadowMapCubemap2", "Example_ShadowMapCubemap2\Example_ShadowMapCubemap2.vcxproj", "{B23CBDDB-F4EB-4532-9E9F-BE87E09C1A41}"
 	ProjectSection(ProjectDependencies) = postProject
 		{89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2} = {89B8B9CB-38BC-41E0-94F3-DE67F7E74FF2}
 	EndProjectSection
@@ -80,6 +85,10 @@ Global
 		{3B7CA055-836D-4327-94A0-32F24C79741D}.Debug|x64.Build.0 = Debug|x64
 		{3B7CA055-836D-4327-94A0-32F24C79741D}.Release|x64.ActiveCfg = Release|x64
 		{3B7CA055-836D-4327-94A0-32F24C79741D}.Release|x64.Build.0 = Release|x64
+		{B23CBDDB-F4EB-4532-9E9F-BE87E09C1A41}.Debug|x64.ActiveCfg = Debug|x64
+		{B23CBDDB-F4EB-4532-9E9F-BE87E09C1A41}.Debug|x64.Build.0 = Debug|x64
+		{B23CBDDB-F4EB-4532-9E9F-BE87E09C1A41}.Release|x64.ActiveCfg = Release|x64
+		{B23CBDDB-F4EB-4532-9E9F-BE87E09C1A41}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,5 +105,6 @@ Global
 		ExampleBase\ExampleBase.vcxitems*{624c9cba-b194-4c44-861c-86f2ed5cef89}*SharedItemsImports = 4
 		ExampleBase\ExampleBase.vcxitems*{6bf3e863-648c-46e7-bd09-6877ed943f77}*SharedItemsImports = 4
 		ExampleBase\ExampleBase.vcxitems*{7e68bad7-4ce3-4768-8247-c9fcd1e00da5}*SharedItemsImports = 9
+		ExampleBase\ExampleBase.vcxitems*{b23cbddb-f4eb-4532-9e9f-be87e09c1a41}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

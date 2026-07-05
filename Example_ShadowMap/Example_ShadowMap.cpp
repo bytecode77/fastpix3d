@@ -41,10 +41,37 @@ void ShadowMapExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 310, 0, 20, "Move mouse", "rotation", "Key 1-3", "Shadow map resolution", nullptr);
-		DrawFieldSet(570, 10, 0, 0, 20, "Space", IsFreeLook ? "Freelook is ON" : "Freelook is OFF", "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "P", RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? "PCF is ON" : "PCF is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
-		DebugShadowMap(Window->Width - 10 - 256, 10, 256, 256, .3f, 5);
+		DrawPerformanceBox(10, 10, FreeLook->Position);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"Mouse",
+			"Rotate",
+			-1,
+			"Space",
+			"Freelook",
+			IsFreeLook ? 1 : 0,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"1 - 3",
+			"Shadow Map Resolution",
+			-1,
+			"P",
+			"PCF",
+			RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
+
+		DrawShadowMapImage(Window->Width - 10 - 256, 10, 256, 256, .3f, 5);
 
 		Window->Unlock();
 		Window->Flip();
@@ -204,19 +231,27 @@ void ShadowMapExample::LoadScene()
 
 	Cage = PrimitiveFactory::Cube(4);
 	Cage->SetCullMode(CullMode::None);
-	Cage->SetTexture(Texture::FromFile("Assets\\Textures\\c1a0a_material_75.png"));
-	Cage->SetTextureSize(.72f, .97f);
+	Cage->SetTexture(Texture::FromFile("Assets\\Textures\\grid1.png"));
+	Cage->GetSurface(0)->Texture = Texture::FromFile("Assets\\Textures\\grid2.png");
+	Cage->GetSurface(0)->TextureSize = vfloat2(.25f, .25f);
 	Cage->SetSpecular(40, .4f);
 
 	CageGround = PrimitiveFactory::Cube();
-	CageGround->SetTexture(Texture::FromFile("Assets\\Textures\\c1a0a_material_17.png"));
-	CageGround->GetSurface(2)->TextureSize = vfloat2(1, 10);
-	CageGround->GetSurface(3)->TextureSize = vfloat2(1, 10);
-	CageGround->GetSurface(4)->TextureSize = vfloat2(1, 10);
-	CageGround->GetSurface(5)->TextureSize = vfloat2(1, 10);
+	for (int32 i = 0; i <= 1; i++)
+	{
+		CageGround->GetSurface(i)->Texture = Texture::FromFile("Assets\\Textures\\c1a0a_material_17.png");
+	}
+	for (int32 i = 2; i <= 5; i++)
+	{
+		CageGround->GetSurface(i)->Texture = Texture::FromFile("Assets\\Textures\\crete2_flr03c.png");
+		CageGround->GetSurface(i)->TextureSize = vfloat2(.3f, 1);
+	}
 
 	Crate = PrimitiveFactory::Cube();
 	Crate->SetTexture(Texture::FromFile("Assets\\Textures\\c1a2_material_93.png"));
+
+	Crate2 = PrimitiveFactory::Cube();
+	Crate2->SetTexture(Texture::FromFile("Assets\\Textures\\crate02b.png"));
 
 	Scientist1 = Mesh::Load("Assets\\Models\\half-life-scientist-einstein\\einstein.obj");
 	Scientist1->FitToBoundingBox(Box3f(1), true);
@@ -258,18 +293,18 @@ void ShadowMapExample::DrawScene(::RenderUnit &renderUnit, int32 part)
 			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(-10) * Matrix4f::Translate(0, .15f, 0) * crateMatrix);
 			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(8) * Matrix4f::Translate(.2f, .45f, 0) * crateMatrix);
 
-			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(15) * Matrix4f::Translate(-1.4f, .15f, -.3f));
+			renderUnit.DrawMesh(*Crate2, Matrix4f::Scale(.3f) * Matrix4f::RotateY(15) * Matrix4f::Translate(-1.4f, .15f, -.3f));
 
 			renderUnit.DrawMesh(*Scientist1, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(-.7f, .5f, .7f));
 			renderUnit.DrawMesh(*Scientist2, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(0, .5f, .7f));
 			renderUnit.DrawMesh(*Scientist3, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(.7f, .5f, .7f));
 
-			Matrix4f cageMatrix = Matrix4f::Translate(1.2f, 0, -.7f);
-			renderUnit.DrawMesh(*CageGround, Matrix4f::Scale(.7f, .1f, .7f) * cageMatrix);
+			Matrix4f cageMatrix = Matrix4f::Translate(1.2f, .025f, -.7f);
+			renderUnit.DrawMesh(*CageGround, Matrix4f::Scale(.7f, .05f, .7f) * cageMatrix);
 			renderUnit.DrawMesh(*HoundEye, Matrix4f::Scale(.5f) * Matrix4f::Translate(0, .25f, 0) * cageMatrix);
 
 			// Draw textures that have a transparency key last.
-			renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .29f, 0) * cageMatrix);
+			renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .27f, 0) * cageMatrix);
 			renderUnit.DrawMesh(*Fence, Matrix4f::Scale(.05f, .5f, 3) * Matrix4f::Translate(-.975f, .25f, 1));
 			break;
 		}
@@ -279,64 +314,4 @@ void ShadowMapExample::DrawScene(::RenderUnit &renderUnit, int32 part)
 			break;
 		}
 	}
-}
-void ShadowMapExample::DebugShadowMap(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const
-{
-	width = Math::Min(width, RenderUnit->RenderStates.FrameBuffer.Width - 1);
-	height = Math::Min(height, RenderUnit->RenderStates.FrameBuffer.Height - 1);
-	zFrom = RenderUnit->RenderStates.ClipNear / zFrom;
-	zTo = RenderUnit->RenderStates.ClipNear / zTo;
-
-	int32 scale = 0;
-	while (RenderUnit->RenderStates.ShadowMap.Width >> scale > width || RenderUnit->RenderStates.ShadowMap.Height >> scale > height)
-	{
-		scale++;
-	}
-
-	int32 renderWidth = RenderUnit->RenderStates.ShadowMap.Width >> scale;
-	int32 renderHeight = RenderUnit->RenderStates.ShadowMap.Height >> scale;
-
-	Color *frameBuffer = RenderUnit->RenderStates.FrameBuffer.GetBuffer<Color>(x + y * RenderUnit->RenderStates.FrameBuffer.Width);
-	float *shadowMap = RenderUnit->RenderStates.ShadowMap.GetBuffer<float>();
-
-	int32 frameBufferStrideY = RenderUnit->RenderStates.FrameBuffer.Width - renderWidth;
-	int32 shadowMapStrideX = 1 << scale;
-	int32 shadowMapStrideY = RenderUnit->RenderStates.ShadowMap.Width * (shadowMapStrideX - 1);
-
-	for (int32 py = 0; py < renderHeight; py++)
-	{
-		for (int32 px = 0; px < renderWidth; px++)
-		{
-			if (*shadowMap > 0)
-			{
-				int32 color = (int32)Math::Interpolate(*shadowMap, zFrom, zTo, 255.0f, 0.0f) & 0xff;
-				frameBuffer->B = color;
-				frameBuffer->G = color;
-				frameBuffer->R = color;
-			}
-			else
-			{
-				frameBuffer->B >>= 1;
-				frameBuffer->G >>= 1;
-				frameBuffer->R >>= 1;
-			}
-
-			frameBuffer++;
-			shadowMap += shadowMapStrideX;
-		}
-
-		frameBuffer += frameBufferStrideY;
-		shadowMap += shadowMapStrideY;
-	}
-
-	char title[100];
-	char buffer[100];
-	lstrcpyA(title, "Shadow Map ");
-	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Width, buffer, 10));
-	lstrcatA(title, "x");
-	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Height, buffer, 10));
-
-	Graphics g = Graphics(*Window);
-	g.Font = Font;
-	g.DrawString(x + 10, y + 10, title);
 }

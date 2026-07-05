@@ -30,9 +30,32 @@ void MeshViewExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 250, 0, 20, "Move mouse", "move object", "Click right/left", "rotate X/Y", "Key 1-4", "choose mesh", nullptr);
-		DrawFieldSet(510, 10, 0, 0, 20, "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
+		DrawPerformanceBox(10, 10);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"Mouse",
+			"Move Object",
+			-1,
+			"Click right/left",
+			"Rotate X/Y",
+			-1,
+			"1 - 6",
+			"Select Mesh",
+			-1,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
 
 		Window->Unlock();
 		Window->Flip();
@@ -115,13 +138,21 @@ void MeshViewExample::LoadScene()
 	Meshes[1]->TransformVertices(Matrix4f::RotateY(-90));
 	Meshes[1]->NormalizeNormals();
 
-	Meshes[2] = Mesh::Load("Assets\\Models\\half-life-headcrab\\half-life-headcrab.obj");
+	Meshes[2] = Mesh::Load("Assets\\Models\\Computer\\Computer.obj");
 	Meshes[2]->FitToBoundingBox(Box3f(2), true);
 	Meshes[2]->TransformVertices(Matrix4f::RotateY(180));
 
-	Meshes[3] = Mesh::Load("Assets\\Models\\half-life-houndeye\\half-life-houndeye.obj");
+	Meshes[3] = Mesh::Load("Assets\\Models\\half-life-2-dog\\scene.gltf");
 	Meshes[3]->FitToBoundingBox(Box3f(2), true);
 	Meshes[3]->TransformVertices(Matrix4f::RotateY(180));
+
+	Meshes[4] = Mesh::Load("Assets\\Models\\half-life-headcrab\\half-life-headcrab.obj");
+	Meshes[4]->FitToBoundingBox(Box3f(2), true);
+	Meshes[4]->TransformVertices(Matrix4f::RotateY(180));
+
+	Meshes[5] = Mesh::Load("Assets\\Models\\half-life-houndeye\\half-life-houndeye.obj");
+	Meshes[5]->FitToBoundingBox(Box3f(2), true);
+	Meshes[5]->TransformVertices(Matrix4f::RotateY(180));
 }
 void MeshViewExample::DrawScene(::RenderUnit &renderUnit)
 {

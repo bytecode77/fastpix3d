@@ -14,6 +14,7 @@ private:
 	Mesh *Cage = nullptr;
 	Mesh *CageGround = nullptr;
 	Mesh *Crate = nullptr;
+	Mesh *Crate2 = nullptr;
 	Mesh *Scientist1 = nullptr;
 	Mesh *Scientist2 = nullptr;
 	Mesh *Scientist3 = nullptr;
@@ -35,5 +36,4 @@ private:
 
 	void LoadScene();
 	void DrawScene(::RenderUnit &renderUnit, int32 part);
-	void DebugShadowMap(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const;
 };

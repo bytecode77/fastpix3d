@@ -29,9 +29,29 @@ void SphereMapExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 200, 0, 20, "Space", RotationStopwatch.IsRunning ? "Animation ON " : "Animation OFF", nullptr);
-		DrawFieldSet(460, 10, 0, 0, 20, "M", UseHighPolyModel ? "High poly model" : "Low poly model", "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
+		DrawPerformanceBox(10, 10);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"Space",
+			"Animation",
+			RotationStopwatch.IsRunning ? 1 : 0,
+			"M",
+			"High Poly Mesh",
+			UseHighPolyModel ? 1 : 0,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
 
 		Window->Unlock();
 		Window->Flip();

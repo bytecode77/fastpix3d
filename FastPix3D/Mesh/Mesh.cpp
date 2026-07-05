@@ -243,6 +243,13 @@ void Mesh::TransformVertices(const Matrix4f &matrix, bool positions, bool normal
 		}
 	}
 }
+void Mesh::AutoNormals()
+{
+	for (Surface *surface : Surfaces)
+	{
+		surface->AutoNormals();
+	}
+}
 void Mesh::NormalizeNormals()
 {
 	for (Surface *surface : Surfaces)

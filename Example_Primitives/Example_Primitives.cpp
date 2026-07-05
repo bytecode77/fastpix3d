@@ -29,8 +29,26 @@ void PrimitivesExample::Run()
 		HandleInput();
 		Render();
 
-		DrawStatisticsBox(10, 10);
-		DrawFieldSet(250, 10, 0, 0, 20, "Space", RenderUnit->RenderStates.TextureEnable ? "Textures are ON" : "Textures are OFF", "T", RenderUnit->RenderStates.TextureFilteringEnable ? "Texture filtering is ON" : "Texture filtering is OFF", "X", Wireframe ? "Wireframe is ON" : "Wireframe is OFF", nullptr);
+		DrawPerformanceBox(10, 10);
+		DrawControlsBox(
+			"Controls",
+			10,
+			-10,
+			"Space",
+			"Textures",
+			RenderUnit->RenderStates.TextureEnable ? 1 : 0,
+			nullptr);
+		DrawControlsBox(
+			"Render",
+			-10,
+			-10,
+			"T",
+			"Texture Filtering",
+			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			"X",
+			"Wireframe",
+			Wireframe ? 1 : 0,
+			nullptr);
 
 		Window->Unlock();
 		Window->Flip();
