@@ -220,71 +220,55 @@ void FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, cons
 	else
 	{
 		// 1 or 2 vertices are in front of the near clipping plane.
-		FragmentRasterizerVertex v12;
-		FragmentRasterizerVertex v23;
-		FragmentRasterizerVertex v31;
-
-		v12.Position = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.Position, v2.Position);
-		v23.Position = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.Position, v3.Position);
-		v31.Position = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.Position, v1.Position);
-
-		if (RenderStates.TextureEnable && RenderStates.Texture)
-		{
-			v12.TextureCoordinates = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.TextureCoordinates, v2.TextureCoordinates);
-			v23.TextureCoordinates = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.TextureCoordinates, v3.TextureCoordinates);
-			v31.TextureCoordinates = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.TextureCoordinates, v1.TextureCoordinates);
-		}
-
-		if (hasColor)
-		{
-			v12.Color = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.Color, v2.Color);
-			v23.Color = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.Color, v3.Color);
-			v31.Color = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.Color, v1.Color);
-		}
-
-		if (hasSpecular)
-		{
-			v12.Specular = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.Specular, v2.Specular);
-			v23.Specular = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.Specular, v3.Specular);
-			v31.Specular = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.Specular, v1.Specular);
-		}
-
-		if (RenderStates.ShadowMapFunc != ShadowMapFunc::None)
-		{
-			v12.ShadowXyz = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.ShadowXyz, v2.ShadowXyz);
-			v23.ShadowXyz = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.ShadowXyz, v3.ShadowXyz);
-			v31.ShadowXyz = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.ShadowXyz, v1.ShadowXyz);
-
-			v12.ShadowColor = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.ShadowColor, v2.ShadowColor);
-			v23.ShadowColor = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.ShadowColor, v3.ShadowColor);
-			v31.ShadowColor = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.ShadowColor, v1.ShadowColor);
-		}
-
 		if (vertex1Visible && vertex2Visible)
 		{
+			FragmentRasterizerVertex v23;
+			FragmentRasterizerVertex v31;
+
+			ClipEdges(hasColor, hasSpecular, v2, v3, v3, v1, v23, v31);
 			rendered = DrawClippedTriangle(v31, v1, v23, hasColor, hasSpecular);
 			rendered |= DrawClippedTriangle(v1, v2, v23, hasColor, hasSpecular);
 		}
 		else if (vertex2Visible && vertex3Visible)
 		{
+			FragmentRasterizerVertex v12;
+			FragmentRasterizerVertex v31;
+
+			ClipEdges(hasColor, hasSpecular, v1, v2, v3, v1, v12, v31);
 			rendered = DrawClippedTriangle(v3, v31, v2, hasColor, hasSpecular);
 			rendered |= DrawClippedTriangle(v12, v2, v31, hasColor, hasSpecular);
 		}
 		else if (vertex1Visible && vertex3Visible)
 		{
+			FragmentRasterizerVertex v12;
+			FragmentRasterizerVertex v23;
+
+			ClipEdges(hasColor, hasSpecular, v1, v2, v2, v3, v12, v23);
 			rendered = DrawClippedTriangle(v1, v12, v23, hasColor, hasSpecular);
 			rendered |= DrawClippedTriangle(v3, v1, v23, hasColor, hasSpecular);
 		}
 		else if (vertex1Visible)
 		{
+			FragmentRasterizerVertex v12;
+			FragmentRasterizerVertex v31;
+
+			ClipEdges(hasColor, hasSpecular, v1, v2, v3, v1, v12, v31);
 			rendered = DrawClippedTriangle(v1, v12, v31, hasColor, hasSpecular);
 		}
 		else if (vertex2Visible)
 		{
+			FragmentRasterizerVertex v12;
+			FragmentRasterizerVertex v23;
+
+			ClipEdges(hasColor, hasSpecular, v1, v2, v2, v3, v12, v23);
 			rendered = DrawClippedTriangle(v2, v23, v12, hasColor, hasSpecular);
 		}
 		else if (vertex3Visible)
 		{
+			FragmentRasterizerVertex v23;
+			FragmentRasterizerVertex v31;
+
+			ClipEdges(hasColor, hasSpecular, v2, v3, v3, v1, v23, v31);
 			rendered = DrawClippedTriangle(v3, v31, v23, hasColor, hasSpecular);
 		}
 	}
@@ -292,6 +276,44 @@ void FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, cons
 	if (rendered && RasterizerMath::GetWorkloadThreadIndex(RenderStates.Workload) == 0)
 	{
 		Statistics.RenderedTriangleCount++;
+	}
+}
+
+void FragmentRasterizer::ClipEdges(bool hasColor, bool hasSpecular, const FragmentRasterizerVertex &edge1a, const FragmentRasterizerVertex &edge1b, const FragmentRasterizerVertex &edge2a, const FragmentRasterizerVertex &edge2b, FragmentRasterizerVertex &intersection1, FragmentRasterizerVertex &intersection2) const
+{
+	// When a triangle intersects the near clipping plane, two intersection points need to be computed.
+
+	float t1 = (RenderStates.ClipNear - edge1a.Position.Z) / (edge1b.Position.Z - edge1a.Position.Z);
+	float t2 = (RenderStates.ClipNear - edge2a.Position.Z) / (edge2b.Position.Z - edge2a.Position.Z);
+
+	intersection1.Position = edge1a.Position + (edge1b.Position - edge1a.Position) * t1;
+	intersection2.Position = edge2a.Position + (edge2b.Position - edge2a.Position) * t2;
+
+	if (RenderStates.TextureEnable && RenderStates.Texture)
+	{
+		intersection1.TextureCoordinates = edge1a.TextureCoordinates + (edge1b.TextureCoordinates - edge1a.TextureCoordinates) * t1;
+		intersection2.TextureCoordinates = edge2a.TextureCoordinates + (edge2b.TextureCoordinates - edge2a.TextureCoordinates) * t2;
+	}
+
+	if (hasColor)
+	{
+		intersection1.Color = edge1a.Color + (edge1b.Color - edge1a.Color) * t1;
+		intersection2.Color = edge2a.Color + (edge2b.Color - edge2a.Color) * t2;
+	}
+
+	if (hasSpecular)
+	{
+		intersection1.Specular = edge1a.Specular + (edge1b.Specular - edge1a.Specular) * t1;
+		intersection2.Specular = edge2a.Specular + (edge2b.Specular - edge2a.Specular) * t2;
+	}
+
+	if (RenderStates.ShadowMapFunc != ShadowMapFunc::None)
+	{
+		intersection1.ShadowXyz = edge1a.ShadowXyz + (edge1b.ShadowXyz - edge1a.ShadowXyz) * t1;
+		intersection2.ShadowXyz = edge2a.ShadowXyz + (edge2b.ShadowXyz - edge2a.ShadowXyz) * t2;
+
+		intersection1.ShadowColor = edge1a.ShadowColor + (edge1b.ShadowColor - edge1a.ShadowColor) * t1;
+		intersection2.ShadowColor = edge2a.ShadowColor + (edge2b.ShadowColor - edge2a.ShadowColor) * t2;
 	}
 }
 bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1, const FragmentRasterizerVertex &v2, const FragmentRasterizerVertex &v3, bool hasColor, bool hasSpecular) const

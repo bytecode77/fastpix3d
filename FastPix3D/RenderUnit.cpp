@@ -129,7 +129,7 @@ void RenderUnit::DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &
 		}
 	}
 }
-void RenderUnit::RenderFog()
+void RenderUnit::RenderFog() const
 {
 	if (RenderStates.FogEnable)
 	{
@@ -139,9 +139,9 @@ void RenderUnit::RenderFog()
 		workloadOffset = halfspace_mul(workloadOffset);
 		workloadIncrement = halfspace_mul(workloadIncrement);
 
-		vfloat8 d = vfloat8(255 / (RenderStates.FogFar - RenderStates.FogNear));
-		vfloat8 clipNear = vfloat8(RenderStates.ClipNear) * d;
-		vfloat8 fogNear = vfloat8(RenderStates.FogNear) * d;
+		float d = 255 / (RenderStates.FogFar - RenderStates.FogNear);
+		vfloat8 clipNear = vfloat8(RenderStates.ClipNear * d);
+		vfloat8 fogNear = vfloat8(RenderStates.FogNear * d);
 		vfloat8 clearDepthValue = vfloat8(RenderStates.ClipNear / RenderStates.ClipFar);
 
 		vushort16 fogColor = vuint8(RenderStates.FogColor.RGB).Low8;

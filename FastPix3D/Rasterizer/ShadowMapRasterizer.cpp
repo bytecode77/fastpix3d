@@ -47,46 +47,55 @@ void ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 	else
 	{
 		// 1 or 2 vertices are in front of the near clipping plane.
-		ShadowMapRasterizerVertex v12;
-		ShadowMapRasterizerVertex v23;
-		ShadowMapRasterizerVertex v31;
-
-		v12.Position = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.Position, v2.Position);
-		v23.Position = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.Position, v3.Position);
-		v31.Position = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.Position, v1.Position);
-
-		if (RenderStates.TextureEnable && RenderStates.Texture && RenderStates.Texture->HasTransparencyKey)
-		{
-			v12.TextureCoordinates = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.TextureCoordinates, v2.TextureCoordinates);
-			v23.TextureCoordinates = Math::Interpolate(RenderStates.ClipNear, v2.Position.Z, v3.Position.Z, v2.TextureCoordinates, v3.TextureCoordinates);
-			v31.TextureCoordinates = Math::Interpolate(RenderStates.ClipNear, v3.Position.Z, v1.Position.Z, v3.TextureCoordinates, v1.TextureCoordinates);
-		}
-
 		if (vertex1Visible && vertex2Visible)
 		{
+			ShadowMapRasterizerVertex v23;
+			ShadowMapRasterizerVertex v31;
+
+			ClipEdges(v2, v3, v3, v1, v23, v31);
 			rendered = DrawClippedTriangle(v31, v1, v23);
 			rendered |= DrawClippedTriangle(v1, v2, v23);
 		}
 		else if (vertex2Visible && vertex3Visible)
 		{
+			ShadowMapRasterizerVertex v12;
+			ShadowMapRasterizerVertex v31;
+
+			ClipEdges(v1, v2, v3, v1, v12, v31);
 			rendered = DrawClippedTriangle(v3, v31, v2);
 			rendered |= DrawClippedTriangle(v12, v2, v31);
 		}
 		else if (vertex1Visible && vertex3Visible)
 		{
+			ShadowMapRasterizerVertex v12;
+			ShadowMapRasterizerVertex v23;
+
+			ClipEdges(v1, v2, v2, v3, v12, v23);
 			rendered = DrawClippedTriangle(v1, v12, v23);
 			rendered |= DrawClippedTriangle(v3, v1, v23);
 		}
 		else if (vertex1Visible)
 		{
+			ShadowMapRasterizerVertex v12;
+			ShadowMapRasterizerVertex v31;
+
+			ClipEdges(v1, v2, v3, v1, v12, v31);
 			rendered = DrawClippedTriangle(v1, v12, v31);
 		}
 		else if (vertex2Visible)
 		{
+			ShadowMapRasterizerVertex v12;
+			ShadowMapRasterizerVertex v23;
+
+			ClipEdges(v1, v2, v2, v3, v12, v23);
 			rendered = DrawClippedTriangle(v2, v23, v12);
 		}
 		else if (vertex3Visible)
 		{
+			ShadowMapRasterizerVertex v23;
+			ShadowMapRasterizerVertex v31;
+
+			ClipEdges(v2, v3, v3, v1, v23, v31);
 			rendered = DrawClippedTriangle(v3, v31, v23);
 		}
 	}
@@ -94,6 +103,22 @@ void ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 	if (rendered && RasterizerMath::GetWorkloadThreadIndex(RenderStates.Workload) == 0)
 	{
 		Statistics.RenderedTriangleCount++;
+	}
+}
+void ShadowMapRasterizer::ClipEdges(const ShadowMapRasterizerVertex &edge1a, const ShadowMapRasterizerVertex &edge1b, const ShadowMapRasterizerVertex &edge2a, const ShadowMapRasterizerVertex &edge2b, ShadowMapRasterizerVertex &intersection1, ShadowMapRasterizerVertex &intersection2) const
+{
+	// When a triangle intersects the near clipping plane, two intersection points need to be computed.
+
+	float t1 = (RenderStates.ClipNear - edge1a.Position.Z) / (edge1b.Position.Z - edge1a.Position.Z);
+	float t2 = (RenderStates.ClipNear - edge2a.Position.Z) / (edge2b.Position.Z - edge2a.Position.Z);
+
+	intersection1.Position = edge1a.Position + (edge1b.Position - edge1a.Position) * t1;
+	intersection2.Position = edge2a.Position + (edge2b.Position - edge2a.Position) * t2;
+
+	if (RenderStates.TextureEnable && RenderStates.Texture && RenderStates.Texture->HasTransparencyKey)
+	{
+		intersection1.TextureCoordinates = edge1a.TextureCoordinates + (edge1b.TextureCoordinates - edge1a.TextureCoordinates) * t1;
+		intersection2.TextureCoordinates = edge2a.TextureCoordinates + (edge2b.TextureCoordinates - edge2a.TextureCoordinates) * t2;
 	}
 }
 bool ShadowMapRasterizer::DrawClippedTriangle(const ShadowMapRasterizerVertex &v1, const ShadowMapRasterizerVertex &v2, const ShadowMapRasterizerVertex &v3) const

@@ -21,5 +21,5 @@ public:
 
 	void DrawMesh(const Mesh &mesh, const Matrix4f &modelMatrix);
 	void DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3);
-	void RenderFog();
+	void RenderFog() const;
 };

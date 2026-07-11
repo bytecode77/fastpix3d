@@ -45,6 +45,7 @@ public:
 	void DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
 
 private:
+	void ClipEdges(bool hasColor, bool hasSpecular, const FragmentRasterizerVertex &edge1a, const FragmentRasterizerVertex &edge1b, const FragmentRasterizerVertex &edge2a, const FragmentRasterizerVertex &edge2b, FragmentRasterizerVertex &intersection1, FragmentRasterizerVertex &intersection2) const;
 	bool DrawClippedTriangle(const FragmentRasterizerVertex &v1, const FragmentRasterizerVertex &v2, const FragmentRasterizerVertex &v3, bool hasColor, bool hasSpecular) const;
 	template<bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
 	bool DrawClippedTriangle(const FragmentRasterizerVertex &v1, const FragmentRasterizerVertex &v2, const FragmentRasterizerVertex &v3) const;

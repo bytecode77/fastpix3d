@@ -47,13 +47,7 @@ public:
 		// Transform view space coordinates into clip space.
 		// Clip space coordinates X and Y range from -1 to 1. Z ranges from 1 to 0 (1 = near clipping plane, 0 = infinitely far away).
 
-		float d = zoom / position.Z;
-
-		return vfloat3(
-			position.X * d,
-			position.Y * d * screenWidth / screenHeight,
-			clipNear / position.Z
-		);
+		return vfloat3(position.X * zoom, position.Y * zoom * screenWidth / screenHeight, clipNear) / position.Z;
 	}
 	__forceinline static int32 GetTriangleFixExponent(const vfloat2 &v1, const vfloat2 &v2, const vfloat2 &v3)
 	{
