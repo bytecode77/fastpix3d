@@ -1,22 +1,19 @@
 #include "WireframeRasterizer.h"
 #include "../RasterizerMath.h"
+#include "../Math/VectorMath.h"
 
-void WireframeRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, const Vertex &_v3) const
+bool WireframeRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, const Vertex &_v3) const
 {
-	WireframeRasterizerVertex v1 = WireframeRasterizerVertex(_v1);
-	WireframeRasterizerVertex v2 = WireframeRasterizerVertex(_v2);
-	WireframeRasterizerVertex v3 = WireframeRasterizerVertex(_v3);
-
 	// Transform vertices to view space.
-	v1.Position = RenderStates.Precomputed.ModelViewMatrix * v1.Position;
-	v2.Position = RenderStates.Precomputed.ModelViewMatrix * v2.Position;
-	v3.Position = RenderStates.Precomputed.ModelViewMatrix * v3.Position;
+	vfloat3 v1 = RenderStates.Precomputed.ModelViewMatrix * _v1.Position;
+	vfloat3 v2 = RenderStates.Precomputed.ModelViewMatrix * _v2.Position;
+	vfloat3 v3 = RenderStates.Precomputed.ModelViewMatrix * _v3.Position;
 
 	// Back-face culling.
 	bool isFrontFace;
-	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1.Position, v2.Position, v3.Position, isFrontFace))
+	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1, v2, v3, isFrontFace))
 	{
-		return;
+		return false;
 	}
 
 	bool rendered = false;
@@ -25,12 +22,9 @@ void WireframeRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 	rendered |= DrawEdge(v2, v3);
 	rendered |= DrawEdge(v3, v1);
 
-	if (rendered && RasterizerMath::GetWorkloadThreadIndex(RenderStates.Workload) == 0)
-	{
-		Statistics.RenderedTriangleCount++;
-	}
+	return rendered;
 }
-bool WireframeRasterizer::DrawEdge(const WireframeRasterizerVertex &v1, const WireframeRasterizerVertex &v2) const
+bool WireframeRasterizer::DrawEdge(const vfloat3 &v1, const vfloat3 &v2) const
 {
 	if (RenderStates.ZEnable)
 	{
@@ -56,11 +50,11 @@ bool WireframeRasterizer::DrawEdge(const WireframeRasterizerVertex &v1, const Wi
 	}
 }
 template<bool zEnable, bool zWriteEnable>
-bool WireframeRasterizer::DrawEdge(WireframeRasterizerVertex v1, WireframeRasterizerVertex v2) const
+bool WireframeRasterizer::DrawEdge(vfloat3 v1, vfloat3 v2) const
 {
 	// Clip along near clipping plane.
-	bool vertex1Visible = v1.Position.Z > RenderStates.ClipNear;
-	bool vertex2Visible = v2.Position.Z > RenderStates.ClipNear;
+	bool vertex1Visible = v1.Z > RenderStates.ClipNear;
+	bool vertex2Visible = v2.Z > RenderStates.ClipNear;
 
 	if (!vertex1Visible && !vertex2Visible)
 	{
@@ -71,7 +65,7 @@ bool WireframeRasterizer::DrawEdge(WireframeRasterizerVertex v1, WireframeRaster
 	if (!vertex1Visible || !vertex2Visible)
 	{
 		// One vertex is behind the near clipping plane.
-		(vertex1Visible ? v2 : v1).Position = Math::Interpolate(RenderStates.ClipNear, v1.Position.Z, v2.Position.Z, v1.Position, v2.Position);
+		(vertex1Visible ? v2 : v1) = Math::Interpolate(RenderStates.ClipNear, v1.Z, v2.Z, v1, v2);
 	}
 
 	int32 frameBufferWidth = RenderStates.FrameBuffer.Width;
@@ -79,16 +73,16 @@ bool WireframeRasterizer::DrawEdge(WireframeRasterizerVertex v1, WireframeRaster
 	float wireframeDepthBias = RenderStates.WireframeDepthBias;
 
 	// Transform vertices to clip space.
-	v1.Position = RasterizerMath::ToClipSpace(v1.Position, frameBufferWidth, frameBufferHeight, RenderStates.Zoom, RenderStates.ClipNear);
-	v2.Position = RasterizerMath::ToClipSpace(v2.Position, frameBufferWidth, frameBufferHeight, RenderStates.Zoom, RenderStates.ClipNear);
+	v1 = RasterizerMath::ToClipSpace(v1, frameBufferWidth, frameBufferHeight, RenderStates.Zoom, RenderStates.ClipNear);
+	v2 = RasterizerMath::ToClipSpace(v2, frameBufferWidth, frameBufferHeight, RenderStates.Zoom, RenderStates.ClipNear);
 
 	// Project vertices screen space.
-	vint2 v1Screen = RasterizerMath::ToScreenSpace(v1.Position, frameBufferWidth, frameBufferHeight);
-	vint2 v2Screen = RasterizerMath::ToScreenSpace(v2.Position, frameBufferWidth, frameBufferHeight);
+	vint2 v1Screen = RasterizerMath::ToScreenSpace(v1, frameBufferWidth, frameBufferHeight);
+	vint2 v2Screen = RasterizerMath::ToScreenSpace(v2, frameBufferWidth, frameBufferHeight);
 
 	// Clip line along screen space edges.
-	RasterizerMath::ClipEdgeToScreenSpace(frameBufferWidth, frameBufferHeight, v1.Position, v2.Position, v1Screen, v2Screen);
-	RasterizerMath::ClipEdgeToScreenSpace(frameBufferWidth, frameBufferHeight, v2.Position, v1.Position, v2Screen, v1Screen);
+	RasterizerMath::ClipEdgeToScreenSpace(frameBufferWidth, frameBufferHeight, v1, v2, v1Screen, v2Screen);
+	RasterizerMath::ClipEdgeToScreenSpace(frameBufferWidth, frameBufferHeight, v2, v1, v2Screen, v1Screen);
 
 	// Clip in screen space to guarantee that the line is inside the screen, to avoid per-pixel checks.
 	if (v1Screen.X < 0 && v2Screen.X < 0 ||
@@ -100,7 +94,7 @@ bool WireframeRasterizer::DrawEdge(WireframeRasterizerVertex v1, WireframeRaster
 	}
 
 	vint2 delta = VectorMath::Abs(v2Screen - v1Screen);
-	float deltaZ = zEnable || zWriteEnable ? delta.X > delta.Y ? (v2.Position.Z - v1.Position.Z) / delta.X : (v2.Position.Z - v1.Position.Z) / delta.Y : 0;
+	float deltaZ = zEnable || zWriteEnable ? delta.X > delta.Y ? (v2.Z - v1.Z) / delta.X : (v2.Z - v1.Z) / delta.Y : 0;
 	vint2 direction = vint2(v1Screen.X < v2Screen.X ? 1 : -1, v1Screen.Y < v2Screen.Y ? 1 : -1);
 	int32 error = delta.X - delta.Y;
 
@@ -117,10 +111,10 @@ bool WireframeRasterizer::DrawEdge(WireframeRasterizerVertex v1, WireframeRaster
 		{
 			int32 offset = v1Screen.X + v1Screen.Y * frameBufferWidth;
 
-			if (!zEnable || v1.Position.Z * wireframeDepthBias > depthBuffer[offset])
+			if (!zEnable || v1.Z * wireframeDepthBias > depthBuffer[offset])
 			{
 				frameBuffer[offset].RGB = color;
-				if constexpr (zWriteEnable) depthBuffer[offset] = v1.Position.Z;
+				if constexpr (zWriteEnable) depthBuffer[offset] = v1.Z;
 			}
 		}
 
@@ -142,7 +136,7 @@ bool WireframeRasterizer::DrawEdge(WireframeRasterizerVertex v1, WireframeRaster
 			v1Screen.Y += direction.Y;
 		}
 
-		if constexpr (zEnable || zWriteEnable) v1.Position.Z += deltaZ;
+		if constexpr (zEnable || zWriteEnable) v1.Z += deltaZ;
 	}
 
 	return true;

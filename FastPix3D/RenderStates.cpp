@@ -10,38 +10,9 @@ RenderStates::RenderStates()
 		};
 	}
 
-	Workload = Workload::Full;
-	Rasterizer = Rasterizer::Fragments;
-	ViewMatrix = Matrix4f::Identity();
-	ModelMatrix = Matrix4f::Identity();
-	ClipNear = 1;
-	ClipFar = 1000;
-	Zoom = 1;
-	CullMode = CullMode::Back;
-	WireframeColor = Color(255, 255, 255);
-	WireframeDepthBias = 1;
-	ZEnable = true;
-	ZWriteEnable = true;
-	TextureEnable = true;
-	Texture = nullptr;
-	TextureFilteringEnable = false;
-	TextureSize = vfloat2(1);
-	BlendMode = BlendMode::None;
-	Alpha = 1;
-	SpecularExponent = 0;
-	SpecularIntensity = 0;
-	FogEnable = false;
-	FogNear = 0;
-	FogFar = 1000;
-	LightsEnable = false;
-	AmbientLight = Color(127, 127, 127);
-	ShadowMapFunc = ShadowMapFunc::None;
-	ShadowMapProjection = ShadowMapProjection::Perspective;
-	ShadowLightIndex = 0;
-	ShadowLightZoom = 1;
-	ShadowMapDepthBias = 0;
-
-	Precomputed.LightsMaxIndex = -1;
+	UpdateClipNear();
+	UpdateTextureSize();
+	UpdateModelViewMatrix();
 }
 RenderStates::RenderStates(const RenderStates &renderStates)
 {
@@ -56,6 +27,14 @@ void RenderStates::SetWorkload(int32 threadIndex, int32 threadCount)
 	Workload = (::Workload)(threadIndex | threadCount << 8);
 }
 
+void RenderStates::UpdateClipNear()
+{
+	Precomputed.InverseClipNear = 1 / _ClipNear;
+}
+void RenderStates::UpdateTextureSize()
+{
+	Precomputed.InverseTextureSize = vfloat2(1 / _TextureSize.X, 1 / _TextureSize.Y);
+}
 void RenderStates::UpdateModelViewMatrix()
 {
 	Precomputed.ModelViewMatrix = _ModelMatrix * _ViewMatrix;
@@ -129,6 +108,8 @@ RenderStates& RenderStates::operator=(const RenderStates& renderStates)
 		_ShadowLightIndex = renderStates._ShadowLightIndex;
 		_ShadowLightZoom = renderStates._ShadowLightZoom;
 		_ShadowMapDepthBias = renderStates._ShadowMapDepthBias;
+		_CountTotalTriangles = renderStates._CountTotalTriangles;
+		_CountRenderedTriangles = renderStates._CountRenderedTriangles;
 
 		for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
 		{

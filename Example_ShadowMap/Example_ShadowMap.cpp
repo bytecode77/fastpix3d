@@ -9,27 +9,23 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 ShadowMapExample::ShadowMapExample(int32 width, int32 height) : ExampleBase(width, height, "Shadow Mapping")
 {
-	RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048, _aligned_malloc(4096 * 4096 * 4, 32));
-	RenderUnit->RenderStates.ClipNear = .1f;
-	RenderUnit->RenderStates.LightsEnable = true;
-	RenderUnit->RenderStates.AmbientLight = Color(120, 130, 160);
-	RenderUnit->RenderStates.Lights[0].Enabled = true;
-	RenderUnit->RenderStates.Lights[0].Type = LightType::Point;
-	RenderUnit->RenderStates.Lights[0].Intensity = 4;
-	RenderUnit->RenderStates.Lights[0].Color = Color(255, 240, 180);
-	RenderUnit->RenderStates.ShadowMapFunc = ShadowMapFunc::Point;
-	RenderUnit->RenderStates.ShadowLightZoom = .25f;
-	RenderUnit->RenderStates.ShadowMapDepthBias = .03f;
+	RenderStates->ShadowMap = RenderTarget(2048, 2048, _aligned_malloc(4096 * 4096 * 4, 32));
+	RenderStates->ClipNear = .1f;
+	RenderStates->LightsEnable = true;
+	RenderStates->AmbientLight = Color(120, 130, 160);
+	RenderStates->Lights[0].Enabled = true;
+	RenderStates->Lights[0].Type = LightType::Point;
+	RenderStates->Lights[0].Intensity = 4;
+	RenderStates->Lights[0].Color = Color(255, 240, 180);
+	RenderStates->ShadowMapFunc = ShadowMapFunc::Point;
+	RenderStates->ShadowLightZoom = .25f;
+	RenderStates->ShadowMapDepthBias = .03f;
 
 	LoadScene();
 
 	FreeLook->Speed = .1f;
 	Window->SetRelativeMouseMode(true);
 	Input::CenterMouse(*Window);
-}
-ShadowMapExample::~ShadowMapExample()
-{
-	_aligned_free(RenderUnit->RenderStates.ShadowMap.Buffer);
 }
 
 void ShadowMapExample::Run()
@@ -62,10 +58,10 @@ void ShadowMapExample::Run()
 			-1,
 			"P",
 			"PCF",
-			RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
+			RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
 			"T",
 			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			RenderStates->TextureFilteringEnable ? 1 : 0,
 			"X",
 			"Wireframe",
 			Wireframe ? 1 : 0,
@@ -93,15 +89,18 @@ void ShadowMapExample::HandleInput()
 
 	if (Input::GetKeyPressed(Scancode::D1))
 	{
-		RenderUnit->RenderStates.ShadowMap = RenderTarget(1024, 1024, RenderUnit->RenderStates.ShadowMap.Buffer);
+		RenderStates->ShadowMap = RenderTarget(1024, 1024, RenderStates->ShadowMap.Buffer);
+		RenderStates->ShadowMapDepthBias = .04f;
 	}
 	else if (Input::GetKeyPressed(Scancode::D2))
 	{
-		RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048, RenderUnit->RenderStates.ShadowMap.Buffer);
+		RenderStates->ShadowMap = RenderTarget(2048, 2048, RenderStates->ShadowMap.Buffer);
+		RenderStates->ShadowMapDepthBias = .03f;
 	}
 	else if (Input::GetKeyPressed(Scancode::D3))
 	{
-		RenderUnit->RenderStates.ShadowMap = RenderTarget(4096, 4096, RenderUnit->RenderStates.ShadowMap.Buffer);
+		RenderStates->ShadowMap = RenderTarget(4096, 4096, RenderStates->ShadowMap.Buffer);
+		RenderStates->ShadowMapDepthBias = .01f;
 	}
 
 	if (Input::GetKeyPressed(Scancode::Space))
@@ -113,28 +112,28 @@ void ShadowMapExample::HandleInput()
 
 	if (Input::GetKeyPressed(Scancode::P))
 	{
-		RenderUnit->RenderStates.ShadowMapFunc = RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? ShadowMapFunc::Point : ShadowMapFunc::Pcf;
+		RenderStates->ShadowMapFunc = RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? ShadowMapFunc::Point : ShadowMapFunc::Pcf;
 	}
 }
 void ShadowMapExample::Render()
 {
 	int64 time = System::Milliseconds() + 5000;
 
-	if (IsFreeLook) RenderUnit->ClearFrameBuffer();
-	RenderUnit->ClearDepthBuffer();
-	RenderUnit->ClearShadowMap();
 	RenderUnit->Statistics.Clear();
+	if (IsFreeLook) RenderUnit->ClearFrameBuffer(*RenderStates);
+	RenderUnit->ClearDepthBuffer(*RenderStates);
+	RenderUnit->ClearShadowMap(*RenderStates);
 
-	RenderUnit->RenderStates.Lights[0].Position = vfloat3(Math::Cos(time * .02f) * .7f, 1.4f, Math::Sin(time * .02f) * .7f);
-	RenderUnit->RenderStates.Lights[0].Rotation = vfloat3(270 - time * .02f, 80, 0);
+	RenderStates->Lights[0].Position = vfloat3(Math::Cos(time * .02f) * .7f, 1.4f, Math::Sin(time * .02f) * .7f);
+	RenderStates->Lights[0].Rotation = vfloat3(270 - time * .02f, 80, 0);
 
 	if (IsFreeLook)
 	{
-		RenderUnit->RenderStates.ViewMatrix = FreeLook->ViewMatrix;
+		RenderStates->ViewMatrix = FreeLook->ViewMatrix;
 	}
 	else
 	{
-		RenderUnit->RenderStates.ViewMatrix =
+		RenderStates->ViewMatrix =
 			Matrix4f::RotateY((Input::GetMousePosition().X - Window->Width / 2) * 360.0f / Window->Width) *
 			Matrix4f::Translate(0, -1, 2.5f) *
 			Matrix4f::RotateX(-20);
@@ -156,14 +155,11 @@ void ShadowMapExample::Render()
 	{
 		threadIds[i] = ThreadPool::Start([this, i]
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			renderUnitCopy.RenderStates.SetWorkload(i, 4);
-			renderUnitCopy.RenderStates.Rasterizer = Rasterizer::ShadowMap;
-			DrawScene(renderUnitCopy, 0);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics, false, true);
+			::RenderStates sceneRenderStates = *RenderStates;
+			sceneRenderStates.SetWorkload(i, 4);
+			sceneRenderStates.Rasterizer = Rasterizer::ShadowMap;
+			sceneRenderStates.CountTotalTriangles = false;
+			DrawScene(sceneRenderStates, 0);
 		});
 	}
 
@@ -177,22 +173,18 @@ void ShadowMapExample::Render()
 	{
 		threadIds[i] = ThreadPool::Start([this, i]
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			renderUnitCopy.RenderStates.SetWorkload(i, 4);
-			DrawScene(renderUnitCopy, 0);
-
-			renderUnitCopy.RenderStates.ShadowMapFunc = ShadowMapFunc::None;
-			DrawScene(renderUnitCopy, 1);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics, true, true);
+			::RenderStates sceneRenderStates = *RenderStates;
+			sceneRenderStates.SetWorkload(i, 4);
+			DrawScene(sceneRenderStates, 0);
+			DrawScene(sceneRenderStates, 1);
 
 			if (Wireframe)
 			{
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				DrawScene(renderUnitCopy, 0);
-				DrawScene(renderUnitCopy, 1);
+				sceneRenderStates.Rasterizer = Rasterizer::Wireframe;
+				sceneRenderStates.CountTotalTriangles = false;
+				sceneRenderStates.CountRenderedTriangles = false;
+				DrawScene(sceneRenderStates, 0);
+				DrawScene(sceneRenderStates, 1);
 			}
 		});
 	}
@@ -274,43 +266,43 @@ void ShadowMapExample::LoadScene()
 	LightBulb->GetSurface(0)->BlendMode = BlendMode::Add;
 	LightBulb->GetSurface(0)->Alpha = .75f;
 }
-void ShadowMapExample::DrawScene(::RenderUnit &renderUnit, int32 part)
+void ShadowMapExample::DrawScene(::RenderStates &renderStates, int32 part)
 {
 	switch (part)
 	{
 		case 0:
 		{
-			renderUnit.DrawMesh(*Floor, Matrix4f::Scale(5, 0, 5));
-			renderUnit.DrawMesh(*Ceiling, Matrix4f::Scale(5, 0, 5) * Matrix4f::RotateX(180) * Matrix4f::Translate(0, 1.5f, 0));
-			renderUnit.DrawMesh(*Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateY(180) * Matrix4f::RotateZ(90) * Matrix4f::Translate(2.5f, .75f, 0));
-			renderUnit.DrawMesh(*Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateZ(-90) * Matrix4f::Translate(-2.5f, .75f, 0));
-			renderUnit.DrawMesh(*Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateX(-90) * Matrix4f::RotateZ(-90) * Matrix4f::Translate(0, .75f, 2.5f));
-			renderUnit.DrawMesh(*Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateX(90) * Matrix4f::RotateZ(-90) * Matrix4f::Translate(0, .75f, -2.5f));
-			renderUnit.DrawMesh(*Door, Matrix4f::Scale(.7f, 1.2f, .1f) * Matrix4f::Translate(-1.7f, .6f, 2.5f));
+			RenderUnit->DrawMesh(renderStates, *Floor, Matrix4f::Scale(5, 0, 5));
+			RenderUnit->DrawMesh(renderStates, *Ceiling, Matrix4f::Scale(5, 0, 5) * Matrix4f::RotateX(180) * Matrix4f::Translate(0, 1.5f, 0));
+			RenderUnit->DrawMesh(renderStates, *Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateY(180) * Matrix4f::RotateZ(90) * Matrix4f::Translate(2.5f, .75f, 0));
+			RenderUnit->DrawMesh(renderStates, *Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateZ(-90) * Matrix4f::Translate(-2.5f, .75f, 0));
+			RenderUnit->DrawMesh(renderStates, *Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateX(-90) * Matrix4f::RotateZ(-90) * Matrix4f::Translate(0, .75f, 2.5f));
+			RenderUnit->DrawMesh(renderStates, *Wall, Matrix4f::Scale(1.5f, 0, 5) * Matrix4f::RotateX(90) * Matrix4f::RotateZ(-90) * Matrix4f::Translate(0, .75f, -2.5f));
+			RenderUnit->DrawMesh(renderStates, *Door, Matrix4f::Scale(.7f, 1.2f, .1f) * Matrix4f::Translate(-1.7f, .6f, 2.5f));
 
 			Matrix4f crateMatrix = Matrix4f::Translate(.4f, 0, 1.6f);
-			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(5) * Matrix4f::Translate(.4f, .15f, 0) * crateMatrix);
-			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(-10) * Matrix4f::Translate(0, .15f, 0) * crateMatrix);
-			renderUnit.DrawMesh(*Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(8) * Matrix4f::Translate(.2f, .45f, 0) * crateMatrix);
+			RenderUnit->DrawMesh(renderStates, *Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(5) * Matrix4f::Translate(.4f, .15f, 0) * crateMatrix);
+			RenderUnit->DrawMesh(renderStates, *Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(-10) * Matrix4f::Translate(0, .15f, 0) * crateMatrix);
+			RenderUnit->DrawMesh(renderStates, *Crate, Matrix4f::Scale(.3f) * Matrix4f::RotateY(8) * Matrix4f::Translate(.2f, .45f, 0) * crateMatrix);
 
-			renderUnit.DrawMesh(*Crate2, Matrix4f::Scale(.3f) * Matrix4f::RotateY(15) * Matrix4f::Translate(-1.4f, .15f, -.3f));
+			RenderUnit->DrawMesh(renderStates, *Crate2, Matrix4f::Scale(.3f) * Matrix4f::RotateY(15) * Matrix4f::Translate(-1.4f, .15f, -.3f));
 
-			renderUnit.DrawMesh(*Scientist1, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(-.7f, .5f, .7f));
-			renderUnit.DrawMesh(*Scientist2, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(0, .5f, .7f));
-			renderUnit.DrawMesh(*Scientist3, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(.7f, .5f, .7f));
+			RenderUnit->DrawMesh(renderStates, *Scientist1, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(-.7f, .5f, .7f));
+			RenderUnit->DrawMesh(renderStates, *Scientist2, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(0, .5f, .7f));
+			RenderUnit->DrawMesh(renderStates, *Scientist3, Matrix4f::RotateX(-90) * Matrix4f::RotateY(180) * Matrix4f::Translate(.7f, .5f, .7f));
 
 			Matrix4f cageMatrix = Matrix4f::Translate(1.2f, .025f, -.7f);
-			renderUnit.DrawMesh(*CageGround, Matrix4f::Scale(.7f, .05f, .7f) * cageMatrix);
-			renderUnit.DrawMesh(*HoundEye, Matrix4f::Scale(.5f) * Matrix4f::Translate(0, .25f, 0) * cageMatrix);
+			RenderUnit->DrawMesh(renderStates, *CageGround, Matrix4f::Scale(.7f, .05f, .7f) * cageMatrix);
+			RenderUnit->DrawMesh(renderStates, *HoundEye, Matrix4f::Scale(.5f) * Matrix4f::Translate(0, .25f, 0) * cageMatrix);
 
 			// Draw textures that have a transparency key last.
-			renderUnit.DrawMesh(*Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .27f, 0) * cageMatrix);
-			renderUnit.DrawMesh(*Fence, Matrix4f::Scale(.05f, .5f, 3) * Matrix4f::Translate(-.975f, .25f, 1));
+			RenderUnit->DrawMesh(renderStates, *Cage, Matrix4f::Scale(.69f, .5f, .69f) * Matrix4f::Translate(0, .27f, 0) * cageMatrix);
+			RenderUnit->DrawMesh(renderStates, *Fence, Matrix4f::Scale(.05f, .5f, 3) * Matrix4f::Translate(-.975f, .25f, 1));
 			break;
 		}
 		case 1:
 		{
-			renderUnit.DrawMesh(*LightBulb, Matrix4f::Scale(.05f) * Matrix4f::RotateX(-90) * renderUnit.RenderStates.ViewMatrix.RotationPart.Transpose() * Matrix4f::Translate(renderUnit.RenderStates.Lights[0].Position));
+			RenderUnit->DrawMesh(renderStates, *LightBulb, Matrix4f::Scale(.05f) * Matrix4f::RotateX(-90) * renderStates.ViewMatrix.RotationPart.Transpose() * Matrix4f::Translate(renderStates.Lights[0].Position));
 			break;
 		}
 	}

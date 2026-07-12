@@ -9,7 +9,7 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 FreeLookExample::FreeLookExample(int32 width, int32 height) : ExampleBase(width, height, "Freelook")
 {
-	RenderUnit->RenderStates.ClipNear = .5f;
+	RenderStates->ClipNear = .5f;
 
 	LoadScene(CurrentMap);
 
@@ -47,7 +47,7 @@ void FreeLookExample::Run()
 			-10,
 			"T",
 			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			RenderStates->TextureFilteringEnable ? 1 : 0,
 			"X",
 			"Wireframe",
 			Wireframe ? 1 : 0,
@@ -79,11 +79,11 @@ void FreeLookExample::HandleInput()
 }
 void FreeLookExample::Render()
 {
-	RenderUnit->ClearDepthBuffer();
-	if (!Skybox) RenderUnit->ClearFrameBuffer();
 	RenderUnit->Statistics.Clear();
+	RenderUnit->ClearDepthBuffer(*RenderStates);
+	if (!Skybox) RenderUnit->ClearFrameBuffer(*RenderStates);
 
-	RenderUnit->RenderStates.ViewMatrix = FreeLook->ViewMatrix;
+	RenderStates->ViewMatrix = FreeLook->ViewMatrix;
 
 	int32 threadIds[4];
 	for (int32 i = 0; i < 4; i++)
@@ -92,42 +92,36 @@ void FreeLookExample::Render()
 		{
 			if (Skybox)
 			{
-				::RenderUnit skyboxRenderUnit = *RenderUnit;
-				skyboxRenderUnit.Statistics.Clear();
-
-				skyboxRenderUnit.RenderStates.SetWorkload(i, 4);
-				skyboxRenderUnit.RenderStates.ViewMatrix = skyboxRenderUnit.RenderStates.ViewMatrix.RotationPart;
-				skyboxRenderUnit.RenderStates.ZEnable = false;
-				skyboxRenderUnit.RenderStates.ZWriteEnable = false;
-
-				DrawScene(skyboxRenderUnit, 0);
-
-				RenderUnit->Statistics.Merge(skyboxRenderUnit.Statistics);
+				::RenderStates skyboxRenderStates = *RenderStates;
+				skyboxRenderStates.SetWorkload(i, 4);
+				skyboxRenderStates.ViewMatrix = skyboxRenderStates.ViewMatrix.RotationPart;
+				skyboxRenderStates.ZEnable = false;
+				skyboxRenderStates.ZWriteEnable = false;
+				DrawScene(skyboxRenderStates, 0);
 
 				if (Wireframe)
 				{
-					skyboxRenderUnit.RenderStates.Rasterizer = Rasterizer::Wireframe;
-					DrawScene(skyboxRenderUnit, 0);
+					skyboxRenderStates.Rasterizer = Rasterizer::Wireframe;
+					skyboxRenderStates.CountTotalTriangles = false;
+					skyboxRenderStates.CountRenderedTriangles = false;
+					DrawScene(skyboxRenderStates, 0);
 				}
 			}
 
-			::RenderUnit mapRenderUnitCopy = *RenderUnit;
-			mapRenderUnitCopy.Statistics.Clear();
-
-			mapRenderUnitCopy.RenderStates.SetWorkload(i, 4);
-
-			DrawScene(mapRenderUnitCopy, 1);
-
-			RenderUnit->Statistics.Merge(mapRenderUnitCopy.Statistics);
+			::RenderStates mapRenderStates = *RenderStates;
+			mapRenderStates.SetWorkload(i, 4);
+			DrawScene(mapRenderStates, 1);
 
 			if (Wireframe)
 			{
-				mapRenderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				mapRenderUnitCopy.RenderStates.ZWriteEnable = mapRenderUnitCopy.RenderStates.FogEnable;
-				DrawScene(mapRenderUnitCopy, 1);
+				mapRenderStates.Rasterizer = Rasterizer::Wireframe;
+				mapRenderStates.ZWriteEnable = mapRenderStates.FogEnable;
+				mapRenderStates.CountTotalTriangles = false;
+				mapRenderStates.CountRenderedTriangles = false;
+				DrawScene(mapRenderStates, 1);
 			}
 
-			mapRenderUnitCopy.RenderFog();
+			RenderUnit->RenderFog(mapRenderStates);
 		});
 	}
 
@@ -151,7 +145,7 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 		Skybox = nullptr;
 	}
 
-	RenderUnit->RenderStates.FogEnable = false;
+	RenderStates->FogEnable = false;
 
 	switch (mapNumber)
 	{
@@ -229,10 +223,10 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(49, 5, 12);
 			FreeLook->Rotation = vfloat2(-90, 0);
 
-			RenderUnit->RenderStates.FogEnable = true;
-			RenderUnit->RenderStates.FogNear = 20;
-			RenderUnit->RenderStates.FogFar = 100;
-			RenderUnit->RenderStates.FogColor = Color(230, 225, 220);
+			RenderStates->FogEnable = true;
+			RenderStates->FogNear = 20;
+			RenderStates->FogFar = 100;
+			RenderStates->FogColor = Color(230, 225, 220);
 			break;
 		case 6:
 			Map = Mesh::Load("Assets\\Maps\\Apartment\\Apartment.obj");
@@ -254,22 +248,22 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(-20, -1, -7);
 			FreeLook->Rotation = vfloat2();
 
-			RenderUnit->RenderStates.FogEnable = true;
-			RenderUnit->RenderStates.FogNear = 20;
-			RenderUnit->RenderStates.FogFar = 100;
-			RenderUnit->RenderStates.FogColor = Color();
+			RenderStates->FogEnable = true;
+			RenderStates->FogNear = 20;
+			RenderStates->FogFar = 100;
+			RenderStates->FogColor = Color();
 			break;
 	}
 }
-void FreeLookExample::DrawScene(::RenderUnit &renderUnit, int32 part)
+void FreeLookExample::DrawScene(::RenderStates &renderStates, int32 part)
 {
 	switch (part)
 	{
 		case 0:
-			renderUnit.DrawMesh(*Skybox, Matrix4f::Scale(10));
+			RenderUnit->DrawMesh(renderStates, *Skybox, Matrix4f::Scale(10));
 			break;
 		case 1:
-			renderUnit.DrawMesh(*Map, Matrix4f::Identity());
+			RenderUnit->DrawMesh(renderStates, *Map, Matrix4f::Identity());
 			break;
 	}
 }

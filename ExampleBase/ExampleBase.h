@@ -14,12 +14,14 @@
 #include <Math/VectorMath.h>
 #include <RenderTarget.h>
 #include <RenderUnit.h>
+#include <RenderStates.h>
 
 class ExampleBase
 {
 protected:
 	Window *Window;
 	RenderUnit *RenderUnit;
+	RenderStates *RenderStates;
 	FreeLook *FreeLook;
 	FPSCounter *FPSCounter;
 	const Font *Font10;
@@ -61,4 +63,5 @@ public:
 	void DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const;
 
 	Mesh* CreateSkybox(const char *path) const;
+	vfloat3 GetCubemapDirection(int32 face) const;
 };

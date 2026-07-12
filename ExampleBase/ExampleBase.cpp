@@ -15,11 +15,12 @@ ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 	lstrcatA(title, name);
 
 	Window = new ::Window(width, height, title);
-
 	RenderUnit = new ::RenderUnit();
-	RenderUnit->RenderStates.FrameBuffer = RenderTarget(*Window);
-	RenderUnit->RenderStates.DepthBuffer = RenderTarget(Window->Width, Window->Height, _aligned_malloc(Window->Width * Window->Height * 4, 32));
-	RenderUnit->RenderStates.WireframeDepthBias = 1.01f;
+
+	RenderStates = new ::RenderStates();
+	RenderStates->FrameBuffer = RenderTarget(*Window);
+	RenderStates->DepthBuffer = RenderTarget(Window->Width, Window->Height, _aligned_malloc(Window->Width * Window->Height * 4, 32));
+	RenderStates->WireframeDepthBias = 1.01f;
 
 	FreeLook = new ::FreeLook();
 	FPSCounter = new ::FPSCounter(500);
@@ -50,8 +51,11 @@ ExampleBase::~ExampleBase()
 {
 	delete Window;
 
-	_aligned_free(RenderUnit->RenderStates.DepthBuffer.Buffer);
+	_aligned_free(RenderStates->DepthBuffer.Buffer);
+	if (RenderStates->ShadowMap.Buffer) _aligned_free(RenderStates->ShadowMap.Buffer);
+
 	delete RenderUnit;
+	delete RenderStates;
 
 	delete FreeLook;
 	delete FPSCounter;
@@ -88,7 +92,7 @@ void ExampleBase::HandleBaseInput()
 
 	if (Input::GetKeyPressed(Scancode::T))
 	{
-		RenderUnit->RenderStates.TextureFilteringEnable = !RenderUnit->RenderStates.TextureFilteringEnable;
+		RenderStates->TextureFilteringEnable = !RenderStates->TextureFilteringEnable;
 	}
 
 	if (Input::GetKeyPressed(Scancode::R))
@@ -235,26 +239,26 @@ void ExampleBase::DrawControlsBox(const char *title, int32 x, int32 y, ...) cons
 }
 void ExampleBase::DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const
 {
-	width = Math::Min(width, RenderUnit->RenderStates.FrameBuffer.Width - 1);
-	height = Math::Min(height, RenderUnit->RenderStates.FrameBuffer.Height - 1);
-	zFrom = RenderUnit->RenderStates.ClipNear / zFrom;
-	zTo = RenderUnit->RenderStates.ClipNear / zTo;
+	width = Math::Min(width, RenderStates->FrameBuffer.Width - 1);
+	height = Math::Min(height, RenderStates->FrameBuffer.Height - 1);
+	zFrom = RenderStates->ClipNear / zFrom;
+	zTo = RenderStates->ClipNear / zTo;
 
 	int32 scale = 0;
-	while (RenderUnit->RenderStates.ShadowMap.Width >> scale > width || RenderUnit->RenderStates.ShadowMap.Height >> scale > height)
+	while (RenderStates->ShadowMap.Width >> scale > width || RenderStates->ShadowMap.Height >> scale > height)
 	{
 		scale++;
 	}
 
-	int32 renderWidth = RenderUnit->RenderStates.ShadowMap.Width >> scale;
-	int32 renderHeight = RenderUnit->RenderStates.ShadowMap.Height >> scale;
+	int32 renderWidth = RenderStates->ShadowMap.Width >> scale;
+	int32 renderHeight = RenderStates->ShadowMap.Height >> scale;
 
-	Color *frameBuffer = RenderUnit->RenderStates.FrameBuffer.GetBuffer<Color>(x + y * RenderUnit->RenderStates.FrameBuffer.Width);
-	float *shadowMap = RenderUnit->RenderStates.ShadowMap.GetBuffer<float>();
+	Color *frameBuffer = RenderStates->FrameBuffer.GetBuffer<Color>(x + y * RenderStates->FrameBuffer.Width);
+	float *shadowMap = RenderStates->ShadowMap.GetBuffer<float>();
 
-	int32 frameBufferStrideY = RenderUnit->RenderStates.FrameBuffer.Width - renderWidth;
+	int32 frameBufferStrideY = RenderStates->FrameBuffer.Width - renderWidth;
 	int32 shadowMapStrideX = 1 << scale;
-	int32 shadowMapStrideY = RenderUnit->RenderStates.ShadowMap.Width * (shadowMapStrideX - 1);
+	int32 shadowMapStrideY = RenderStates->ShadowMap.Width * (shadowMapStrideX - 1);
 
 	for (int32 py = 0; py < renderHeight; py++)
 	{
@@ -284,9 +288,9 @@ void ExampleBase::DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height
 
 	char title[100];
 	char tmp[100];
-	lstrcpyA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Width, tmp, 10));
+	lstrcpyA(title, _itoa(RenderStates->ShadowMap.Width, tmp, 10));
 	lstrcatA(title, "x");
-	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Height, tmp, 10));
+	lstrcatA(title, _itoa(RenderStates->ShadowMap.Height, tmp, 10));
 
 	Graphics g = Graphics(*Window);
 	g.DrawString(x + 10, y + 10, *Font14Bold, "Shadow Map");
@@ -327,4 +331,24 @@ Mesh* ExampleBase::CreateSkybox(const char *path) const
 	skybox->GetSurface(5)->Texture = Texture::FromFile(fileName);
 
 	return skybox;
+}
+vfloat3 ExampleBase::GetCubemapDirection(int32 face) const
+{
+	switch (face)
+	{
+		case 0:
+			return vfloat3(90, 0, 0);
+		case 1:
+			return vfloat3(-90, 0, 0);
+		case 2:
+			return vfloat3(0, -90, 0);
+		case 3:
+			return vfloat3(0, 90, 0);
+		case 4:
+			return vfloat3();
+		case 5:
+			return vfloat3(180, 0, 0);
+		default:
+			throw;
+	}
 }

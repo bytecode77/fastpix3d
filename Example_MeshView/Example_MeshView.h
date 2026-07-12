@@ -22,5 +22,5 @@ private:
 	void Render();
 
 	void LoadScene();
-	void DrawScene(::RenderUnit &renderUnit);
+	void DrawScene(::RenderStates &renderStates);
 };

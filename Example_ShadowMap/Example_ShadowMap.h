@@ -26,7 +26,6 @@ private:
 
 public:
 	explicit ShadowMapExample(int32 width, int32 height);
-	~ShadowMapExample();
 
 	void Run() override;
 
@@ -35,5 +34,5 @@ private:
 	void Render();
 
 	void LoadScene();
-	void DrawScene(::RenderUnit &renderUnit, int32 part);
+	void DrawScene(::RenderStates &renderStates, int32 part);
 };

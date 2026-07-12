@@ -9,10 +9,10 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 PrimitivesExample::PrimitivesExample(int32 width, int32 height) : ExampleBase(width, height, "Primitives")
 {
-	RenderUnit->RenderStates.ClipNear = .1f;
-	RenderUnit->RenderStates.LightsEnable = true;
-	RenderUnit->RenderStates.AmbientLight = Color(40, 40, 40);
-	RenderUnit->RenderStates.Lights[0].Enabled = true;
+	RenderStates->ClipNear = .1f;
+	RenderStates->LightsEnable = true;
+	RenderStates->AmbientLight = Color(40, 40, 40);
+	RenderStates->Lights[0].Enabled = true;
 
 	LoadScene();
 
@@ -36,7 +36,7 @@ void PrimitivesExample::Run()
 			-10,
 			"Space",
 			"Textures",
-			RenderUnit->RenderStates.TextureEnable ? 1 : 0,
+			RenderStates->TextureEnable ? 1 : 0,
 			nullptr);
 		DrawControlsBox(
 			"Render",
@@ -44,7 +44,7 @@ void PrimitivesExample::Run()
 			-10,
 			"T",
 			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			RenderStates->TextureFilteringEnable ? 1 : 0,
 			"X",
 			"Wireframe",
 			Wireframe ? 1 : 0,
@@ -75,9 +75,9 @@ void PrimitivesExample::HandleInput()
 
 	if (Input::GetKeyPressed(Scancode::Space))
 	{
-		RenderUnit->RenderStates.TextureEnable = !RenderUnit->RenderStates.TextureEnable;
+		RenderStates->TextureEnable = !RenderStates->TextureEnable;
 
-		if (RenderUnit->RenderStates.TextureEnable)
+		if (RenderStates->TextureEnable)
 		{
 			for (int32 i = 0; i < 8; i++)
 			{
@@ -99,31 +99,29 @@ void PrimitivesExample::HandleInput()
 }
 void PrimitivesExample::Render()
 {
-	RenderUnit->ClearFrameBuffer(0, 100, 170);
-	RenderUnit->ClearDepthBuffer();
 	RenderUnit->Statistics.Clear();
+	RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170);
+	RenderUnit->ClearDepthBuffer(*RenderStates);
 
 	int32 threadIds[4];
 	for (int32 i = 0; i < 4; i++)
 	{
 		threadIds[i] = ThreadPool::Start([this, i]
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
 			// Since none of the meshes intersect, this makes it an embarrassingly parallel problem,
 			// by rendering each mesh in a seperate thread.
 
-			DrawScene(renderUnitCopy, i * 2);
-			DrawScene(renderUnitCopy, i * 2 + 1);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
+			::RenderStates meshRenderStates = *RenderStates;
+			DrawScene(meshRenderStates, i * 2);
+			DrawScene(meshRenderStates, i * 2 + 1);
 
 			if (Wireframe)
 			{
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				DrawScene(renderUnitCopy, i * 2);
-				DrawScene(renderUnitCopy, i * 2 + 1);
+				meshRenderStates.Rasterizer = Rasterizer::Wireframe;
+				meshRenderStates.CountTotalTriangles = false;
+				meshRenderStates.CountRenderedTriangles = false;
+				DrawScene(meshRenderStates, i * 2);
+				DrawScene(meshRenderStates, i * 2 + 1);
 			}
 		});
 	}
@@ -155,10 +153,10 @@ void PrimitivesExample::LoadScene()
 		Meshes[i]->SetSpecular(20, .75f);
 	}
 }
-void PrimitivesExample::DrawScene(::RenderUnit &renderUnit, int32 meshIndex)
+void PrimitivesExample::DrawScene(::RenderStates &renderStates, int32 meshIndex)
 {
 	int32 x = meshIndex % 4;
 	int32 y = meshIndex / 4;
 
-	renderUnit.DrawMesh(*Meshes[meshIndex], Rotation * Matrix4f::Translate((x - 1.5f) * 1.7f, (y - .5f) * -1.7f, 3.8f));
+	RenderUnit->DrawMesh(renderStates, *Meshes[meshIndex], Rotation * Matrix4f::Translate((x - 1.5f) * 1.7f, (y - .5f) * -1.7f, 3.8f));
 }

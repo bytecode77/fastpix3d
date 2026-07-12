@@ -2,7 +2,7 @@
 #include "../Math/Box2i.h"
 #include "../RasterizerMath.h"
 
-void FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, const Vertex &_v3) const
+bool FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, const Vertex &_v3) const
 {
 	FragmentRasterizerVertex v1 = FragmentRasterizerVertex(_v1);
 	FragmentRasterizerVertex v2 = FragmentRasterizerVertex(_v2);
@@ -17,7 +17,7 @@ void FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, cons
 	bool isFrontFace;
 	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1.Position, v2.Position, v3.Position, isFrontFace))
 	{
-		return;
+		return false;
 	}
 	else if (!isFrontFace)
 	{
@@ -34,7 +34,7 @@ void FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, cons
 		v1.Position.Z > RenderStates.ClipFar && v2.Position.Z > RenderStates.ClipFar && v3.Position.Z > RenderStates.ClipFar)
 	{
 		// All vertices are behind the near or far clipping plane.
-		return;
+		return false;
 	}
 
 	if (RenderStates.ShadowMapFunc != ShadowMapFunc::None)
@@ -273,10 +273,7 @@ void FragmentRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, cons
 		}
 	}
 
-	if (rendered && RasterizerMath::GetWorkloadThreadIndex(RenderStates.Workload) == 0)
-	{
-		Statistics.RenderedTriangleCount++;
-	}
+	return rendered;
 }
 
 void FragmentRasterizer::ClipEdges(bool hasColor, bool hasSpecular, const FragmentRasterizerVertex &edge1a, const FragmentRasterizerVertex &edge1b, const FragmentRasterizerVertex &edge2a, const FragmentRasterizerVertex &edge2b, FragmentRasterizerVertex &intersection1, FragmentRasterizerVertex &intersection2) const

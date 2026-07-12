@@ -62,7 +62,7 @@ public:
 	Matrix4f NormalMatrix;
 	float InverseClipNear;
 	vfloat2 InverseTextureSize;
-	int32 LightsMaxIndex;
+	int32 LightsMaxIndex = -1;
 	Matrix4f ShadowLightMatrix;
 	Matrix4f ShadowLightModelMatrix;
 };
@@ -72,47 +72,50 @@ class FASTPIX3D_API RenderStates
 private:
 	PrecomputedRenderStates Precomputed;
 
-	Workload _Workload;
-	Rasterizer _Rasterizer;
+	Workload _Workload = Workload::Full;
+	Rasterizer _Rasterizer = Rasterizer::Fragments;
 
 	RenderTarget _FrameBuffer;
 	RenderTarget _DepthBuffer;
 	RenderTarget _ShadowMap;
 
-	Matrix4f _ViewMatrix;
-	Matrix4f _ModelMatrix;
-	float _ClipNear;
-	float _ClipFar;
-	float _Zoom;
-	CullMode _CullMode;
-	Color _WireframeColor;
-	float _WireframeDepthBias;
+	Matrix4f _ViewMatrix = Matrix4f::Identity();
+	Matrix4f _ModelMatrix = Matrix4f::Identity();
+	float _ClipNear = 1;
+	float _ClipFar = 1000;
+	float _Zoom = 1;
+	CullMode _CullMode = CullMode::Back;
+	Color _WireframeColor = Color(255, 255, 255);
+	float _WireframeDepthBias = 1;
 
-	bool _ZEnable;
-	bool _ZWriteEnable;
+	bool _ZEnable = true;
+	bool _ZWriteEnable = true;
 
-	bool _TextureEnable;
-	const Texture *_Texture;
-	bool _TextureFilteringEnable;
-	vfloat2 _TextureSize;
-	BlendMode _BlendMode;
-	float _Alpha;
-	float _SpecularExponent;
-	float _SpecularIntensity;
+	bool _TextureEnable = true;
+	const Texture *_Texture = nullptr;
+	bool _TextureFilteringEnable = false;
+	vfloat2 _TextureSize = vfloat2(1);
+	BlendMode _BlendMode = BlendMode::None;
+	float _Alpha = 1;
+	float _SpecularExponent = 0;
+	float _SpecularIntensity = 0;
 
-	bool _FogEnable;
-	float _FogNear;
-	float _FogFar;
+	bool _FogEnable = false;
+	float _FogNear = 0;
+	float _FogFar = 1000;
 	Color _FogColor;
 
-	bool _LightsEnable;
-	Color _AmbientLight;
+	bool _LightsEnable = false;
+	Color _AmbientLight = Color(127, 127, 127);
 
-	::ShadowMapFunc _ShadowMapFunc;
-	::ShadowMapProjection _ShadowMapProjection;
-	int32 _ShadowLightIndex;
-	float _ShadowLightZoom;
-	float _ShadowMapDepthBias;
+	::ShadowMapFunc _ShadowMapFunc = ShadowMapFunc::None;
+	::ShadowMapProjection _ShadowMapProjection = ShadowMapProjection::Perspective;
+	int32 _ShadowLightIndex = 0;
+	float _ShadowLightZoom = 1;
+	float _ShadowMapDepthBias = 0;
+
+	bool _CountTotalTriangles = true;
+	bool _CountRenderedTriangles = true;
 
 public:
 	property_get(::Workload, Workload)
@@ -184,7 +187,7 @@ public:
 	property_set(float, ClipNear)
 	{
 		_ClipNear = value;
-		Precomputed.InverseClipNear = 1 / _ClipNear;
+		UpdateClipNear();
 	}
 	property_get(float, ClipFar)
 	{
@@ -275,7 +278,7 @@ public:
 	property_set(const vfloat2&, TextureSize)
 	{
 		_TextureSize = value;
-		Precomputed.InverseTextureSize = vfloat2(1 / _TextureSize.X, 1 / _TextureSize.Y);
+		UpdateTextureSize();
 	}
 	property_get(::BlendMode, BlendMode)
 	{
@@ -404,6 +407,23 @@ public:
 		_ShadowMapDepthBias = value;
 	}
 
+	property_get(bool, CountTotalTriangles)
+	{
+		return _CountTotalTriangles;
+	}
+	property_set(bool, CountTotalTriangles)
+	{
+		_CountTotalTriangles = value;
+	}
+	property_get(bool, CountRenderedTriangles)
+	{
+		return _CountRenderedTriangles;
+	}
+	property_set(bool, CountRenderedTriangles)
+	{
+		_CountRenderedTriangles = value;
+	}
+
 	RenderStates();
 	RenderStates(const RenderStates &renderStates);
 
@@ -412,6 +432,8 @@ public:
 	RenderStates& operator=(const RenderStates& renderStates);
 
 private:
+	void UpdateClipNear();
+	void UpdateTextureSize();
 	void UpdateModelViewMatrix();
 	void UpdateShadowLightMatrix();
 	void PrecomputeLights();

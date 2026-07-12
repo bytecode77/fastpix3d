@@ -9,17 +9,17 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 ShadowMapCubemapExample::ShadowMapCubemapExample(int32 width, int32 height) : ExampleBase(width, height, "Shadow Mapping")
 {
-	RenderUnit->RenderStates.ShadowMap = RenderTarget(1024, 1024 * 6, _aligned_malloc(2048 * 2048 * 6 * 4, 32));
-	RenderUnit->RenderStates.ClipNear = .1f;
-	RenderUnit->RenderStates.LightsEnable = true;
-	RenderUnit->RenderStates.AmbientLight = Color(120, 130, 160);
-	RenderUnit->RenderStates.Lights[0].Enabled = true;
-	RenderUnit->RenderStates.Lights[0].Type = LightType::Point;
-	RenderUnit->RenderStates.Lights[0].Intensity = 50;
-	RenderUnit->RenderStates.Lights[0].Color = Color(255, 240, 180);
-	RenderUnit->RenderStates.ShadowMapFunc = ShadowMapFunc::Point;
-	RenderUnit->RenderStates.ShadowMapProjection = ShadowMapProjection::Cubemap;
-	RenderUnit->RenderStates.ShadowMapDepthBias = .075f;
+	RenderStates->ShadowMap = RenderTarget(1024, 1024 * 6, _aligned_malloc(2048 * 2048 * 6 * 4, 32));
+	RenderStates->ClipNear = .1f;
+	RenderStates->LightsEnable = true;
+	RenderStates->AmbientLight = Color(120, 130, 160);
+	RenderStates->Lights[0].Enabled = true;
+	RenderStates->Lights[0].Type = LightType::Point;
+	RenderStates->Lights[0].Intensity = 50;
+	RenderStates->Lights[0].Color = Color(255, 240, 180);
+	RenderStates->ShadowMapFunc = ShadowMapFunc::Point;
+	RenderStates->ShadowMapProjection = ShadowMapProjection::Cubemap;
+	RenderStates->ShadowMapDepthBias = .075f;
 
 	LoadScene();
 
@@ -27,10 +27,6 @@ ShadowMapCubemapExample::ShadowMapCubemapExample(int32 width, int32 height) : Ex
 	LightMovementStopwatch = Stopwatch::StartNew();
 	Window->SetRelativeMouseMode(true);
 	Input::CenterMouse(*Window);
-}
-ShadowMapCubemapExample::~ShadowMapCubemapExample()
-{
-	_aligned_free(RenderUnit->RenderStates.ShadowMap.Buffer);
 }
 
 void ShadowMapCubemapExample::Run()
@@ -63,10 +59,10 @@ void ShadowMapCubemapExample::Run()
 			-1,
 			"P",
 			"PCF",
-			RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
+			RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
 			"T",
 			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			RenderStates->TextureFilteringEnable ? 1 : 0,
 			"X",
 			"Wireframe",
 			Wireframe ? 1 : 0,
@@ -95,26 +91,26 @@ void ShadowMapCubemapExample::HandleInput()
 
 	if (Input::GetKeyPressed(Scancode::D1))
 	{
-		RenderUnit->RenderStates.ShadowMap = RenderTarget(512, 512 * 6, RenderUnit->RenderStates.ShadowMap.Buffer);
-		RenderUnit->RenderStates.ShadowMapDepthBias = .15f;
+		RenderStates->ShadowMap = RenderTarget(512, 512 * 6, RenderStates->ShadowMap.Buffer);
+		RenderStates->ShadowMapDepthBias = .15f;
 		ShadowMapResolutionChanged = true;
 	}
 	else if (Input::GetKeyPressed(Scancode::D2))
 	{
-		RenderUnit->RenderStates.ShadowMap = RenderTarget(1024, 1024 * 6, RenderUnit->RenderStates.ShadowMap.Buffer);
-		RenderUnit->RenderStates.ShadowMapDepthBias = .075f;
+		RenderStates->ShadowMap = RenderTarget(1024, 1024 * 6, RenderStates->ShadowMap.Buffer);
+		RenderStates->ShadowMapDepthBias = .075f;
 		ShadowMapResolutionChanged = true;
 	}
 	else if (Input::GetKeyPressed(Scancode::D3))
 	{
-		RenderUnit->RenderStates.ShadowMap = RenderTarget(2048, 2048 * 6, RenderUnit->RenderStates.ShadowMap.Buffer);
-		RenderUnit->RenderStates.ShadowMapDepthBias = .05f;
+		RenderStates->ShadowMap = RenderTarget(2048, 2048 * 6, RenderStates->ShadowMap.Buffer);
+		RenderStates->ShadowMapDepthBias = .05f;
 		ShadowMapResolutionChanged = true;
 	}
 
 	if (Input::GetKeyPressed(Scancode::P))
 	{
-		RenderUnit->RenderStates.ShadowMapFunc = RenderUnit->RenderStates.ShadowMapFunc == ShadowMapFunc::Pcf ? ShadowMapFunc::Point : ShadowMapFunc::Pcf;
+		RenderStates->ShadowMapFunc = RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? ShadowMapFunc::Point : ShadowMapFunc::Pcf;
 	}
 }
 void ShadowMapCubemapExample::Render()
@@ -122,12 +118,12 @@ void ShadowMapCubemapExample::Render()
 	bool renderShadowMap = ShadowMapResolutionChanged || LightMovementStopwatch.IsRunning;
 	ShadowMapResolutionChanged = false;
 
-	RenderUnit->ClearFrameBuffer();
-	RenderUnit->ClearDepthBuffer();
-	if (renderShadowMap) RenderUnit->ClearShadowMap();
 	RenderUnit->Statistics.Clear();
+	RenderUnit->ClearFrameBuffer(*RenderStates);
+	RenderUnit->ClearDepthBuffer(*RenderStates);
+	if (renderShadowMap) RenderUnit->ClearShadowMap(*RenderStates);
 
-	RenderUnit->RenderStates.ViewMatrix = FreeLook->ViewMatrix;
+	RenderStates->ViewMatrix = FreeLook->ViewMatrix;
 
 	int64 t1 = LightMovementStopwatch.ElapsedMilliseconds + 5000;
 	float t2 = LightMovementStopwatch.ElapsedMilliseconds * .05f;
@@ -135,12 +131,12 @@ void ShadowMapCubemapExample::Render()
 	const float lightSquareWidth = 11;
 	const float lightSquareHeight = 5;
 
-	if (lightKeyframe < 300) RenderUnit->RenderStates.Lights[0].Position = vfloat3(-lightSquareHeight / 2, 0, lightKeyframe / 300.0f * lightSquareWidth - lightSquareWidth / 2);
-	else if (lightKeyframe < 300 + 180) RenderUnit->RenderStates.Lights[0].Position = vfloat3((lightKeyframe - 300) / 180.0f * lightSquareHeight - lightSquareHeight / 2, 0, lightSquareWidth / 2);
-	else if (lightKeyframe < 300 + 180 + 300) RenderUnit->RenderStates.Lights[0].Position = vfloat3(lightSquareHeight / 2, 0, lightSquareWidth / 2 - (lightKeyframe - 300 - 180) / 300.0f * lightSquareWidth);
-	else RenderUnit->RenderStates.Lights[0].Position = vfloat3(lightSquareHeight / 2 - (lightKeyframe - 300 - 180 - 300) / 180.0f * lightSquareHeight, 0, -lightSquareWidth / 2);
+	if (lightKeyframe < 300) RenderStates->Lights[0].Position = vfloat3(-lightSquareHeight / 2, 0, lightKeyframe / 300.0f * lightSquareWidth - lightSquareWidth / 2);
+	else if (lightKeyframe < 300 + 180) RenderStates->Lights[0].Position = vfloat3((lightKeyframe - 300) / 180.0f * lightSquareHeight - lightSquareHeight / 2, 0, lightSquareWidth / 2);
+	else if (lightKeyframe < 300 + 180 + 300) RenderStates->Lights[0].Position = vfloat3(lightSquareHeight / 2, 0, lightSquareWidth / 2 - (lightKeyframe - 300 - 180) / 300.0f * lightSquareWidth);
+	else RenderStates->Lights[0].Position = vfloat3(lightSquareHeight / 2 - (lightKeyframe - 300 - 180 - 300) / 180.0f * lightSquareHeight, 0, -lightSquareWidth / 2);
 
-	RenderUnit->RenderStates.Lights[0].Position += vfloat3(0, .5f, 0) + vfloat3(Math::Sin(t2), Math::Cos(t2), Math::Sin(t2)) * .3f;
+	RenderStates->Lights[0].Position += vfloat3(0, .5f, 0) + vfloat3(Math::Sin(t2), Math::Cos(t2), Math::Sin(t2)) * .3f;
 
 	int32 threadIds[6];
 
@@ -151,47 +147,12 @@ void ShadowMapCubemapExample::Render()
 		{
 			threadIds[i] = ThreadPool::Start([this, i]
 			{
-				::RenderUnit renderUnitCopy = *RenderUnit;
-				renderUnitCopy.Statistics.Clear();
-
-				float directionX = 0;
-				float directionY = 0;
-
-				switch (i)
-				{
-					case 0:
-						directionX = 90;
-						directionY = 0;
-						break;
-					case 1:
-						directionX = -90;
-						directionY = 0;
-						break;
-					case 2:
-						directionX = 0;
-						directionY = -90;
-						break;
-					case 3:
-						directionX = 0;
-						directionY = 90;
-						break;
-					case 4:
-						directionX = 0;
-						directionY = 0;
-						break;
-					case 5:
-						directionX = 180;
-						directionY = 0;
-						break;
-				}
-
-				int32 size = renderUnitCopy.RenderStates.ShadowMap.Width;
-				renderUnitCopy.RenderStates.ShadowMap = RenderTarget(size, size, RenderUnit->RenderStates.ShadowMap.GetBuffer<float>(size * size * i));
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::ShadowMap;
-				renderUnitCopy.RenderStates.Lights[0].Rotation = vfloat3(directionX, directionY, 0);
-				DrawScene(renderUnitCopy, 0);
-
-				RenderUnit->Statistics.Merge(renderUnitCopy.Statistics, false, true);
+				::RenderStates shadowMapRenderStates = *RenderStates;
+				shadowMapRenderStates.ShadowMap = RenderTarget(shadowMapRenderStates.ShadowMap.Width, shadowMapRenderStates.ShadowMap.Width, RenderStates->ShadowMap.GetBuffer<float>(shadowMapRenderStates.ShadowMap.Width * shadowMapRenderStates.ShadowMap.Width * i));
+				shadowMapRenderStates.Rasterizer = Rasterizer::ShadowMap;
+				shadowMapRenderStates.Lights[0].Rotation = GetCubemapDirection(i);
+				shadowMapRenderStates.CountTotalTriangles = false;
+				DrawScene(shadowMapRenderStates, 0);
 			});
 		}
 
@@ -206,22 +167,18 @@ void ShadowMapCubemapExample::Render()
 	{
 		threadIds[i] = ThreadPool::Start([this, i]
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			renderUnitCopy.RenderStates.SetWorkload(i, 4);
-			DrawScene(renderUnitCopy, 0);
-
-			renderUnitCopy.RenderStates.ShadowMapFunc = ShadowMapFunc::None;
-			DrawScene(renderUnitCopy, 1);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics, true, true);
+			::RenderStates sceneRenderStates = *RenderStates;
+			sceneRenderStates.SetWorkload(i, 4);
+			DrawScene(sceneRenderStates, 0);
+			DrawScene(sceneRenderStates, 1);
 
 			if (Wireframe)
 			{
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				DrawScene(renderUnitCopy, 0);
-				DrawScene(renderUnitCopy, 1);
+				sceneRenderStates.Rasterizer = Rasterizer::Wireframe;
+				sceneRenderStates.CountTotalTriangles = false;
+				sceneRenderStates.CountRenderedTriangles = false;
+				DrawScene(sceneRenderStates, 0);
+				DrawScene(sceneRenderStates, 1);
 			}
 		});
 	}
@@ -244,18 +201,18 @@ void ShadowMapCubemapExample::LoadScene()
 	LightBulb->SetTexture(Texture::FromFile("Assets\\Textures\\LightSprite.png"));
 	LightBulb->GetSurface(0)->BlendMode = BlendMode::Add;
 }
-void ShadowMapCubemapExample::DrawScene(::RenderUnit &renderUnit, int32 part)
+void ShadowMapCubemapExample::DrawScene(::RenderStates &renderStates, int32 part)
 {
 	switch (part)
 	{
 		case 0:
 		{
-			renderUnit.DrawMesh(*Map, Matrix4f::Identity());
+			RenderUnit->DrawMesh(renderStates, *Map, Matrix4f::Identity());
 			break;
 		}
 		case 1:
 		{
-			renderUnit.DrawMesh(*LightBulb, Matrix4f::Scale(.2f) * Matrix4f::RotateX(-90) * renderUnit.RenderStates.ViewMatrix.RotationPart.Transpose() * Matrix4f::Translate(renderUnit.RenderStates.Lights[0].Position));
+			RenderUnit->DrawMesh(renderStates, *LightBulb, Matrix4f::Scale(.2f) * Matrix4f::RotateX(-90) * renderStates.ViewMatrix.RotationPart.Transpose() * Matrix4f::Translate(renderStates.Lights[0].Position));
 			break;
 		}
 	}

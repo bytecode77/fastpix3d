@@ -1,0 +1,31 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="ExampleBase/ExampleBase.vcxitems" Id="7e68bad7-4ce3-4768-8247-c9fcd1e00da5" />
+  <Project Path="Example_FreeLook/Example_FreeLook.vcxproj" Id="5f96adbb-f2dc-4b19-bde3-9af369379d6e">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_HighPolyBenchmark/Example_HighPolyBenchmark.vcxproj" Id="3b7ca055-836d-4327-94a0-32f24c79741d">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_MeshView/Example_MeshView.vcxproj" Id="23c863cc-8a55-4912-9959-2b7224c0fea0">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_Primitives/Example_Primitives.vcxproj" Id="6bf3e863-648c-46e7-bd09-6877ed943f77">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_ShadowMap/Example_ShadowMap.vcxproj" Id="624c9cba-b194-4c44-861c-86f2ed5cef89">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_ShadowMapCubemap/Example_ShadowMapCubemap.vcxproj" Id="1f9fd4b7-529f-401e-9fb9-3d2be5d2bdd4">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_ShadowMapCubemap2/Example_ShadowMapCubemap2.vcxproj" Id="b23cbddb-f4eb-4532-9e9f-be87e09c1a41">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="Example_SphereMap/Example_SphereMap.vcxproj" Id="23a2a8f0-c809-4473-b4bd-457abcf4efc3">
+    <BuildDependency Project="FastPix3D/FastPix3D.vcxproj" />
+  </Project>
+  <Project Path="FastPix3D/FastPix3D.vcxproj" Id="89b8b9cb-38bc-41e0-94f3-de67f7e74ff2" />
+</Solution>

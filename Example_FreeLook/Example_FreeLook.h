@@ -20,5 +20,5 @@ private:
 	void Render();
 
 	void LoadScene(int32 mapNumber);
-	void DrawScene(::RenderUnit &renderUnit, int32 part);
+	void DrawScene(::RenderStates &renderStates, int32 part);
 };

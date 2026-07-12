@@ -11,8 +11,6 @@ public:
 	RenderStatistics(const RenderStatistics &renderStatistics);
 
 	void Clear();
-	void Merge(const RenderStatistics &statistics);
-	void Merge(const RenderStatistics &statistics, bool totalTriangleCount, bool renderedTriangleCount);
 
 	RenderStatistics& operator =(const RenderStatistics &other);
 };

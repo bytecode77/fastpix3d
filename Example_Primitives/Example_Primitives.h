@@ -20,5 +20,5 @@ private:
 	void Render();
 
 	void LoadScene();
-	void DrawScene(::RenderUnit &renderUnit, int32 meshIndex);
+	void DrawScene(::RenderStates &renderStates, int32 meshIndex);
 };

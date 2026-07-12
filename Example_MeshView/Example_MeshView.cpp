@@ -9,11 +9,11 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 MeshViewExample::MeshViewExample(int32 width, int32 height) : ExampleBase(width, height, "Meshes")
 {
-	RenderUnit->RenderStates.ClipNear = .1f;
-	RenderUnit->RenderStates.LightsEnable = true;
-	RenderUnit->RenderStates.AmbientLight = Color(19, 21, 23);
-	RenderUnit->RenderStates.Lights[0].Enabled = true;
-	RenderUnit->RenderStates.Lights[0].Color = Color(255, 252, 245);
+	RenderStates->ClipNear = .1f;
+	RenderStates->LightsEnable = true;
+	RenderStates->AmbientLight = Color(19, 21, 23);
+	RenderStates->Lights[0].Enabled = true;
+	RenderStates->Lights[0].Color = Color(255, 252, 245);
 
 	LoadScene();
 
@@ -51,7 +51,7 @@ void MeshViewExample::Run()
 			-10,
 			"T",
 			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			RenderStates->TextureFilteringEnable ? 1 : 0,
 			"X",
 			"Wireframe",
 			Wireframe ? 1 : 0,
@@ -96,28 +96,25 @@ void MeshViewExample::HandleInput()
 }
 void MeshViewExample::Render()
 {
-	RenderUnit->ClearFrameBuffer(0, 100, 170);
-	RenderUnit->ClearDepthBuffer();
 	RenderUnit->Statistics.Clear();
+	RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170);
+	RenderUnit->ClearDepthBuffer(*RenderStates);
 
 	int32 threadIds[4];
 	for (int32 i = 0; i < 4; i++)
 	{
 		threadIds[i] = ThreadPool::Start([this, i]
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			renderUnitCopy.RenderStates.SetWorkload(i, 4);
-
-			DrawScene(renderUnitCopy);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
+			::RenderStates meshRenderStates = *RenderStates;
+			meshRenderStates.SetWorkload(i, 4);
+			DrawScene(meshRenderStates);
 
 			if (Wireframe)
 			{
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				DrawScene(renderUnitCopy);
+				meshRenderStates.Rasterizer = Rasterizer::Wireframe;
+				meshRenderStates.CountTotalTriangles = false;
+				meshRenderStates.CountRenderedTriangles = false;
+				DrawScene(meshRenderStates);
 			}
 		});
 	}
@@ -143,6 +140,7 @@ void MeshViewExample::LoadScene()
 	Meshes[2]->TransformVertices(Matrix4f::RotateY(180));
 
 	Meshes[3] = Mesh::Load("Assets\\Models\\half-life-2-dog\\scene.gltf");
+	Meshes[3]->SetCullMode(CullMode::Back);
 	Meshes[3]->FitToBoundingBox(Box3f(2), true);
 	Meshes[3]->TransformVertices(Matrix4f::RotateY(180));
 
@@ -154,7 +152,7 @@ void MeshViewExample::LoadScene()
 	Meshes[5]->FitToBoundingBox(Box3f(2), true);
 	Meshes[5]->TransformVertices(Matrix4f::RotateY(180));
 }
-void MeshViewExample::DrawScene(::RenderUnit &renderUnit)
+void MeshViewExample::DrawScene(::RenderStates &renderStates)
 {
-	renderUnit.DrawMesh(*Meshes[CurrentMesh], Rotation * Matrix4f::Translate(Position + vfloat3(0, 0, 4)));
+	RenderUnit->DrawMesh(renderStates, *Meshes[CurrentMesh], Rotation * Matrix4f::Translate(Position + vfloat3(0, 0, 4)));
 }

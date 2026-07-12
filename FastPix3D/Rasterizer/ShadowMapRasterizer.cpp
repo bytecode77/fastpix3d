@@ -2,7 +2,7 @@
 #include "../Math/Box2i.h"
 #include "../RasterizerMath.h"
 
-void ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, const Vertex &_v3) const
+bool ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, const Vertex &_v3) const
 {
 	ShadowMapRasterizerVertex v1 = ShadowMapRasterizerVertex(_v1);
 	ShadowMapRasterizerVertex v2 = ShadowMapRasterizerVertex(_v2);
@@ -17,7 +17,7 @@ void ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 	bool isFrontFace;
 	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1.Position, v2.Position, v3.Position, isFrontFace))
 	{
-		return;
+		return false;
 	}
 	else if (!isFrontFace)
 	{
@@ -34,7 +34,7 @@ void ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 		v1.Position.Z > RenderStates.ClipFar && v2.Position.Z > RenderStates.ClipFar && v3.Position.Z > RenderStates.ClipFar)
 	{
 		// All vertices are behind the near or far clipping plane.
-		return;
+		return false;
 	}
 
 	bool rendered = false;
@@ -100,10 +100,7 @@ void ShadowMapRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 		}
 	}
 
-	if (rendered && RasterizerMath::GetWorkloadThreadIndex(RenderStates.Workload) == 0)
-	{
-		Statistics.RenderedTriangleCount++;
-	}
+	return rendered;
 }
 void ShadowMapRasterizer::ClipEdges(const ShadowMapRasterizerVertex &edge1a, const ShadowMapRasterizerVertex &edge1b, const ShadowMapRasterizerVertex &edge2a, const ShadowMapRasterizerVertex &edge2b, ShadowMapRasterizerVertex &intersection1, ShadowMapRasterizerVertex &intersection2) const
 {

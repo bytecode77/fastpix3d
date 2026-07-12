@@ -10,16 +10,15 @@
 class FASTPIX3D_API RenderUnit
 {
 public:
-	RenderStates RenderStates;
 	RenderStatistics Statistics;
 
-	void ClearFrameBuffer() const;
-	void ClearFrameBuffer(int32 r, int32 g, int32 b) const;
-	void ClearFrameBuffer(const Color &color) const;
-	void ClearDepthBuffer() const;
-	void ClearShadowMap() const;
+	void ClearFrameBuffer(const RenderStates &renderStates) const;
+	void ClearFrameBuffer(const RenderStates &renderStates, int32 r, int32 g, int32 b) const;
+	void ClearFrameBuffer(const RenderStates &renderStates, const Color &color) const;
+	void ClearDepthBuffer(const RenderStates &renderStates) const;
+	void ClearShadowMap(const RenderStates &renderStates) const;
 
-	void DrawMesh(const Mesh &mesh, const Matrix4f &modelMatrix);
-	void DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3);
-	void RenderFog() const;
+	void DrawMesh(const RenderStates &renderStates, const Mesh &mesh, const Matrix4f &modelMatrix);
+	void DrawTriangle(const RenderStates &renderStates, const Vertex &v1, const Vertex &v2, const Vertex &v3);
+	void RenderFog(const RenderStates &renderStates) const;
 };

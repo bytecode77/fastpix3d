@@ -13,7 +13,6 @@ private:
 
 public:
 	explicit ShadowMapCubemapExample(int32 width, int32 height);
-	~ShadowMapCubemapExample();
 
 	void Run() override;
 
@@ -22,5 +21,5 @@ private:
 	void Render();
 
 	void LoadScene();
-	void DrawScene(::RenderUnit &renderUnit, int32 part);
+	void DrawScene(::RenderStates &renderStates, int32 part);
 };

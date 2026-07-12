@@ -3,7 +3,6 @@
 #include "../Math/VectorMath.h"
 #include "../Mesh/Vertex.h"
 #include "../RenderStates.h"
-#include "../RenderStatistics.h"
 
 struct FragmentRasterizerVertex
 {
@@ -33,16 +32,14 @@ class FragmentRasterizer
 {
 private:
 	const RenderStates &RenderStates;
-	RenderStatistics &Statistics;
 
 public:
-	explicit FragmentRasterizer(const ::RenderStates &renderStates, RenderStatistics &statistics) :
-		RenderStates(renderStates),
-		Statistics(statistics)
+	explicit FragmentRasterizer(const ::RenderStates &renderStates) :
+		RenderStates(renderStates)
 	{
 	}
 
-	void DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
+	bool DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
 
 private:
 	void ClipEdges(bool hasColor, bool hasSpecular, const FragmentRasterizerVertex &edge1a, const FragmentRasterizerVertex &edge1b, const FragmentRasterizerVertex &edge2a, const FragmentRasterizerVertex &edge2b, FragmentRasterizerVertex &intersection1, FragmentRasterizerVertex &intersection2) const;

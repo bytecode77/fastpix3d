@@ -3,7 +3,6 @@
 #include "../Math/VectorMath.h"
 #include "../Mesh/Vertex.h"
 #include "../RenderStates.h"
-#include "../RenderStatistics.h"
 
 struct ShadowMapRasterizerVertex
 {
@@ -24,16 +23,14 @@ class ShadowMapRasterizer
 {
 private:
 	const RenderStates &RenderStates;
-	RenderStatistics &Statistics;
 
 public:
-	explicit ShadowMapRasterizer(const ::RenderStates &renderStates, RenderStatistics &statistics) :
-		RenderStates(renderStates),
-		Statistics(statistics)
+	explicit ShadowMapRasterizer(const ::RenderStates &renderStates)
+		: RenderStates(renderStates)
 	{
 	}
 
-	void DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
+	bool DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
 
 private:
 	void ClipEdges(const ShadowMapRasterizerVertex &edge1a, const ShadowMapRasterizerVertex &edge1b, const ShadowMapRasterizerVertex &edge2a, const ShadowMapRasterizerVertex &edge2b, ShadowMapRasterizerVertex &intersection1, ShadowMapRasterizerVertex &intersection2) const;

@@ -9,11 +9,11 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 SphereMapExample::SphereMapExample(int32 width, int32 height) : ExampleBase(width, height, "Sphere Mapping")
 {
-	RenderUnit->RenderStates.ViewMatrix = Matrix4f::Translate(0, -1, 3) * Matrix4f::RotateX(-20);
-	RenderUnit->RenderStates.LightsEnable = true;
-	RenderUnit->RenderStates.AmbientLight = Color(40, 40, 40);
-	RenderUnit->RenderStates.Lights[0].Enabled = true;
-	RenderUnit->RenderStates.Lights[0].Intensity = .7f;
+	RenderStates->ViewMatrix = Matrix4f::Translate(0, -1, 3) * Matrix4f::RotateX(-20);
+	RenderStates->LightsEnable = true;
+	RenderStates->AmbientLight = Color(40, 40, 40);
+	RenderStates->Lights[0].Enabled = true;
+	RenderStates->Lights[0].Intensity = .7f;
 
 	LoadScene();
 
@@ -47,7 +47,7 @@ void SphereMapExample::Run()
 			-10,
 			"T",
 			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
+			RenderStates->TextureFilteringEnable ? 1 : 0,
 			"X",
 			"Wireframe",
 			Wireframe ? 1 : 0,
@@ -77,28 +77,25 @@ void SphereMapExample::HandleInput()
 }
 void SphereMapExample::Render()
 {
-	RenderUnit->ClearFrameBuffer(0, 100, 170);
-	RenderUnit->ClearDepthBuffer();
 	RenderUnit->Statistics.Clear();
+	RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170);
+	RenderUnit->ClearDepthBuffer(*RenderStates);
 
 	int32 threadIds[4];
 	for (int32 i = 0; i < 4; i++)
 	{
 		threadIds[i] = ThreadPool::Start([this, i]
 		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			renderUnitCopy.RenderStates.SetWorkload(i, 4);
-
-			DrawScene(renderUnitCopy);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
+			::RenderStates meshRenderStates = *RenderStates;
+			meshRenderStates.SetWorkload(i, 4);
+			DrawScene(meshRenderStates);
 
 			if (Wireframe)
 			{
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				DrawScene(renderUnitCopy);
+				meshRenderStates.Rasterizer = Rasterizer::Wireframe;
+				meshRenderStates.CountTotalTriangles = false;
+				meshRenderStates.CountRenderedTriangles = false;
+				DrawScene(meshRenderStates);
 			}
 		});
 	}
@@ -124,7 +121,7 @@ void SphereMapExample::LoadScene()
 	MeshHighPoly->SetTexture(texture);
 	MeshHighPoly->SetSpecular(50, 1.5f);
 }
-void SphereMapExample::DrawScene(::RenderUnit &renderUnit)
+void SphereMapExample::DrawScene(::RenderStates &renderStates)
 {
-	renderUnit.DrawMesh(UseHighPolyModel ? *MeshHighPoly : *Mesh, Matrix4f::RotateY(RotationStopwatch.ElapsedMilliseconds * .03f + 180));
+	RenderUnit->DrawMesh(renderStates, UseHighPolyModel ? *MeshHighPoly : *Mesh, Matrix4f::RotateY(RotationStopwatch.ElapsedMilliseconds * .03f + 180));
 }
