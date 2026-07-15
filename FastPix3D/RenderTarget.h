@@ -67,6 +67,6 @@ private:
 	void AssertAlignment()
 	{
 		// Pixels must be aligned to 32 bytes to be used with AVX2.
-		if ((int64)_Buffer & 31) throw;
+		if ((int64)_Buffer & 31) throw std::runtime_error("RenderTarget buffer must be aligned to 32 bytes.");
 	}
 };

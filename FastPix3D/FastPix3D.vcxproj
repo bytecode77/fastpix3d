@@ -16,7 +16,6 @@
     <ClCompile Include="Helper\FreeLook.cpp" />
     <ClCompile Include="Helper\PrimitiveFactory.cpp" />
     <ClCompile Include="Interop\Bitmap.cpp" />
-    <ClCompile Include="Interop\FileReader.cpp" />
     <ClCompile Include="Interop\FPSCounter.cpp" />
     <ClCompile Include="Interop\Input.cpp" />
     <ClCompile Include="Interop\Stopwatch.cpp" />
@@ -42,7 +41,6 @@
     <ClInclude Include="Helper\FreeLook.h" />
     <ClInclude Include="Helper\PrimitiveFactory.h" />
     <ClInclude Include="Interop\Bitmap.h" />
-    <ClInclude Include="Interop\FileReader.h" />
     <ClInclude Include="Interop\FPSCounter.h" />
     <ClInclude Include="Interop\Input.h" />
     <ClInclude Include="Interop\Stopwatch.h" />
@@ -50,7 +48,6 @@
     <ClInclude Include="Interop\Thread.h" />
     <ClInclude Include="Interop\ThreadPool.h" />
     <ClInclude Include="Interop\Window.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="Math\Box2f.h" />
     <ClInclude Include="Math\Box2i.h" />
     <ClInclude Include="Math\Box3f.h" />

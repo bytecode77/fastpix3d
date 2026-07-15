@@ -20,9 +20,6 @@
     <ClCompile Include="Interop\Bitmap.cpp">
       <Filter>Interop</Filter>
     </ClCompile>
-    <ClCompile Include="Interop\FileReader.cpp">
-      <Filter>Interop</Filter>
-    </ClCompile>
     <ClCompile Include="Interop\FPSCounter.cpp">
       <Filter>Interop</Filter>
     </ClCompile>
@@ -65,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FastPix3D.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="RasterizerMath.h" />
     <ClInclude Include="RenderStates.h" />
     <ClInclude Include="RenderStatistics.h" />
@@ -85,9 +81,6 @@
       <Filter>Helper</Filter>
     </ClInclude>
     <ClInclude Include="Interop\Bitmap.h">
-      <Filter>Interop</Filter>
-    </ClInclude>
-    <ClInclude Include="Interop\FileReader.h">
       <Filter>Interop</Filter>
     </ClInclude>
     <ClInclude Include="Interop\FPSCounter.h">

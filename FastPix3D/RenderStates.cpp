@@ -4,10 +4,7 @@ RenderStates::RenderStates()
 {
 	for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
 	{
-		Lights[i].OnChanged = [this]()
-		{
-			PrecomputeLights();
-		};
+		Lights[i].Parent = this;
 	}
 
 	UpdateClipNear();
@@ -21,8 +18,8 @@ RenderStates::RenderStates(const RenderStates &renderStates)
 
 void RenderStates::SetWorkload(int32 threadIndex, int32 threadCount)
 {
-	if (threadIndex < 0 || threadIndex >= threadCount) throw;
-	if (threadCount != 1 && threadCount != 2 && threadCount != 4 && threadCount != 8 && threadCount != 16 && threadCount != 32) throw;
+	if (threadIndex < 0 || threadIndex >= threadCount) throw std::out_of_range("threadIndex must be in the range 0..threadCount.");
+	if (threadCount != 1 && threadCount != 2 && threadCount != 4 && threadCount != 8 && threadCount != 16 && threadCount != 32) throw std::invalid_argument("threadCount must be 1, 2, 4, 8, 16 or 32.");
 
 	Workload = (::Workload)(threadIndex | threadCount << 8);
 }
@@ -114,12 +111,14 @@ RenderStates& RenderStates::operator=(const RenderStates& renderStates)
 		for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
 		{
 			Lights[i] = renderStates.Lights[i];
-			Lights[i].OnChanged = [this]()
-			{
-				PrecomputeLights();
-			};
+			Lights[i].Parent = this;
 		}
 	}
 
 	return *this;
+}
+
+void Light::LightChanged()
+{
+	Parent->PrecomputeLights();
 }

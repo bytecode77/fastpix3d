@@ -63,7 +63,7 @@ void RenderUnit::DrawMesh(const RenderStates &renderStates, const Mesh& mesh, co
 		}
 	}
 
-	// 3.) Render transparent surfaces with z-writes disabled.
+	// 2.) Render transparent surfaces with z-writes disabled.
 	if (hasTransparentSurfaces)
 	{
 		for (int32 i = 0; i < mesh.SurfaceCount; i++)

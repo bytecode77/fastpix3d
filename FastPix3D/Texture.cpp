@@ -5,8 +5,7 @@ std::vector<Texture*> Texture::AllTextures;
 
 Texture::Texture(int32 width, int32 height)
 {
-	if (width != Math::GetLogarithmicCeiling(width)) throw;
-	if (height != Math::GetLogarithmicCeiling(height)) throw;
+	if (width != Math::GetLogarithmicCeiling(width) || height != Math::GetLogarithmicCeiling(height)) throw std::invalid_argument("Width and height must be power of 2 values.");
 
 	_Path = nullptr;
 	_FileChecksum = 0;
@@ -41,6 +40,8 @@ Texture::~Texture()
 
 Texture* Texture::FromFile(const char *path)
 {
+	if (!path) throw std::invalid_argument("path cannot be null.");
+
 	Texture *existingTexture = GetExistingTexture(path, 0);
 	if (existingTexture)
 	{

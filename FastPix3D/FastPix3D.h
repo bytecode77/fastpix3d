@@ -26,6 +26,7 @@
 #include <vector>
 #include <atomic>
 #include <functional>
+#include <stdexcept>
 
 using sbyte = signed __int8;
 using int16 = signed __int16;

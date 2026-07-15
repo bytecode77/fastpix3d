@@ -9,3 +9,7 @@ int64 System::Microseconds()
 {
 	return SDL_GetTicksNS() / 1000;
 }
+int64 System::Nanoseconds()
+{
+	return SDL_GetTicksNS();
+}

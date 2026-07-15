@@ -91,20 +91,20 @@ public:
 
 	Vertex* GetVertex(int32 index) const
 	{
-		if (index < 0 || index >= _VertexCount) throw;
+		if (index < 0 || index >= _VertexCount) throw std::out_of_range("Vertex index is out of range.");
 
 		return &_Vertices[index];
 	}
 	Vertex* GetTriangleVertex(int32 triangleIndex, int32 vertexNumber) const
 	{
-		if (triangleIndex < 0 || triangleIndex >= _TriangleCount) throw;
+		if (triangleIndex < 0 || triangleIndex >= _TriangleCount) throw std::out_of_range("Triangle index is out of range.");
 
 		switch (vertexNumber)
 		{
 			case 0: return &_Vertices[_Triangles[triangleIndex].Vertex1Index];
 			case 1: return &_Vertices[_Triangles[triangleIndex].Vertex2Index];
 			case 2: return &_Vertices[_Triangles[triangleIndex].Vertex3Index];
-			default: throw;
+			default: throw std::out_of_range("Vertex number must be 0, 1, or 2.");
 		}
 	}
 	void SetVertex(int32 index, const vfloat3 &position)
@@ -121,7 +121,7 @@ public:
 	}
 	void SetVertex(int32 index, const vfloat3 &position, const vfloat3 &normals, const vfloat2 &textureCoordinates, const Color &color)
 	{
-		if (index < 0 || index >= _VertexCount) throw;
+		if (index < 0 || index >= _VertexCount) throw std::out_of_range("Vertex index is out of range.");
 
 		Vertex *vertex = &_Vertices[index];
 		vertex->Position = position;
@@ -131,10 +131,10 @@ public:
 	}
 	void SetTriangle(int32 triangleIndex, int32 vertex1Index, int32 vertex2Index, int32 vertex3Index)
 	{
-		if (triangleIndex < 0 || triangleIndex >= _TriangleCount) throw;
-		if (vertex1Index < 0 || vertex1Index >= _VertexCount) throw;
-		if (vertex2Index < 0 || vertex2Index >= _VertexCount) throw;
-		if (vertex3Index < 0 || vertex3Index >= _VertexCount) throw;
+		if (triangleIndex < 0 || triangleIndex >= _TriangleCount) throw std::out_of_range("Triangle index is out of range.");
+		if (vertex1Index < 0 || vertex1Index >= _VertexCount) throw std::out_of_range("Vertex1 index is out of range.");
+		if (vertex2Index < 0 || vertex2Index >= _VertexCount) throw std::out_of_range("Vertex2 index is out of range.");
+		if (vertex3Index < 0 || vertex3Index >= _VertexCount) throw std::out_of_range("Vertex3 index is out of range.");
 
 		_Triangles[triangleIndex].Vertex1Index = vertex1Index;
 		_Triangles[triangleIndex].Vertex2Index = vertex2Index;

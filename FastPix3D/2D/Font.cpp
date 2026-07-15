@@ -8,11 +8,13 @@ Font::Font(const char *path, int32 columnCount, int32 rowCount, int32 startChar)
 }
 Font::Font(const char *path, int32 columnCount, int32 rowCount, int32 startChar, int32 characterSpacing)
 {
-	if (columnCount <= 0 || rowCount <= 0) throw;
+	if (!path) throw std::invalid_argument("path cannot be null.");
+	if (columnCount <= 0) throw std::invalid_argument("Column count must be a positive number.");
+	if (rowCount <= 0) throw std::invalid_argument("Row count must be a positive number.");
 
 	Bitmap *bitmap = Bitmap::FromFile(path);
-	if (bitmap->Width > 4096 || bitmap->Height > 4096) throw;
-	if (bitmap->Width % columnCount != 0 || bitmap->Height % rowCount != 0) throw;
+	if (bitmap->Width > 4096 || bitmap->Height > 4096) throw std::runtime_error("Font bitmap exceeds the maximum size of 4096x4096.");
+	if (bitmap->Width % columnCount != 0 || bitmap->Height % rowCount != 0) throw std::invalid_argument("Bitmap size must be a multiple of columnCount and rowCount.");
 
 	int32 width = bitmap->Width / columnCount;
 	Height = bitmap->Height / rowCount;
@@ -20,7 +22,7 @@ Font::Font(const char *path, int32 columnCount, int32 rowCount, int32 startChar,
 	CharCount = rowCount * columnCount;
 	_CharacterSpacing = characterSpacing;
 
-	if (StartChar + CharCount > 255) throw;
+	if (StartChar < 0 || StartChar + CharCount > 255) throw std::out_of_range("Font character range exceeds the range of valid ASCII values.");
 
 	CharacterOffsets = new int32[CharCount];
 	CharacterWidths = new int32[CharCount];

@@ -8,4 +8,5 @@ public:
 
 	static int64 Milliseconds();
 	static int64 Microseconds();
+	static int64 Nanoseconds();
 };

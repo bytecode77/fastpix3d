@@ -1,6 +1,6 @@
 #pragma once
 #include "FastPix3D.h"
-#include "Light.h"
+#include "Math/Color.h"
 #include "Math/Matrix4f.h"
 #include "Math/VectorMath.h"
 #include "RenderTarget.h"
@@ -53,6 +53,109 @@ enum class ShadowMapProjection
 {
 	Perspective,
 	Cubemap
+};
+
+enum class LightType
+{
+	Directional,
+	Point,
+	Spot
+};
+
+class PrecomputedLight
+{
+public:
+	float SpecularIntensity;
+	vfloat3 ColorF;
+	vfloat3 PositionViewSpace;
+	vfloat3 DirectionViewSpace;
+	float DirectionViewSpaceDotIntensity;
+};
+
+class RenderStates;
+
+class FASTPIX3D_API Light
+{
+private:
+	RenderStates *Parent;
+	PrecomputedLight Precomputed;
+	bool _Enabled;
+	LightType _Type;
+	float _Intensity;
+	Color _Color;
+	vfloat3 _Position;
+	vfloat3 _Rotation;
+
+	Light() :
+		Parent(nullptr),
+		_Enabled(false),
+		_Type(LightType::Directional),
+		_Intensity(1),
+		_Color(::Color(255, 255, 255))
+	{
+	}
+
+public:
+	property_get(bool, Enabled)
+	{
+		return _Enabled;
+	}
+	property_set(bool, Enabled)
+	{
+		_Enabled = value;
+		LightChanged();
+	}
+	property_get(LightType, Type)
+	{
+		return _Type;
+	}
+	property_set(LightType, Type)
+	{
+		_Type = value;
+		LightChanged();
+	}
+	property_get(float, Intensity)
+	{
+		return _Intensity;
+	}
+	property_set(float, Intensity)
+	{
+		_Intensity = value;
+		LightChanged();
+	}
+	property_get(::Color, Color)
+	{
+		return _Color;
+	}
+	property_set(const ::Color&, Color)
+	{
+		_Color = value;
+		LightChanged();
+	}
+	property_get(vfloat3, Position)
+	{
+		return _Position;
+	}
+	property_set(const vfloat3&, Position)
+	{
+		_Position = value;
+		LightChanged();
+	}
+	property_get(vfloat3, Rotation)
+	{
+		return _Rotation;
+	}
+	property_set(const vfloat3&, Rotation)
+	{
+		_Rotation = value;
+		LightChanged();
+	}
+
+private:
+	void LightChanged();
+
+	friend class RenderStates;
+	friend class FragmentRasterizer;
 };
 
 class PrecomputedRenderStates
@@ -438,6 +541,7 @@ private:
 	void UpdateShadowLightMatrix();
 	void PrecomputeLights();
 
+	friend class Light;
 	friend class FragmentRasterizer;
 	friend class WireframeRasterizer;
 	friend class ShadowMapRasterizer;

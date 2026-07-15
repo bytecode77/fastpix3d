@@ -15,8 +15,10 @@ Bitmap::~Bitmap()
 
 Bitmap* Bitmap::FromFile(const char *path)
 {
+	if (!path) throw std::invalid_argument("path cannot be null.");
+
 	SDL_Surface *surface = IMG_Load(path);
-	if (!surface) throw;
+	if (!surface) throw std::runtime_error("Failed to load image.");
 
 	Bitmap *bitmap = FromSurface(surface);
 	SDL_DestroySurface(surface);
@@ -26,10 +28,10 @@ Bitmap* Bitmap::FromFile(const char *path)
 Bitmap* Bitmap::FromMemory(const void *buffer, int32 size)
 {
 	SDL_IOStream *stream = SDL_IOFromConstMem(buffer, size);
-	if (!stream) throw;
+	if (!stream) throw std::runtime_error("Failed to load image.");
 
 	SDL_Surface *surface = IMG_Load_IO(stream, true);
-	if (!surface) throw;
+	if (!surface) throw std::runtime_error("Failed to load image.");
 
 	Bitmap *bitmap = FromSurface(surface);
 	SDL_DestroySurface(surface);
@@ -39,9 +41,9 @@ Bitmap* Bitmap::FromMemory(const void *buffer, int32 size)
 Bitmap* Bitmap::FromSurface(SDL_Surface *surface)
 {
 	SDL_Surface *copy = SDL_CreateSurface(surface->w, surface->h, SDL_PIXELFORMAT_XRGB8888);
-	if (!copy) throw;
+	if (!copy) throw std::runtime_error("Failed to load image.");
 
-	if (!SDL_BlitSurface(surface, NULL, copy, NULL)) throw;
+	if (!SDL_BlitSurface(surface, NULL, copy, NULL)) throw std::runtime_error("Failed to load image.");
 
 	Bitmap *bitmap = new Bitmap(copy->w, copy->h);
 	memcpy(bitmap->_Pixels, copy->pixels, bitmap->_Width * bitmap->_Height * 4);

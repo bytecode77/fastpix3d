@@ -293,14 +293,12 @@ bool ShadowMapRasterizer::DrawClippedTriangle(ShadowMapRasterizerVertex v1, Shad
 
 				if constexpr (hasTexture)
 				{
-					attributesRow = blockAttributes / blockAttributes[ATTRIBUTE_Z];
-					attributesRow[ATTRIBUTE_Z] = blockAttributes[ATTRIBUTE_Z];
+					float d = 1 / blockAttributes[ATTRIBUTE_Z];
+					attributesRow = blockAttributes * d;
 
 					// Do perspective correction only once per block.
-					attributesPixelDeltaX = (blockAttributes + attributesDeltaX) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaX[ATTRIBUTE_Z]) - attributesRow;
-					attributesPixelDeltaY = (blockAttributes + attributesDeltaY) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaY[ATTRIBUTE_Z]) - attributesRow;
-					attributesPixelDeltaX[ATTRIBUTE_Z] = attributesDeltaX[ATTRIBUTE_Z];
-					attributesPixelDeltaY[ATTRIBUTE_Z] = attributesDeltaY[ATTRIBUTE_Z];
+					attributesPixelDeltaX = (attributesDeltaX - attributesRow * attributesDeltaX[ATTRIBUTE_Z]) * d;
+					attributesPixelDeltaY = (attributesDeltaY - attributesRow * attributesDeltaY[ATTRIBUTE_Z]) * d;
 				}
 				else
 				{
@@ -323,7 +321,7 @@ bool ShadowMapRasterizer::DrawClippedTriangle(ShadowMapRasterizerVertex v1, Shad
 					textureWidthExponent = Math::GetExponent(RenderStates.Texture->Width);
 				}
 
-				vfloat8 attributeZ = vfloat8(attributesRow[ATTRIBUTE_Z]) + vfloat8(attributesPixelDeltaX[ATTRIBUTE_Z]) * Delta1To8MultiplierF;
+				vfloat8 attributeZ = vfloat8(blockAttributes[ATTRIBUTE_Z]) + vfloat8(attributesDeltaX[ATTRIBUTE_Z]) * Delta1To8MultiplierF;
 				vfloat8 attributeU;
 				vfloat8 attributeV;
 
@@ -350,7 +348,7 @@ bool ShadowMapRasterizer::DrawClippedTriangle(ShadowMapRasterizerVertex v1, Shad
 						hasTexture ? textureHeightMask : 0,
 						hasTexture ? textureWidthExponent : 0);
 
-					attributeZ += attributesPixelDeltaY[ATTRIBUTE_Z];
+					attributeZ += attributesDeltaY[ATTRIBUTE_Z];
 					if constexpr (hasTexture) attributeU += attributesPixelDeltaY[ATTRIBUTE_U];
 					if constexpr (hasTexture) attributeV += attributesPixelDeltaY[ATTRIBUTE_V];
 
@@ -360,7 +358,6 @@ bool ShadowMapRasterizer::DrawClippedTriangle(ShadowMapRasterizerVertex v1, Shad
 					shadowMap += stride;
 				}
 
-				attributesRow += attributesDeltaY;
 				shadowMap += strideBlock;
 			}
 			else if (isDrawing)

@@ -289,7 +289,7 @@ void Graphics::FillRectangle(int32 x, int32 y, int32 width, int32 height, const 
 		else if (py >= y + height - cornerRadius)
 		{
 			int32 yOffset = cornerRadius - (y + height - 1 - py);
-			int32 length = (int32)Math::Floor(Math::Sqrt(cornerRadiusSquared - yOffset * yOffset));
+			int32 length = (int32)Math::Floor(Math::Sqrt((float)(cornerRadiusSquared - yOffset * yOffset)));
 
 			lineFrom = x + cornerRadius - length;
 			lineTo = x + width - cornerRadius + length;
@@ -333,6 +333,8 @@ void Graphics::DrawString(int32 x, int32 y, const Font &font, const char *text) 
 }
 void Graphics::DrawString(int32 x, int32 y, const Font &font, const char *text, const Color &color) const
 {
+	if (!text) throw std::invalid_argument("text cannot be null.");
+
 	if (x >= _Width || y < -font.Height || y >= _Height)
 	{
 		return;
@@ -413,6 +415,8 @@ void Graphics::DrawString(int32 x, int32 y, const Font &font, const char *text, 
 }
 int32 Graphics::MeasureString(const Font &font, const char *text) const
 {
+	if (!text) throw std::invalid_argument("text cannot be null.");
+
 	int32 length = lstrlenA(text);
 	int32 width = 0;
 	bool hasText = false;

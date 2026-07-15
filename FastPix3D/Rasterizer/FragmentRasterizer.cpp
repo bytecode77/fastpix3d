@@ -894,14 +894,12 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 			{
 				isDrawing = true;
 
-				vfloat8 attributesRow = blockAttributes / blockAttributes[ATTRIBUTE_Z];
-				attributesRow[ATTRIBUTE_Z] = blockAttributes[ATTRIBUTE_Z];
+				float d = 1 / blockAttributes[ATTRIBUTE_Z];
+				vfloat8 attributesRow = blockAttributes * d;
 
 				// Do perspective correction only once per block.
-				vfloat8 attributesPixelDeltaX = (blockAttributes + attributesDeltaX) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaX[ATTRIBUTE_Z]) - attributesRow;
-				vfloat8 attributesPixelDeltaY = (blockAttributes + attributesDeltaY) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaY[ATTRIBUTE_Z]) - attributesRow;
-				attributesPixelDeltaX[ATTRIBUTE_Z] = attributesDeltaX[ATTRIBUTE_Z];
-				attributesPixelDeltaY[ATTRIBUTE_Z] = attributesDeltaY[ATTRIBUTE_Z];
+				vfloat8 attributesPixelDeltaX = (attributesDeltaX - attributesRow * attributesDeltaX[ATTRIBUTE_Z]) * d;
+				vfloat8 attributesPixelDeltaY = (attributesDeltaY - attributesRow * attributesDeltaY[ATTRIBUTE_Z]) * d;
 
 				vfloat8 attributesBRow;
 				vfloat8 attributesBPixelDeltaX;
@@ -909,9 +907,9 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 
 				if constexpr (hasSpecular)
 				{
-					attributesBRow = blockAttributesB / blockAttributes[ATTRIBUTE_Z];
-					attributesBPixelDeltaX = (blockAttributesB + attributesBDeltaX) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaX[ATTRIBUTE_Z]) - attributesBRow;
-					attributesBPixelDeltaY = (blockAttributesB + attributesBDeltaY) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaY[ATTRIBUTE_Z]) - attributesBRow;
+					attributesBRow = blockAttributesB * d;
+					attributesBPixelDeltaX = (attributesBDeltaX - attributesBRow * attributesDeltaX[ATTRIBUTE_Z]) * d;
+					attributesBPixelDeltaY = (attributesBDeltaY - attributesBRow * attributesDeltaY[ATTRIBUTE_Z]) * d;
 				}
 
 				vfloat8 shadowAttributesRow;
@@ -922,14 +920,8 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 				{
 					if constexpr (shadowMapProjection == ShadowMapProjection::Perspective)
 					{
-						vfloat8 d = vfloat8(
-							blockShadowAttributes[ATTRIBUTE_SHADOW_Z],
-							blockShadowAttributes[ATTRIBUTE_SHADOW_Z],
-							blockAttributes[ATTRIBUTE_Z],
-							blockAttributes[ATTRIBUTE_Z],
-							blockAttributes[ATTRIBUTE_Z],
-							blockAttributes[ATTRIBUTE_Z]
-						);
+						float shadowD = 1 / blockShadowAttributes[ATTRIBUTE_SHADOW_Z];
+						vfloat8 inverseShadowD = vfloat8(shadowD, shadowD, d, d, d, d);
 
 						vfloat8 dx = vfloat8(
 							shadowAttributesDeltaX[ATTRIBUTE_SHADOW_Z],
@@ -949,15 +941,15 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 							attributesDeltaY[ATTRIBUTE_Z]
 						);
 
-						shadowAttributesRow = blockShadowAttributes / d;
-						shadowAttributesPixelDeltaX = (blockShadowAttributes + shadowAttributesDeltaX) / (d + dx) - shadowAttributesRow;
-						shadowAttributesPixelDeltaY = (blockShadowAttributes + shadowAttributesDeltaY) / (d + dy) - shadowAttributesRow;
+						shadowAttributesRow = blockShadowAttributes * inverseShadowD;
+						shadowAttributesPixelDeltaX = (shadowAttributesDeltaX - shadowAttributesRow * dx) * inverseShadowD;
+						shadowAttributesPixelDeltaY = (shadowAttributesDeltaY - shadowAttributesRow * dy) * inverseShadowD;
 					}
 					else if constexpr (shadowMapProjection == ShadowMapProjection::Cubemap)
 					{
-						shadowAttributesRow = blockShadowAttributes / blockAttributes[ATTRIBUTE_Z];
-						shadowAttributesPixelDeltaX = (blockShadowAttributes + shadowAttributesDeltaX) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaX[ATTRIBUTE_Z]) - shadowAttributesRow;
-						shadowAttributesPixelDeltaY = (blockShadowAttributes + shadowAttributesDeltaY) / (blockAttributes[ATTRIBUTE_Z] + attributesDeltaY[ATTRIBUTE_Z]) - shadowAttributesRow;
+						shadowAttributesRow = blockShadowAttributes * d;
+						shadowAttributesPixelDeltaX = (shadowAttributesDeltaX - shadowAttributesRow * attributesDeltaX[ATTRIBUTE_Z]) * d;
+						shadowAttributesPixelDeltaY = (shadowAttributesDeltaY - shadowAttributesRow * attributesDeltaY[ATTRIBUTE_Z]) * d;
 					}
 				}
 
@@ -990,7 +982,7 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 					}
 				}
 
-				vfloat8 attributeZ = vfloat8(attributesRow[ATTRIBUTE_Z]) + vfloat8(attributesPixelDeltaX[ATTRIBUTE_Z]) * Delta1To8MultiplierF;
+				vfloat8 attributeZ = vfloat8(blockAttributes[ATTRIBUTE_Z]) + vfloat8(attributesDeltaX[ATTRIBUTE_Z]) * Delta1To8MultiplierF;
 				vfloat8 attributeU;
 				vfloat8 attributeV;
 				vfloat8 attributeR;
@@ -1055,7 +1047,7 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 						shadowMapFunc != ShadowMapFunc::None ? shadowMapSizeExponent : 0,
 						blendMode == BlendMode::Alpha || blendMode == BlendMode::Add ? alpha : 0);
 
-					attributeZ += attributesPixelDeltaY[ATTRIBUTE_Z];
+					attributeZ += attributesDeltaY[ATTRIBUTE_Z];
 					if constexpr (hasTexture) attributeU += attributesPixelDeltaY[ATTRIBUTE_U];
 					if constexpr (hasTexture) attributeV += attributesPixelDeltaY[ATTRIBUTE_V];
 					if constexpr (hasColor) attributeR += attributesPixelDeltaY[ATTRIBUTE_R];
@@ -1077,10 +1069,6 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 					frameBuffer += stride;
 					if constexpr (zEnable || zWriteEnable) depthBuffer += stride;
 				}
-
-				attributesRow += attributesDeltaY;
-				if constexpr (hasSpecular) attributesBRow += attributesBDeltaY;
-				if constexpr (shadowMapFunc != ShadowMapFunc::None) shadowAttributesRow += attributesDeltaY;
 
 				frameBuffer += strideBlock;
 				if constexpr (zEnable || zWriteEnable) depthBuffer += strideBlock;

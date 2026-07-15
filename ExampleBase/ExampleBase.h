@@ -63,5 +63,7 @@ public:
 	void DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const;
 
 	Mesh* CreateSkybox(const char *path) const;
+
+	char* FormatNumber(int32 number, char *buffer, bool thousandsSeparator) const;
 	vfloat3 GetCubemapDirection(int32 face) const;
 };

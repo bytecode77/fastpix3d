@@ -14,6 +14,7 @@ Mesh::~Mesh()
 
 Mesh* Mesh::Load(const char *path)
 {
+	if (!path) throw std::invalid_argument("path cannot be null.");
 	const char *extension = PathFindExtensionA(path);
 
 	if (!lstrcmpiA(extension, ".gltf") ||
@@ -27,12 +28,14 @@ Mesh* Mesh::Load(const char *path)
 	}
 	else
 	{
-		throw;
+		throw std::invalid_argument("Unsupported mesh file format.");
 	}
 }
 
 Surface* Mesh::GetSurface(const char *textureFileName) const
 {
+	if (!textureFileName) throw std::invalid_argument("textureFileName cannot be null.");
+
 	// textureFileName can be a filename with or without extension.
 	// Only the filename part without extension is used to find the surface.
 
@@ -278,7 +281,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 	cgltf_data* data = nullptr;
 
 	if (cgltf_parse_file(&options, path, &data) != cgltf_result::cgltf_result_success ||
-		cgltf_load_buffers(&options, data, path) != cgltf_result::cgltf_result_success) throw;
+		cgltf_load_buffers(&options, data, path) != cgltf_result::cgltf_result_success) throw std::runtime_error("Failed to load GLTF file.");
 
 	Mesh *mesh = new Mesh();
 
@@ -298,7 +301,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 			const cgltf_primitive &primitive = node.mesh->primitives[p];
 
 			if (primitive.type != cgltf_primitive_type::cgltf_primitive_type_triangles) continue;
-			if (!primitive.indices || primitive.indices->count == 0 || primitive.indices->count % 3 != 0) throw;
+			if (!primitive.indices || primitive.indices->count == 0 || primitive.indices->count % 3 != 0) throw std::runtime_error("Invalid GLTF primitive indices.");
 
 			const cgltf_attribute *positionAttribute = nullptr;
 			const cgltf_attribute *normalAttribute = nullptr;
@@ -324,7 +327,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 				}
 			}
 
-			if (!positionAttribute) throw;
+			if (!positionAttribute) throw std::runtime_error("GLTF primitive does not have position attribute.");
 
 			Surface *surface = mesh->AddSurface((int32)positionAttribute->data->count, (int32)primitive.indices->count / 3);
 
@@ -335,10 +338,10 @@ Mesh* Mesh::LoadGltf(const char *path)
 				vfloat2 textureCoordinates;
 				vfloat3 color = vfloat3(1);
 
-				if (!cgltf_accessor_read_float(positionAttribute->data, i, (float*)&position, 3)) throw;
-				if (normalAttribute && !cgltf_accessor_read_float(normalAttribute->data, i, (float*)&normal, 3)) throw;
-				if (textureCoordinateAttribute && !cgltf_accessor_read_float(textureCoordinateAttribute->data, i, (float*)&textureCoordinates, 2)) throw;
-				if (colorAttribute && !cgltf_accessor_read_float(colorAttribute->data, i, (float*)&color, 3)) throw;
+				if (!cgltf_accessor_read_float(positionAttribute->data, i, (float*)&position, 3)) throw std::runtime_error("Failed to read GLTF position attribute.");
+				if (normalAttribute && !cgltf_accessor_read_float(normalAttribute->data, i, (float*)&normal, 3)) throw std::runtime_error("Failed to read GLTF normal attribute.");
+				if (textureCoordinateAttribute && !cgltf_accessor_read_float(textureCoordinateAttribute->data, i, (float*)&textureCoordinates, 2)) throw std::runtime_error("Failed to read GLTF texture coordinate attribute.");
+				if (colorAttribute && !cgltf_accessor_read_float(colorAttribute->data, i, (float*)&color, 3)) throw std::runtime_error("Failed to read GLTF color attribute.");
 
 				surface->SetVertex(
 					i,
@@ -417,7 +420,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 Mesh* Mesh::LoadObj(const char *path)
 {
 	objl::Loader loader;
-	if (!loader.LoadFile(path)) throw;
+	if (!loader.LoadFile(path)) throw std::runtime_error("Failed to load OBJ file.");
 
 	Mesh *mesh = new Mesh();
 
@@ -450,6 +453,8 @@ Mesh* Mesh::LoadObj(const char *path)
 }
 Texture* Mesh::LoadTexture(const char *meshPath, const char *textureFileName)
 {
+	if (!meshPath) throw std::invalid_argument("meshPath cannot be null.");
+	if (!textureFileName) throw std::invalid_argument("textureFileName cannot be null.");
 	if (!textureFileName || lstrlenA(textureFileName) == 0) return nullptr;
 
 	// Texture path = directory of mesh + texture filename.
