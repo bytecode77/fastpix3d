@@ -10,8 +10,7 @@ bool WireframeRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 	vfloat3 v3 = RenderStates.Precomputed.ModelViewMatrix * _v3.Position;
 
 	// Back-face culling.
-	bool isFrontFace;
-	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1, v2, v3, isFrontFace))
+	if (RasterizerMath::IsTriangleCulled(RenderStates.CullMode, v1, v2, v3))
 	{
 		return false;
 	}
@@ -26,30 +25,16 @@ bool WireframeRasterizer::DrawTriangle(const Vertex &_v1, const Vertex &_v2, con
 }
 bool WireframeRasterizer::DrawEdge(const vfloat3 &v1, const vfloat3 &v2) const
 {
-	if (RenderStates.ZEnable)
+	switch (RenderStates.DepthMode)
 	{
-		if (RenderStates.ZWriteEnable)
-		{
-			return DrawEdge<true, true>(v1, v2);
-		}
-		else
-		{
-			return DrawEdge<true, false>(v1, v2);
-		}
+		case DepthMode::None: return DrawEdge<DepthMode::None>(v1, v2);
+		case DepthMode::Read: return DrawEdge<DepthMode::Read>(v1, v2);
+		case DepthMode::ReadWrite: return DrawEdge<DepthMode::ReadWrite>(v1, v2);
 	}
-	else
-	{
-		if (RenderStates.ZWriteEnable)
-		{
-			return DrawEdge<false, true>(v1, v2);
-		}
-		else
-		{
-			return DrawEdge<false, false>(v1, v2);
-		}
-	}
+
+	return false;
 }
-template<bool zEnable, bool zWriteEnable>
+template<DepthMode depthMode>
 bool WireframeRasterizer::DrawEdge(vfloat3 v1, vfloat3 v2) const
 {
 	// Clip along near clipping plane.
@@ -94,12 +79,12 @@ bool WireframeRasterizer::DrawEdge(vfloat3 v1, vfloat3 v2) const
 	}
 
 	vint2 delta = VectorMath::Abs(v2Screen - v1Screen);
-	float deltaZ = zEnable || zWriteEnable ? delta.X > delta.Y ? (v2.Z - v1.Z) / delta.X : (v2.Z - v1.Z) / delta.Y : 0;
+	float deltaZ = depthMode != DepthMode::None ? delta.X > delta.Y ? (v2.Z - v1.Z) / delta.X : (v2.Z - v1.Z) / delta.Y : 0;
 	vint2 direction = vint2(v1Screen.X < v2Screen.X ? 1 : -1, v1Screen.Y < v2Screen.Y ? 1 : -1);
 	int32 error = delta.X - delta.Y;
 
 	Color *frameBuffer = RenderStates.FrameBuffer.GetBuffer<Color>();
-	float *depthBuffer = zEnable || zWriteEnable ? RenderStates.DepthBuffer.GetBuffer<float>() : nullptr;
+	float *depthBuffer = depthMode != DepthMode::None ? RenderStates.DepthBuffer.GetBuffer<float>() : nullptr;
 	int32 color = RenderStates.WireframeColor.RGB;
 
 	int32 workloadThreadIndex = RasterizerMath::GetWorkloadThreadIndex(RenderStates.Workload);
@@ -111,10 +96,10 @@ bool WireframeRasterizer::DrawEdge(vfloat3 v1, vfloat3 v2) const
 		{
 			int32 offset = v1Screen.X + v1Screen.Y * frameBufferWidth;
 
-			if (!zEnable || v1.Z * wireframeDepthBias > depthBuffer[offset])
+			if (depthMode == DepthMode::None || v1.Z * wireframeDepthBias > depthBuffer[offset])
 			{
 				frameBuffer[offset].RGB = color;
-				if constexpr (zWriteEnable) depthBuffer[offset] = v1.Z;
+				if constexpr (depthMode == DepthMode::ReadWrite) depthBuffer[offset] = v1.Z;
 			}
 		}
 
@@ -136,7 +121,7 @@ bool WireframeRasterizer::DrawEdge(vfloat3 v1, vfloat3 v2) const
 			v1Screen.Y += direction.Y;
 		}
 
-		if constexpr (zEnable || zWriteEnable) v1.Z += deltaZ;
+		if constexpr (depthMode != DepthMode::None) v1.Z += deltaZ;
 	}
 
 	return true;

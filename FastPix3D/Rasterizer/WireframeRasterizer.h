@@ -18,6 +18,6 @@ public:
 
 private:
 	bool DrawEdge(const vfloat3 &v1, const vfloat3 &v2) const;
-	template<bool zEnable, bool zWriteEnable>
+	template<DepthMode depthMode>
 	bool DrawEdge(vfloat3 v1, vfloat3 v2) const;
 };

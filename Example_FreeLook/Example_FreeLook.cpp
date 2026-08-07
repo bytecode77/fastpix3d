@@ -95,8 +95,7 @@ void FreeLookExample::Render()
 				::RenderStates skyboxRenderStates = *RenderStates;
 				skyboxRenderStates.SetWorkload(i, 4);
 				skyboxRenderStates.ViewMatrix = skyboxRenderStates.ViewMatrix.RotationPart;
-				skyboxRenderStates.ZEnable = false;
-				skyboxRenderStates.ZWriteEnable = false;
+				skyboxRenderStates.DepthMode = DepthMode::None;
 				DrawScene(skyboxRenderStates, 0);
 
 				if (Wireframe)
@@ -115,7 +114,7 @@ void FreeLookExample::Render()
 			if (Wireframe)
 			{
 				mapRenderStates.Rasterizer = Rasterizer::Wireframe;
-				mapRenderStates.ZWriteEnable = mapRenderStates.FogEnable;
+				mapRenderStates.DepthMode = mapRenderStates.FogEnable ? DepthMode::ReadWrite : DepthMode::Read;
 				mapRenderStates.CountTotalTriangles = false;
 				mapRenderStates.CountRenderedTriangles = false;
 				DrawScene(mapRenderStates, 1);

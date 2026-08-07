@@ -33,6 +33,13 @@ enum class CullMode
 	Front
 };
 
+enum class DepthMode
+{
+	None,
+	Read,
+	ReadWrite
+};
+
 enum class BlendMode
 {
 	None,
@@ -187,12 +194,10 @@ private:
 	float _ClipNear = 1;
 	float _ClipFar = 1000;
 	float _Zoom = 1;
+	DepthMode _DepthMode = DepthMode::ReadWrite;
 	CullMode _CullMode = CullMode::Back;
 	Color _WireframeColor = Color(255, 255, 255);
 	float _WireframeDepthBias = 1;
-
-	bool _ZEnable = true;
-	bool _ZWriteEnable = true;
 
 	bool _TextureEnable = true;
 	const Texture *_Texture = nullptr;
@@ -308,6 +313,14 @@ public:
 	{
 		_Zoom = value;
 	}
+	property_get(::DepthMode, DepthMode)
+	{
+		return _DepthMode;
+	}
+	property_set(::DepthMode, DepthMode)
+	{
+		_DepthMode = value;
+	}
 	property_get(::CullMode, CullMode)
 	{
 		return _CullMode;
@@ -331,23 +344,6 @@ public:
 	property_set(float, WireframeDepthBias)
 	{
 		_WireframeDepthBias = value;
-	}
-
-	property_get(bool, ZEnable)
-	{
-		return _ZEnable;
-	}
-	property_set(bool, ZEnable)
-	{
-		_ZEnable = value;
-	}
-	property_get(bool, ZWriteEnable)
-	{
-		return _ZWriteEnable;
-	}
-	property_set(bool, ZWriteEnable)
-	{
-		_ZWriteEnable = value;
 	}
 
 	property_get(bool, TextureEnable)

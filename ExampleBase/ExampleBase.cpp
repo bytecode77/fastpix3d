@@ -136,11 +136,11 @@ void ExampleBase::DrawPerformanceBox(int32 x, int32 y, vfloat3 cameraPosition) c
 	g.DrawRectangle(x - 1, y - 1, width + 2, height + 2, Color(255, 255, 255), .3f, 8);
 	g.DrawString(x + 10, y + 10, *Font14Bold, "Performance");
 
-	g.DrawString(x + 10, y + 30, *Font30Bold, FormatNumber(FPSCounter->FPS, str, false), Color(127, 255, 127));
+	g.DrawString(x + 10, y + 30, *Font30Bold, FormatNumber(FPSCounter->FPS, str), Color(127, 255, 127));
 	g.DrawString(x + 18 + g.MeasureString(*Font30Bold, str), y + 45, *Font14, "FPS");
 
 	g.DrawString(x + 10, y + 70, *Font12, "Best Frame Time", Color(230, 230, 230));
-	g.DrawString(x + 130, y + 70, *Font12, FormatNumber(FPSCounter->MinFrameTime, str, true), Color(127, 255, 127));
+	g.DrawString(x + 130, y + 70, *Font12, FormatFixed3Number(FPSCounter->MinFrameTime, str), Color(127, 255, 127));
 	g.DrawString(x + 135 + g.MeasureString(*Font12, str), y + 70, *Font12, "ms", Color(230, 230, 230));
 
 	g.DrawString(x + 10, y + 90, *Font12, "Triangles", Color(230, 230, 230));
@@ -150,11 +150,11 @@ void ExampleBase::DrawPerformanceBox(int32 x, int32 y, vfloat3 cameraPosition) c
 	if (hasCameraPosition)
 	{
 		char cameraPositionString[20];
-		FormatNumber((int32)cameraPosition.X, cameraPositionString, false);
+		FormatNumber((int32)cameraPosition.X, cameraPositionString);
 		lstrcatA(cameraPositionString, ", ");
-		lstrcatA(cameraPositionString, FormatNumber((int32)cameraPosition.Y, str, false));
+		lstrcatA(cameraPositionString, FormatNumber((int32)cameraPosition.Y, str));
 		lstrcatA(cameraPositionString, ", ");
-		lstrcatA(cameraPositionString, FormatNumber((int32)cameraPosition.Z, str, false));
+		lstrcatA(cameraPositionString, FormatNumber((int32)cameraPosition.Z, str));
 
 		g.DrawString(x + 10, y + 110, *Font12, "Camera", Color(230, 230, 230));
 		g.DrawString(x + 130, y + 110, *Font12, cameraPositionString, Color(127, 255, 127));
@@ -279,9 +279,9 @@ void ExampleBase::DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height
 
 	char title[100];
 	char str[100];
-	lstrcpyA(title, FormatNumber(RenderStates->ShadowMap.Width, str, false));
+	lstrcpyA(title, FormatNumber(RenderStates->ShadowMap.Width, str));
 	lstrcatA(title, "x");
-	lstrcatA(title, FormatNumber(RenderStates->ShadowMap.Height, str, false));
+	lstrcatA(title, FormatNumber(RenderStates->ShadowMap.Height, str));
 
 	Graphics g = Graphics(*Window);
 	g.DrawString(x + 10, y + 10, *Font14Bold, "Shadow Map");
@@ -324,42 +324,26 @@ Mesh* ExampleBase::CreateSkybox(const char *path) const
 	return skybox;
 }
 
+char* ExampleBase::FormatNumber(int32 number, char *buffer) const
+{
+	return FormatNumber(number, buffer, false);
+}
 char* ExampleBase::FormatNumber(int32 number, char *buffer, bool thousandsSeparator) const
 {
-	if (thousandsSeparator)
+	if (thousandsSeparator && number >= 1000)
 	{
-		if (number >= 0)
-		{
-			buffer[0] = '\0';
-		}
-		else
-		{
-			number = -number;
-			buffer[0] = '-';
-			buffer[1] = '\0';
-		}
-
-		_itoa(number / 1000, &buffer[lstrlenA(buffer)], 10);
-		lstrcatA(buffer, ".");
-
-		int32 fraction = number % 1000;
-
-		if (fraction < 10)
-		{
-			lstrcatA(buffer, "00");
-		}
-		else if (fraction < 100)
-		{
-			lstrcatA(buffer, "0");
-		}
-
-		_itoa(fraction, &buffer[lstrlenA(buffer)], 10);
+		FormatFixed3Number(number, buffer, "'");
 	}
 	else
 	{
 		_itoa(number, buffer, 10);
 	}
 
+	return buffer;
+}
+char* ExampleBase::FormatFixed3Number(int32 number, char *buffer) const
+{
+	FormatFixed3Number(number, buffer, ".");
 	return buffer;
 }
 vfloat3 ExampleBase::GetCubemapDirection(int32 face) const
@@ -381,4 +365,34 @@ vfloat3 ExampleBase::GetCubemapDirection(int32 face) const
 		default:
 			throw std::out_of_range("Cubemap face must be between 0 and 5.");
 	}
+}
+
+void ExampleBase::FormatFixed3Number(int32 number, char *buffer, const char *separator) const
+{
+	if (number >= 0)
+	{
+		buffer[0] = '\0';
+	}
+	else
+	{
+		number = -number;
+		buffer[0] = '-';
+		buffer[1] = '\0';
+	}
+
+	_itoa(number / 1000, &buffer[lstrlenA(buffer)], 10);
+	lstrcatA(buffer, separator);
+
+	int32 fraction = number % 1000;
+
+	if (fraction < 10)
+	{
+		lstrcatA(buffer, "00");
+	}
+	else if (fraction < 100)
+	{
+		lstrcatA(buffer, "0");
+	}
+
+	_itoa(fraction, &buffer[lstrlenA(buffer)], 10);
 }

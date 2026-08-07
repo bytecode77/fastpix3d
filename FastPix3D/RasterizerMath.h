@@ -34,12 +34,21 @@ public:
 		workloadIncrement = threadCount;
 	}
 
+	__forceinline static bool IsTriangleCulled(CullMode cullMode, const vfloat3 &v1, const vfloat3 &v2, const vfloat3 &v3)
+	{
+		if (cullMode == CullMode::None)
+		{
+			return false;
+		}
+		else
+		{
+			bool isFrontFace = (v2 - v1).CrossProduct(v3 - v1).DotProduct(v1) < 0;
+			return (cullMode == CullMode::Front) == isFrontFace;
+		}
+	}
 	__forceinline static bool IsTriangleCulled(CullMode cullMode, const vfloat3 &v1, const vfloat3 &v2, const vfloat3 &v3, bool &isFrontFace)
 	{
-		vfloat3 normal = (v2 - v1).CrossProduct(v3 - v1);
-		vfloat3 center = vfloat3(v1 + v2 + v3) * (1.0f / 3.0f);
-		isFrontFace = normal.Normalize().DotProduct(center.Normalize()) < 0;
-
+		isFrontFace = (v2 - v1).CrossProduct(v3 - v1).DotProduct(v1) < 0;
 		return cullMode != CullMode::None && (cullMode == CullMode::Front) == isFrontFace;
 	}
 	__forceinline static vfloat3 ToClipSpace(const vfloat3 &position, int32 screenWidth, int32 screenHeight, float zoom, float clipNear)

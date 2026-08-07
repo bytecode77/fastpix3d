@@ -64,6 +64,11 @@ public:
 
 	Mesh* CreateSkybox(const char *path) const;
 
+	char* FormatNumber(int32 number, char *buffer) const;
 	char* FormatNumber(int32 number, char *buffer, bool thousandsSeparator) const;
+	char* FormatFixed3Number(int32 number, char *buffer) const;
 	vfloat3 GetCubemapDirection(int32 face) const;
+
+private:
+	void FormatFixed3Number(int32 number, char *buffer, const char *separator) const;
 };

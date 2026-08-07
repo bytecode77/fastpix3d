@@ -320,11 +320,11 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 
 	if (RenderStates.TextureEnable && RenderStates.Texture)
 	{
-		if (hasColor)
+		if (RenderStates.TextureFilteringEnable)
 		{
-			if (hasSpecular)
+			if (hasColor)
 			{
-				if (RenderStates.TextureFilteringEnable)
+				if (hasSpecular)
 				{
 					switch (RenderStates.ShadowMapFunc)
 					{
@@ -355,35 +355,6 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 					switch (RenderStates.ShadowMapFunc)
 					{
 						case ShadowMapFunc::None:
-							return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-						case ShadowMapFunc::Point:
-							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-							{
-								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Point, ShadowMapProjection::Perspective>(v1, v2, v3);
-							}
-							else
-							{
-								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Point, ShadowMapProjection::Cubemap>(v1, v2, v3);
-							}
-						case ShadowMapFunc::Pcf:
-							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-							{
-								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Pcf, ShadowMapProjection::Perspective>(v1, v2, v3);
-							}
-							else
-							{
-								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Pcf, ShadowMapProjection::Cubemap>(v1, v2, v3);
-							}
-					}
-				}
-			}
-			else
-			{
-				if (RenderStates.TextureFilteringEnable)
-				{
-					switch (RenderStates.ShadowMapFunc)
-					{
-						case ShadowMapFunc::None:
 							return DrawClippedTriangle<true, true, true, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
 						case ShadowMapFunc::Point:
 							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
@@ -402,6 +373,64 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 							else
 							{
 								return DrawClippedTriangle<true, true, true, false, ShadowMapFunc::Pcf, ShadowMapProjection::Cubemap>(v1, v2, v3);
+							}
+					}
+				}
+			}
+			else
+			{
+				switch (RenderStates.ShadowMapFunc)
+				{
+					case ShadowMapFunc::None:
+						return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
+					case ShadowMapFunc::Point:
+						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
+						{
+							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Point, ShadowMapProjection::Perspective>(v1, v2, v3);
+						}
+						else
+						{
+							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Point, ShadowMapProjection::Cubemap>(v1, v2, v3);
+						}
+					case ShadowMapFunc::Pcf:
+						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
+						{
+							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Pcf, ShadowMapProjection::Perspective>(v1, v2, v3);
+						}
+						else
+						{
+							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Pcf, ShadowMapProjection::Cubemap>(v1, v2, v3);
+						}
+				}
+			}
+		}
+		else
+		{
+			if (hasColor)
+			{
+				if (hasSpecular)
+				{
+					switch (RenderStates.ShadowMapFunc)
+					{
+						case ShadowMapFunc::None:
+							return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
+						case ShadowMapFunc::Point:
+							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
+							{
+								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Point, ShadowMapProjection::Perspective>(v1, v2, v3);
+							}
+							else
+							{
+								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Point, ShadowMapProjection::Cubemap>(v1, v2, v3);
+							}
+						case ShadowMapFunc::Pcf:
+							if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
+							{
+								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Pcf, ShadowMapProjection::Perspective>(v1, v2, v3);
+							}
+							else
+							{
+								return DrawClippedTriangle<true, false, true, true, ShadowMapFunc::Pcf, ShadowMapProjection::Cubemap>(v1, v2, v3);
 							}
 					}
 				}
@@ -430,35 +459,6 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 								return DrawClippedTriangle<true, false, true, false, ShadowMapFunc::Pcf, ShadowMapProjection::Cubemap>(v1, v2, v3);
 							}
 					}
-				}
-			}
-		}
-		else
-		{
-			if (RenderStates.TextureFilteringEnable)
-			{
-				switch (RenderStates.ShadowMapFunc)
-				{
-					case ShadowMapFunc::None:
-						return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::None, ShadowMapProjection::Perspective>(v1, v2, v3);
-					case ShadowMapFunc::Point:
-						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-						{
-							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Point, ShadowMapProjection::Perspective>(v1, v2, v3);
-						}
-						else
-						{
-							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Point, ShadowMapProjection::Cubemap>(v1, v2, v3);
-						}
-					case ShadowMapFunc::Pcf:
-						if (RenderStates.ShadowMapProjection == ShadowMapProjection::Perspective)
-						{
-							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Pcf, ShadowMapProjection::Perspective>(v1, v2, v3);
-						}
-						else
-						{
-							return DrawClippedTriangle<true, true, false, false, ShadowMapFunc::Pcf, ShadowMapProjection::Cubemap>(v1, v2, v3);
-						}
 				}
 			}
 			else
@@ -550,60 +550,43 @@ bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1,
 template<bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
 bool FragmentRasterizer::DrawClippedTriangle(const FragmentRasterizerVertex &v1, const FragmentRasterizerVertex &v2, const FragmentRasterizerVertex &v3) const
 {
-	if (RenderStates.ZEnable)
+	switch (RenderStates.DepthMode)
 	{
-		if (RenderStates.ZWriteEnable)
-		{
+		case DepthMode::None:
 			switch (RenderStates.BlendMode)
 			{
-				case BlendMode::None: return DrawClippedTriangle<true, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::TransparencyKey: return DrawClippedTriangle<true, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Alpha: return DrawClippedTriangle<true, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Multiply: return DrawClippedTriangle<true, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Add: return DrawClippedTriangle<true, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::None: return DrawClippedTriangle<DepthMode::None, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::TransparencyKey: return DrawClippedTriangle<DepthMode::None, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Alpha: return DrawClippedTriangle<DepthMode::None, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Multiply: return DrawClippedTriangle<DepthMode::None, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Add: return DrawClippedTriangle<DepthMode::None, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
 			}
-		}
-		else
-		{
+			break;
+		case DepthMode::Read:
 			switch (RenderStates.BlendMode)
 			{
-				case BlendMode::None: return DrawClippedTriangle<true, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::TransparencyKey: return DrawClippedTriangle<true, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Alpha: return DrawClippedTriangle<true, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Multiply: return DrawClippedTriangle<true, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Add: return DrawClippedTriangle<true, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::None: return DrawClippedTriangle<DepthMode::Read, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::TransparencyKey: return DrawClippedTriangle<DepthMode::Read, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Alpha: return DrawClippedTriangle<DepthMode::Read, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Multiply: return DrawClippedTriangle<DepthMode::Read, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Add: return DrawClippedTriangle<DepthMode::Read, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
 			}
-		}
-	}
-	else
-	{
-		if (RenderStates.ZWriteEnable)
-		{
+			break;
+		case DepthMode::ReadWrite:
 			switch (RenderStates.BlendMode)
 			{
-				case BlendMode::None: return DrawClippedTriangle<false, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::TransparencyKey: return DrawClippedTriangle<false, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Alpha: return DrawClippedTriangle<false, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Multiply: return DrawClippedTriangle<false, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Add: return DrawClippedTriangle<false, true, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::None: return DrawClippedTriangle<DepthMode::ReadWrite, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::TransparencyKey: return DrawClippedTriangle<DepthMode::ReadWrite, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Alpha: return DrawClippedTriangle<DepthMode::ReadWrite, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Multiply: return DrawClippedTriangle<DepthMode::ReadWrite, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
+				case BlendMode::Add: return DrawClippedTriangle<DepthMode::ReadWrite, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
 			}
-		}
-		else
-		{
-			switch (RenderStates.BlendMode)
-			{
-				case BlendMode::None: return DrawClippedTriangle<false, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::None, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::TransparencyKey: return DrawClippedTriangle<false, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::TransparencyKey, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Alpha: return DrawClippedTriangle<false, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Alpha, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Multiply: return DrawClippedTriangle<false, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Multiply, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-				case BlendMode::Add: return DrawClippedTriangle<false, false, hasTexture, textureFilteringEnable, hasColor, hasSpecular, BlendMode::Add, shadowMapFunc, shadowMapProjection>(v1, v2, v3);
-			}
-		}
+			break;
 	}
 
 	return false;
 }
-template<bool zEnable, bool zWriteEnable, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
+template<DepthMode depthMode, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
 bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, FragmentRasterizerVertex v2, FragmentRasterizerVertex v3) const
 {
 	// Transform vertices to clip space.
@@ -853,7 +836,7 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 
 	int32 bufferStart = boundingBox.Min.X + unfix(yStart, fixExponent) * RenderStates.FrameBuffer.Width;
 	Color *frameBuffer = RenderStates.FrameBuffer.GetBuffer<Color>(bufferStart);
-	float *depthBuffer = zEnable || zWriteEnable ? RenderStates.DepthBuffer.GetBuffer<float>(bufferStart) : nullptr;
+	float *depthBuffer = depthMode != DepthMode::None ? RenderStates.DepthBuffer.GetBuffer<float>(bufferStart) : nullptr;
 
 	float *shadowMap;
 	int32 shadowMapSize;
@@ -1018,7 +1001,7 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 
 				for (int32 i = 0; i < 8; i++)
 				{
-					DrawPixelRow<zEnable, zWriteEnable, hasTexture, textureFilteringEnable, hasColor, hasSpecular, blendMode, shadowMapFunc, shadowMapProjection>(
+					DrawPixelRow<depthMode, hasTexture, textureFilteringEnable, hasColor, hasSpecular, blendMode, shadowMapFunc, shadowMapProjection>(
 						(vuint8*)frameBuffer,
 						(vfloat8*)depthBuffer,
 						VectorMath::CmpGt(edgeA, vfix8()) & VectorMath::CmpGt(edgeB, vfix8()) & VectorMath::CmpGt(edgeC, vfix8()),
@@ -1067,18 +1050,18 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 					edgeB += edgeBDeltaY;
 					edgeC += edgeCDeltaY;
 					frameBuffer += stride;
-					if constexpr (zEnable || zWriteEnable) depthBuffer += stride;
+					if constexpr (depthMode != DepthMode::None) depthBuffer += stride;
 				}
 
 				frameBuffer += strideBlock;
-				if constexpr (zEnable || zWriteEnable) depthBuffer += strideBlock;
+				if constexpr (depthMode != DepthMode::None) depthBuffer += strideBlock;
 			}
 			else if (isDrawing)
 			{
 				// End of the current line of blocks.
 				int32 strideRowEnd = boundingBox.Max.X + 1 - blockX;
 				frameBuffer += strideRowEnd;
-				if constexpr (zEnable || zWriteEnable) depthBuffer += strideRowEnd;
+				if constexpr (depthMode != DepthMode::None) depthBuffer += strideRowEnd;
 				break;
 			}
 
@@ -1092,7 +1075,7 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 			if constexpr (hasSpecular) blockAttributesB += blockAttributesBDeltaX;
 			if constexpr (shadowMapFunc != ShadowMapFunc::None) blockShadowAttributes += blockShadowAttributesDeltaX;
 			frameBuffer += halfspace_mul(1);
-			if constexpr (zEnable || zWriteEnable) depthBuffer += halfspace_mul(1);
+			if constexpr (depthMode != DepthMode::None) depthBuffer += halfspace_mul(1);
 		}
 
 		cornerEdgeARow += cornerEdgeADeltaY;
@@ -1105,12 +1088,12 @@ bool FragmentRasterizer::DrawClippedTriangle(FragmentRasterizerVertex v1, Fragme
 		if constexpr (hasSpecular) blockAttributesBRow += blockAttributesBDeltaY;
 		if constexpr (shadowMapFunc != ShadowMapFunc::None) blockShadowAttributesRow += blockShadowAttributesDeltaY;
 		frameBuffer += strideRow;
-		if constexpr (zEnable || zWriteEnable) depthBuffer += strideRow;
+		if constexpr (depthMode != DepthMode::None) depthBuffer += strideRow;
 	}
 
 	return true;
 }
-template<bool zEnable, bool zWriteEnable, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
+template<DepthMode depthMode, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
 __forceinline void FragmentRasterizer::DrawPixelRow(
 	vuint8 *frameBuffer,
 	vfloat8 *depthBuffer,
@@ -1151,7 +1134,7 @@ __forceinline void FragmentRasterizer::DrawPixelRow(
 	vuint8 specular;
 	vuint8 shadowColor;
 
-	if constexpr (zEnable || zWriteEnable) depth = vfloat8(depthBuffer);
+	if constexpr (depthMode != DepthMode::None) depth = vfloat8(depthBuffer);
 	if constexpr (hasColor) color = (vuint8)((vint8)attributeR << 16 | (vint8)attributeG << 8 | (vint8)attributeB);
 	if constexpr (hasSpecular) specular = (vuint8)((vint8)attributeSpecularR << 16 | (vint8)attributeSpecularG << 8 | (vint8)attributeSpecularB);
 	if constexpr (shadowMapFunc != ShadowMapFunc::None) shadowColor = (vuint8)((vint8)attributeShadowR << 16 | (vint8)attributeShadowG << 8 | (vint8)attributeShadowB);
@@ -1167,7 +1150,7 @@ __forceinline void FragmentRasterizer::DrawPixelRow(
 		oneMinusAlphaQ15 = vushort16((255 - alpha) << 7 | (255 - alpha) >> 1);
 	}
 
-	if constexpr (zEnable)
+	if constexpr (depthMode != DepthMode::None)
 	{
 		writeMask &= VectorMath::CmpLe(depth, attributeZ);
 	}
@@ -1207,19 +1190,19 @@ __forceinline void FragmentRasterizer::DrawPixelRow(
 			vuint8 rgb10 = vuint8::Read((uint32*)textureBuffer, u1 | v0 << textureWidthExponent, writeMask);
 			vuint8 rgb11 = vuint8::Read((uint32*)textureBuffer, u1 | v1 << textureWidthExponent, writeMask);
 
-			vuint8 r00 = rgb00 >> 16 & 0xff;
+			vuint8 r00 = rgb00 >> 16;
 			vuint8 g00 = rgb00 >> 8 & 0xff;
 			vuint8 b00 = rgb00 & 0xff;
 
-			vuint8 r01 = rgb01 >> 16 & 0xff;
+			vuint8 r01 = rgb01 >> 16;
 			vuint8 g01 = rgb01 >> 8 & 0xff;
 			vuint8 b01 = rgb01 & 0xff;
 
-			vuint8 r10 = rgb10 >> 16 & 0xff;
+			vuint8 r10 = rgb10 >> 16;
 			vuint8 g10 = rgb10 >> 8 & 0xff;
 			vuint8 b10 = rgb10 & 0xff;
 
-			vuint8 r11 = rgb11 >> 16 & 0xff;
+			vuint8 r11 = rgb11 >> 16;
 			vuint8 g11 = rgb11 >> 8 & 0xff;
 			vuint8 b11 = rgb11 & 0xff;
 
@@ -1625,7 +1608,7 @@ __forceinline void FragmentRasterizer::DrawPixelRow(
 
 	vuint8::Write(frameBuffer, outputColor, writeMask);
 
-	if constexpr (zWriteEnable)
+	if constexpr (depthMode == DepthMode::ReadWrite)
 	{
 		vfloat8::Write(depthBuffer, attributeZ, writeMask);
 	}

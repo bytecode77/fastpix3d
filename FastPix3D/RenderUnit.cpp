@@ -72,7 +72,7 @@ void RenderUnit::DrawMesh(const RenderStates &renderStates, const Mesh& mesh, co
 
 			if (surface->BlendMode == BlendMode::Alpha && surface->Alpha < 1 || surface->BlendMode == BlendMode::Multiply || surface->BlendMode == BlendMode::Add)
 			{
-				renderStatesCopy.ZWriteEnable = false;
+				renderStatesCopy.DepthMode = renderStatesCopy.DepthMode == DepthMode::None ? DepthMode::None : DepthMode::Read;
 				renderStatesCopy.BlendMode = surface->BlendMode;
 				renderStatesCopy.CullMode = surface->CullMode;
 				renderStatesCopy.Texture = surface->Texture;

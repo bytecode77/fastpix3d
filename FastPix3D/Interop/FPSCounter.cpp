@@ -2,14 +2,7 @@
 #include "System.h"
 
 FPSCounter::FPSCounter() :
-	_Interval(1000),
-	_LastFrameTimeStamp(0),
-	_FrameCount(0),
-	_RenderTimeCount(0),
-	_FPS(0),
-	_FrameTime(0),
-	_LastFrameTime(0),
-	_MinFrameTime(-1)
+	FPSCounter(1000)
 {
 }
 FPSCounter::FPSCounter(int32 interval) :

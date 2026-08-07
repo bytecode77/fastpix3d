@@ -40,14 +40,32 @@ Bitmap* Bitmap::FromMemory(const void *buffer, int32 size)
 }
 Bitmap* Bitmap::FromSurface(SDL_Surface *surface)
 {
-	SDL_Surface *copy = SDL_CreateSurface(surface->w, surface->h, SDL_PIXELFORMAT_XRGB8888);
-	if (!copy) throw std::runtime_error("Failed to load image.");
+	Bitmap* bitmap = new Bitmap(surface->w, surface->h);
+	SDL_Surface* dest = SDL_CreateSurfaceFrom(bitmap->_Width, bitmap->_Height, SDL_PIXELFORMAT_XRGB8888, bitmap->_Pixels, bitmap->_Width * 4);
 
-	if (!SDL_BlitSurface(surface, NULL, copy, NULL)) throw std::runtime_error("Failed to load image.");
+	if (!dest)
+	{
+		delete bitmap;
+		throw std::runtime_error("Failed to load image.");
+	}
 
-	Bitmap *bitmap = new Bitmap(copy->w, copy->h);
-	memcpy(bitmap->_Pixels, copy->pixels, bitmap->_Width * bitmap->_Height * 4);
-	SDL_DestroySurface(copy);
+	if (!SDL_BlitSurface(surface, nullptr, dest, nullptr))
+	{
+		SDL_DestroySurface(dest);
+		delete bitmap;
+		throw std::runtime_error("Failed to load image.");
+	}
+
+	SDL_DestroySurface(dest);
+
+	// Remove alpha channel to avoid spilling of alpha values into the RGB channels.
+	int32 *ptr = (int32*)bitmap->Pixels;
+	int32 count = bitmap->_Width * bitmap->_Height;
+
+	for (int32 i = 0; i < count; i++)
+	{
+		*ptr++ &= 0xffffff;
+	}
 
 	return bitmap;
 }
