@@ -17,7 +17,8 @@ public:
 private:
 	void HandleInput();
 	void Render();
+	void DrawHud();
 
 	void LoadScene();
-	void DrawScene(::RenderStates &renderStates);
+	void DrawScene(::RenderStates &renderStates, WorkPartition workPartition);
 };

@@ -3,53 +3,62 @@
 #include "../Math/VectorMath.h"
 #include "../Mesh/Vertex.h"
 #include "../RenderStates.h"
-
-struct FragmentRasterizerVertex
-{
-	vfloat3 Position;
-	vfloat3 Normals;
-	vfloat2 TextureCoordinates;
-	vfloat3 Color;
-	vfloat3 Specular;
-	vfloat3 ShadowXyz;
-	vfloat3 ShadowColor;
-
-	FragmentRasterizerVertex()
-	{
-	}
-	explicit FragmentRasterizerVertex(const Vertex &vertex) :
-		Position(vertex.Position),
-		Normals(vertex.Normals),
-		TextureCoordinates(vertex.TextureCoordinates),
-		Color((vfloat3)vertex.Color),
-		ShadowXyz(vertex.Position),
-		ShadowColor((vfloat3)vertex.Color)
-	{
-	}
-};
+#include "../WorkPartition.h"
 
 class FragmentRasterizer
 {
 private:
+	struct RasterizerVertex
+	{
+		vfloat3 Position;
+		vfloat3 Normals;
+		vfloat2 TextureCoordinates;
+		vfloat3 Color;
+		vfloat3 Specular;
+		vfloat3 ShadowXyz;
+		vfloat3 ShadowColor;
+
+		RasterizerVertex()
+		{
+		}
+		explicit RasterizerVertex(const Vertex &vertex) :
+			Position(vertex.Position),
+			Normals(vertex.Normals),
+			TextureCoordinates(vertex.TextureCoordinates),
+			Color((vfloat3)vertex.Color),
+			ShadowXyz(vertex.Position),
+			ShadowColor((vfloat3)vertex.Color)
+		{
+		}
+	};
+
 	const RenderStates &RenderStates;
+	const WorkPartition WorkPartition;
 
 public:
-	explicit FragmentRasterizer(const ::RenderStates &renderStates) :
-		RenderStates(renderStates)
+	explicit FragmentRasterizer(const ::RenderStates &renderStates, ::WorkPartition workPartition) :
+		RenderStates(renderStates),
+		WorkPartition(workPartition)
 	{
 	}
 
 	bool DrawTriangle(const Vertex &v1, const Vertex &v2, const Vertex &v3) const;
 
 private:
-	void ClipEdges(bool hasColor, bool hasSpecular, const FragmentRasterizerVertex &edge1a, const FragmentRasterizerVertex &edge1b, const FragmentRasterizerVertex &edge2a, const FragmentRasterizerVertex &edge2b, FragmentRasterizerVertex &intersection1, FragmentRasterizerVertex &intersection2) const;
-	bool DrawClippedTriangle(const FragmentRasterizerVertex &v1, const FragmentRasterizerVertex &v2, const FragmentRasterizerVertex &v3, bool hasColor, bool hasSpecular) const;
-	template<bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
-	bool DrawClippedTriangle(const FragmentRasterizerVertex &v1, const FragmentRasterizerVertex &v2, const FragmentRasterizerVertex &v3) const;
+	void ClipEdges(bool hasColor, bool hasSpecular, const RasterizerVertex &edge1a, const RasterizerVertex &edge1b, const RasterizerVertex &edge2a, const RasterizerVertex &edge2b, RasterizerVertex &intersection1, RasterizerVertex &intersection2) const;
+	bool DrawClippedTriangle(RasterizerVertex v1, RasterizerVertex v2, RasterizerVertex v3, bool hasColor, bool hasSpecular) const;
+	template<bool hasColor, bool hasSpecular>
+	void DrawClippedTriangle(RasterizerVertex &v1, RasterizerVertex &v2, RasterizerVertex &v3) const;
+	template<bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular>
+	void DrawClippedTriangle(RasterizerVertex &v1, RasterizerVertex &v2, RasterizerVertex &v3) const;
+	template<DepthMode depthMode, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular>
+	void DrawClippedTriangle(RasterizerVertex &v1, RasterizerVertex &v2, RasterizerVertex &v3) const;
+	template<DepthMode depthMode, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode>
+	void DrawClippedTriangle(RasterizerVertex &v1, RasterizerVertex &v2, RasterizerVertex &v3) const;
 	template<DepthMode depthMode, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
-	bool DrawClippedTriangle(FragmentRasterizerVertex v1, FragmentRasterizerVertex v2, FragmentRasterizerVertex v3) const;
+	void DrawClippedTriangle(RasterizerVertex &v1, RasterizerVertex &v2, RasterizerVertex &v3) const;
 	template<DepthMode depthMode, bool hasTexture, bool textureFilteringEnable, bool hasColor, bool hasSpecular, BlendMode blendMode, ShadowMapFunc shadowMapFunc, ShadowMapProjection shadowMapProjection>
-	__forceinline void DrawPixelRow(
+	__forceinline void DrawPixelVector(
 		vuint8 *frameBuffer,
 		vfloat8 *depthBuffer,
 		vuint8 writeMask,

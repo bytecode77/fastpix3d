@@ -1,12 +1,12 @@
 #define CGLTF_IMPLEMENTATION
 #include "Mesh.h"
 #include "../Math/Math_.h"
-#include <MeshLoaders/cgltf.h>
-#include <MeshLoaders/ObjLoader.h>
+#include <cgltf.h>
+#include <ObjLoader.h>
 
 Mesh::~Mesh()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		delete surface;
 	}
@@ -32,7 +32,7 @@ Mesh* Mesh::Load(const char *path)
 	}
 }
 
-Surface* Mesh::GetSurface(const char *textureFileName) const
+Surface* Mesh::FindSurface(const char *textureFileName) const
 {
 	if (!textureFileName) throw std::invalid_argument("textureFileName cannot be null.");
 
@@ -42,7 +42,7 @@ Surface* Mesh::GetSurface(const char *textureFileName) const
 	const char *dot = StrChrA(textureFileName, '.');
 	int32 length = dot ? (int32)(dot - textureFileName) : lstrlenA(textureFileName);
 
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		if (surface->Texture)
 		{
@@ -59,20 +59,30 @@ Surface* Mesh::GetSurface(const char *textureFileName) const
 Surface* Mesh::AddSurface(int32 vertexCount, int32 triangleCount)
 {
 	Surface *surface = new Surface(vertexCount, triangleCount);
-	Surfaces.push_back(surface);
+	_Surfaces.push_back(surface);
 	return surface;
+}
+void Mesh::RemoveSurface(int32 index)
+{
+	delete _Surfaces[index];
+	_Surfaces.erase(_Surfaces.begin() + index);
+}
+void Mesh::RemoveSurface(const Surface *surface)
+{
+	std::erase(_Surfaces, surface);
+	delete surface;
 }
 
 void Mesh::SetCullMode(CullMode cullMode)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->CullMode = cullMode;
 	}
 }
 void Mesh::SetTexture(const Texture *texture)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->Texture = texture;
 	}
@@ -83,28 +93,28 @@ void Mesh::SetTextureSize(float x, float y)
 }
 void Mesh::SetTextureSize(const vfloat2 &size)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->TextureSize = size;
 	}
 }
 void Mesh::SetBlendMode(BlendMode blendMode)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->BlendMode = blendMode;
 	}
 }
 void Mesh::SetAlpha(float alpha)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->Alpha = alpha;
 	}
 }
 void Mesh::SetSpecular(float specularExponent, float specularIntensity)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->SpecularExponent = specularExponent;
 		surface->SpecularIntensity = specularIntensity;
@@ -112,14 +122,14 @@ void Mesh::SetSpecular(float specularExponent, float specularIntensity)
 }
 void Mesh::SetSpecularExponent(float specularExponent)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->SpecularExponent = specularExponent;
 	}
 }
 void Mesh::SetSpecularIntensity(float specularIntensity)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->SpecularIntensity = specularIntensity;
 	}
@@ -131,21 +141,21 @@ void Mesh::SetVertexColors(byte r, byte g, byte b)
 }
 void Mesh::SetVertexColors(const Color &color)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			surface->GetVertex(i)->Color = color;
+			surface->Vertices[i]->Color = color;
 		}
 	}
 }
 void Mesh::SetRandomVertexColors()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			surface->GetVertex(i)->Color = Color(Math::Random(0, 256), Math::Random(0, 256), Math::Random(0, 256));
+			surface->Vertices[i]->Color = Color(Math::Random(0, 256), Math::Random(0, 256), Math::Random(0, 256));
 		}
 	}
 }
@@ -154,11 +164,11 @@ Box3f Mesh::GetBoundingBox() const
 {
 	Box3f boundingBox = Box3f(vfloat3(NAN), vfloat3(NAN));
 
-	for (const Surface *surface : Surfaces)
+	for (const Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			Vertex *vertex = surface->GetVertex(i);
+			Vertex *vertex = surface->Vertices[i];
 
 			if (isnan(boundingBox.Min.X) || boundingBox.Min.X > vertex->Position.X) boundingBox.Min.X = vertex->Position.X;
 			if (isnan(boundingBox.Min.Y) || boundingBox.Min.Y > vertex->Position.Y) boundingBox.Min.Y = vertex->Position.Y;
@@ -215,61 +225,61 @@ void Mesh::FitToBoundingBox(const Box3f &boundingBox, bool uniform)
 		}
 	}
 
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			Vertex *vertex = surface->GetVertex(i);
+			Vertex *vertex = surface->Vertices[i];
 			vertex->Position = Math::Interpolate(vertex->Position, originalBoundingBox.Min, originalBoundingBox.Max, newBoundingBox.Min, newBoundingBox.Max);
 		}
 	}
 }
-void Mesh::TransformVertices(const Matrix4f &matrix)
+void Mesh::TransformVertices(const Matrix4 &matrix)
 {
 	TransformVertices(matrix, true, true);
 }
-void Mesh::TransformVertices(const Matrix4f &matrix, bool positions, bool normals)
+void Mesh::TransformVertices(const Matrix4 &matrix, bool positions, bool normals)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
 			if (positions)
 			{
-				surface->GetVertex(i)->Position = matrix * surface->GetVertex(i)->Position;
+				surface->Vertices[i]->Position = matrix * surface->Vertices[i]->Position;
 			}
 
 			if (normals)
 			{
-				surface->GetVertex(i)->Normals = matrix * surface->GetVertex(i)->Normals;
+				surface->Vertices[i]->Normals = matrix * surface->Vertices[i]->Normals;
 			}
 		}
 	}
 }
 void Mesh::AutoNormals()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->AutoNormals();
 	}
 }
 void Mesh::NormalizeNormals()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->NormalizeNormals();
 	}
 }
 void Mesh::FlipNormals()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->FlipNormals();
 	}
 }
 void Mesh::FlipTriangles()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->FlipTriangles();
 	}
@@ -290,11 +300,11 @@ Mesh* Mesh::LoadGltf(const char *path)
 		const cgltf_node &node = data->nodes[n];
 		if (!node.mesh) continue;
 
-		Matrix4f matrix;
+		Matrix4 matrix;
 		cgltf_node_transform_world(&node, (float*)&matrix);
 		matrix = matrix.Transpose();
 
-		Matrix4f normalMatrix = matrix.ToNormalMatrix();
+		Matrix4 normalMatrix = matrix.ToNormalMatrix();
 
 		for (int32 p = 0; p < node.mesh->primitives_count; p++)
 		{
@@ -381,7 +391,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 				{
 					for (int32 i = 0; i < surface->VertexCount; i++)
 					{
-						surface->GetVertex(i)->Color *= color;
+						surface->Vertices[i]->Color *= color;
 					}
 				}
 

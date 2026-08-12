@@ -114,6 +114,9 @@ public:
 	}
 	__forceinline static int32 GetLogarithmicCeiling(int32 number)
 	{
+		// Round up to the next power of two.
+		// Example: 800 -> 1024
+
 		return 1 << (32 - __lzcnt(number - 1));
 	}
 	__forceinline static int32 GetExponent(int32 number)

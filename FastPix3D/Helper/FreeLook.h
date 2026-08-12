@@ -1,6 +1,6 @@
 #pragma once
 #include "../FastPix3D.h"
-#include "../Math/Matrix4f.h"
+#include "../Math/Matrix4.h"
 #include "../Math/VectorMath.h"
 
 class FASTPIX3D_API FreeLook
@@ -38,9 +38,9 @@ public:
 	{
 		_Speed = value;
 	}
-	readonly_property(Matrix4f, ViewMatrix)
+	readonly_property(Matrix4, ViewMatrix)
 	{
-		return Matrix4f::Translate(-_Position) * Matrix4f::RotateY(-_Rotation.X) * Matrix4f::RotateX(-_Rotation.Y);
+		return Matrix4::Translate(-_Position) * Matrix4::RotateY(-_Rotation.X) * Matrix4::RotateX(-_Rotation.Y);
 	}
 
 	FreeLook();

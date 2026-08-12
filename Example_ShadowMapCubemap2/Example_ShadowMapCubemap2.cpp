@@ -2,14 +2,14 @@
 
 int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance, _In_ LPSTR commandLine, _In_ int showCmd)
 {
-	ShadowMapCubemapExample example = ShadowMapCubemapExample(1280, 720);
+	ShadowMapCubemap2Example example = ShadowMapCubemap2Example(1280, 720);
 	example.Run();
 	return TRUE;
 }
 
-ShadowMapCubemapExample::ShadowMapCubemapExample(int32 width, int32 height) : ExampleBase(width, height, "Shadow Mapping")
+ShadowMapCubemap2Example::ShadowMapCubemap2Example(int32 width, int32 height) : ExampleBase(width, height, "Shadow Mapping")
 {
-	RenderStates->ShadowMap = RenderTarget(1024, 1024 * 6, _aligned_malloc(2048 * 2048 * 6 * 4, 32));
+	RenderStates->ShadowMap = RenderTarget(1024, 1024 * 6, ShadowMap->Data);
 	RenderStates->ClipNear = .1f;
 	RenderStates->LightsEnable = true;
 	RenderStates->AmbientLight = Color(120, 130, 160);
@@ -19,7 +19,7 @@ ShadowMapCubemapExample::ShadowMapCubemapExample(int32 width, int32 height) : Ex
 	RenderStates->Lights[0].Color = Color(255, 240, 180);
 	RenderStates->ShadowMapFunc = ShadowMapFunc::Point;
 	RenderStates->ShadowMapProjection = ShadowMapProjection::Cubemap;
-	RenderStates->ShadowMapDepthBias = .075f;
+	RenderStates->ShadowMapDepthBias = 1.0075f;
 
 	LoadScene();
 
@@ -29,55 +29,22 @@ ShadowMapCubemapExample::ShadowMapCubemapExample(int32 width, int32 height) : Ex
 	Input::CenterMouse(*Window);
 }
 
-void ShadowMapCubemapExample::Run()
+void ShadowMapCubemap2Example::Run()
 {
-	while (!Input::HasExited() && !Input::GetKeyPressed(Scancode::Escape))
+	while (!Input::HasExited && !Input::GetKeyPressed(Scancode::Escape))
 	{
-		Window->Lock();
-
 		HandleInput();
 		Render();
+		DrawHud();
 
-		DrawPerformanceBox(10, 10, FreeLook->Position);
-		DrawControlsBox(
-			"Controls",
-			10,
-			-10,
-			"WSAD",
-			"Move",
-			-1,
-			"Space",
-			"Light Movement",
-			LightMovementStopwatch.IsRunning ? 1 : 0,
-			nullptr);
-		DrawControlsBox(
-			"Render",
-			-10,
-			-10,
-			"1 - 3",
-			"Shadow Map Resolution",
-			-1,
-			"P",
-			"PCF",
-			RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
-			"T",
-			"Texture Filtering",
-			RenderStates->TextureFilteringEnable ? 1 : 0,
-			"X",
-			"Wireframe",
-			Wireframe ? 1 : 0,
-			nullptr);
-
-		Window->Unlock();
 		Window->Flip();
-
 		Input::Update();
 		Input::CenterMouse(*Window);
 		FPSCounter->Frame();
 	}
 }
 
-void ShadowMapCubemapExample::HandleInput()
+void ShadowMapCubemap2Example::HandleInput()
 {
 	HandleBaseInput();
 
@@ -91,37 +58,50 @@ void ShadowMapCubemapExample::HandleInput()
 
 	if (Input::GetKeyPressed(Scancode::D1))
 	{
-		RenderStates->ShadowMap = RenderTarget(512, 512 * 6, RenderStates->ShadowMap.Buffer);
-		RenderStates->ShadowMapDepthBias = .15f;
+		RenderStates->ShadowMap = RenderTarget(512, 512 * 6, ShadowMap->Data);
+		RenderStates->ShadowMapDepthBias = 1.01f;
 		ShadowMapResolutionChanged = true;
+		FPSCounter->ResetMinFrameTime();
 	}
 	else if (Input::GetKeyPressed(Scancode::D2))
 	{
-		RenderStates->ShadowMap = RenderTarget(1024, 1024 * 6, RenderStates->ShadowMap.Buffer);
-		RenderStates->ShadowMapDepthBias = .075f;
+		RenderStates->ShadowMap = RenderTarget(1024, 1024 * 6, ShadowMap->Data);
+		RenderStates->ShadowMapDepthBias = 1.0075f;
 		ShadowMapResolutionChanged = true;
+		FPSCounter->ResetMinFrameTime();
 	}
 	else if (Input::GetKeyPressed(Scancode::D3))
 	{
-		RenderStates->ShadowMap = RenderTarget(2048, 2048 * 6, RenderStates->ShadowMap.Buffer);
-		RenderStates->ShadowMapDepthBias = .05f;
+		RenderStates->ShadowMap = RenderTarget(2048, 2048 * 6, ShadowMap->Data);
+		RenderStates->ShadowMapDepthBias = 1.005f;
 		ShadowMapResolutionChanged = true;
+		FPSCounter->ResetMinFrameTime();
 	}
 
 	if (Input::GetKeyPressed(Scancode::P))
 	{
 		RenderStates->ShadowMapFunc = RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? ShadowMapFunc::Point : ShadowMapFunc::Pcf;
+		FPSCounter->ResetMinFrameTime();
 	}
 }
-void ShadowMapCubemapExample::Render()
+void ShadowMapCubemap2Example::Render()
 {
 	bool renderShadowMap = ShadowMapResolutionChanged || LightMovementStopwatch.IsRunning;
 	ShadowMapResolutionChanged = false;
 
 	RenderUnit->Statistics.Clear();
-	RenderUnit->ClearFrameBuffer(*RenderStates);
-	RenderUnit->ClearDepthBuffer(*RenderStates);
-	if (renderShadowMap) RenderUnit->ClearShadowMap(*RenderStates);
+
+	ThreadPool::Run({
+		[&] { RenderUnit->ClearFrameBuffer(*RenderStates); },
+		[&] { RenderUnit->ClearDepthBuffer(*RenderStates); },
+		[&]
+		{
+			if (renderShadowMap)
+			{
+				RenderUnit->ClearShadowMap(*RenderStates);
+			}
+		}
+		});
 
 	RenderStates->ViewMatrix = FreeLook->ViewMatrix;
 
@@ -138,58 +118,76 @@ void ShadowMapCubemapExample::Render()
 
 	RenderStates->Lights[0].Position += vfloat3(0, .5f, 0) + vfloat3(Math::Sin(t2), Math::Cos(t2), Math::Sin(t2)) * .3f;
 
-	int32 threadIds[6];
-
-	// Render all 6 faces of shadow cubemap.
+	// Render all 6 faces of the shadow cubemap.
 	if (renderShadowMap)
 	{
-		for (int32 i = 0; i < 6; i++)
+		ThreadPool::Run(6, [this](int32 threadIndex)
 		{
-			threadIds[i] = ThreadPool::Start([this, i]
-			{
-				::RenderStates shadowMapRenderStates = *RenderStates;
-				shadowMapRenderStates.ShadowMap = RenderTarget(shadowMapRenderStates.ShadowMap.Width, shadowMapRenderStates.ShadowMap.Width, RenderStates->ShadowMap.GetBuffer<float>(shadowMapRenderStates.ShadowMap.Width * shadowMapRenderStates.ShadowMap.Width * i));
-				shadowMapRenderStates.Rasterizer = Rasterizer::ShadowMap;
-				shadowMapRenderStates.Lights[0].Rotation = GetCubemapDirection(i);
-				shadowMapRenderStates.CountTotalTriangles = false;
-				DrawScene(shadowMapRenderStates, 0);
-			});
-		}
-
-		for (int32 i = 0; i < 6; i++)
-		{
-			ThreadPool::Join(threadIds[i]);
-		}
-	}
-
-	// Render scene with and project shadow map.
-	for (int32 i = 0; i < 4; i++)
-	{
-		threadIds[i] = ThreadPool::Start([this, i]
-		{
-			::RenderStates sceneRenderStates = *RenderStates;
-			sceneRenderStates.SetWorkload(i, 4);
-			DrawScene(sceneRenderStates, 0);
-			DrawScene(sceneRenderStates, 1);
-
-			if (Wireframe)
-			{
-				sceneRenderStates.Rasterizer = Rasterizer::Wireframe;
-				sceneRenderStates.CountTotalTriangles = false;
-				sceneRenderStates.CountRenderedTriangles = false;
-				DrawScene(sceneRenderStates, 0);
-				DrawScene(sceneRenderStates, 1);
-			}
+			::RenderStates shadowMapRenderStates = *RenderStates;
+			shadowMapRenderStates.ShadowMap = RenderTarget(shadowMapRenderStates.ShadowMap.Width, shadowMapRenderStates.ShadowMap.Width, RenderStates->ShadowMap.GetBuffer<float>(shadowMapRenderStates.ShadowMap.Width * shadowMapRenderStates.ShadowMap.Width * threadIndex));
+			shadowMapRenderStates.Rasterizer = Rasterizer::ShadowMap;
+			shadowMapRenderStates.Lights[0].Rotation = GetCubemapDirection(threadIndex);
+			DrawScene(shadowMapRenderStates, WorkPartition(), 0);
 		});
 	}
 
-	for (int32 i = 0; i < 4; i++)
+	// Render scene and project shadow map.
+	ThreadPool::Run(4, [this](WorkPartition workPartition)
 	{
-		ThreadPool::Join(threadIds[i]);
-	}
+		::RenderStates sceneRenderStates = *RenderStates;
+		DrawScene(sceneRenderStates, workPartition, 0);
+		DrawScene(sceneRenderStates, workPartition, 1);
+
+		if (Wireframe)
+		{
+			sceneRenderStates.Rasterizer = Rasterizer::Wireframe;
+			DrawScene(sceneRenderStates, workPartition, 0);
+			DrawScene(sceneRenderStates, workPartition, 1);
+		}
+	});
+}
+void ShadowMapCubemap2Example::DrawHud()
+{
+	ThreadPool::Run({
+		[&] { DrawPerformanceBox(10, 10, FreeLook->Position); },
+		[&]
+		{
+			DrawControlsBox(
+				"Controls",
+				10,
+				-10,
+				"WSAD",
+				"Move",
+				-1,
+				"Space",
+				"Light Movement",
+				LightMovementStopwatch.IsRunning ? 1 : 0,
+				nullptr);
+		},
+		[&]
+		{
+			DrawControlsBox(
+				"Render",
+				-10,
+				-10,
+				"1 - 3",
+				"Shadow Map Resolution",
+				-1,
+				"P",
+				"PCF",
+				RenderStates->ShadowMapFunc == ShadowMapFunc::Pcf ? 1 : 0,
+				"T",
+				"Texture Filtering",
+				RenderStates->TextureFilteringEnable ? 1 : 0,
+				"X",
+				"Wireframe",
+				Wireframe ? 1 : 0,
+				nullptr);
+		}
+		});
 }
 
-void ShadowMapCubemapExample::LoadScene()
+void ShadowMapCubemap2Example::LoadScene()
 {
 	Map = Mesh::Load("Assets\\Maps\\Warehouse\\Warehouse.obj");
 	Map->SetSpecularIntensity(.015f);
@@ -199,20 +197,20 @@ void ShadowMapCubemapExample::LoadScene()
 
 	LightBulb = PrimitiveFactory::Plane(1, 1);
 	LightBulb->SetTexture(Texture::FromFile("Assets\\Textures\\LightSprite.png"));
-	LightBulb->GetSurface(0)->BlendMode = BlendMode::Add;
+	LightBulb->Surfaces[0]->BlendMode = BlendMode::Add;
 }
-void ShadowMapCubemapExample::DrawScene(::RenderStates &renderStates, int32 part)
+void ShadowMapCubemap2Example::DrawScene(::RenderStates &renderStates, WorkPartition workPartition, int32 part)
 {
 	switch (part)
 	{
 		case 0:
 		{
-			RenderUnit->DrawMesh(renderStates, *Map, Matrix4f::Identity());
+			RenderUnit->DrawMesh(renderStates, workPartition, *Map, Matrix4::Identity());
 			break;
 		}
 		case 1:
 		{
-			RenderUnit->DrawMesh(renderStates, *LightBulb, Matrix4f::Scale(.2f) * Matrix4f::RotateX(-90) * renderStates.ViewMatrix.RotationPart.Transpose() * Matrix4f::Translate(renderStates.Lights[0].Position));
+			RenderUnit->DrawMesh(renderStates, workPartition, *LightBulb, Matrix4::Scale(.2f) * Matrix4::RotateX(-90) * renderStates.ViewMatrix.RotationPart.Transpose() * Matrix4::Translate(renderStates.Lights[0].Position));
 			break;
 		}
 	}

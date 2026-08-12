@@ -61,6 +61,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -68,10 +69,7 @@
       <AdditionalDependencies>Shlwapi.lib;FastPix3D.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)lib\SDL3.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)lib\SDL3_image.dll" "$(TargetDir)"
-
-mkdir "$(SolutionDir)$Build\Examples"
+      <Command>mkdir "$(SolutionDir)$Build\Examples"
 xcopy /Y "$(TargetPath)" "$(SolutionDir)$Build\Examples"
 xcopy /S /Y /I "$(SolutionDir)$Build\FastPix3D\lib\*.dll" "$(SolutionDir)$Build\Examples"
 
@@ -92,6 +90,7 @@ if errorlevel 1 exit 0 else exit %errorlevel%</Command>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,10 +100,7 @@ if errorlevel 1 exit 0 else exit %errorlevel%</Command>
       <AdditionalDependencies>Shlwapi.lib;FastPix3D.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)lib\SDL3.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)lib\SDL3_image.dll" "$(TargetDir)"
-
-mkdir "$(SolutionDir)$Build\Examples"
+      <Command>mkdir "$(SolutionDir)$Build\Examples"
 xcopy /Y "$(TargetPath)" "$(SolutionDir)$Build\Examples"
 xcopy /S /Y /I "$(SolutionDir)$Build\FastPix3D\lib\*.dll" "$(SolutionDir)$Build\Examples"
 

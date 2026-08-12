@@ -4,7 +4,6 @@
     <ClCompile Include="RenderStates.cpp" />
     <ClCompile Include="RenderStatistics.cpp" />
     <ClCompile Include="RenderUnit.cpp" />
-    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="2D\Font.cpp">
       <Filter>2D</Filter>
     </ClCompile>
@@ -20,19 +19,10 @@
     <ClCompile Include="Interop\Bitmap.cpp">
       <Filter>Interop</Filter>
     </ClCompile>
-    <ClCompile Include="Interop\FPSCounter.cpp">
-      <Filter>Interop</Filter>
-    </ClCompile>
     <ClCompile Include="Interop\Input.cpp">
       <Filter>Interop</Filter>
     </ClCompile>
-    <ClCompile Include="Interop\Stopwatch.cpp">
-      <Filter>Interop</Filter>
-    </ClCompile>
     <ClCompile Include="Interop\System.cpp">
-      <Filter>Interop</Filter>
-    </ClCompile>
-    <ClCompile Include="Interop\Thread.cpp">
       <Filter>Interop</Filter>
     </ClCompile>
     <ClCompile Include="Interop\ThreadPool.cpp">
@@ -59,6 +49,15 @@
     <ClCompile Include="Rasterizer\WireframeRasterizer.cpp">
       <Filter>Rasterizer</Filter>
     </ClCompile>
+    <ClCompile Include="Helper\FPSCounter.cpp">
+      <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper\Stopwatch.cpp">
+      <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh\Texture.cpp">
+      <Filter>Mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FastPix3D.h" />
@@ -67,7 +66,6 @@
     <ClInclude Include="RenderStatistics.h" />
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="RenderUnit.h" />
-    <ClInclude Include="Texture.h" />
     <ClInclude Include="2D\Font.h">
       <Filter>2D</Filter>
     </ClInclude>
@@ -83,19 +81,10 @@
     <ClInclude Include="Interop\Bitmap.h">
       <Filter>Interop</Filter>
     </ClInclude>
-    <ClInclude Include="Interop\FPSCounter.h">
-      <Filter>Interop</Filter>
-    </ClInclude>
     <ClInclude Include="Interop\Input.h">
       <Filter>Interop</Filter>
     </ClInclude>
-    <ClInclude Include="Interop\Stopwatch.h">
-      <Filter>Interop</Filter>
-    </ClInclude>
     <ClInclude Include="Interop\System.h">
-      <Filter>Interop</Filter>
-    </ClInclude>
-    <ClInclude Include="Interop\Thread.h">
       <Filter>Interop</Filter>
     </ClInclude>
     <ClInclude Include="Interop\ThreadPool.h">
@@ -116,7 +105,7 @@
     <ClInclude Include="Math\Color.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="Math\Matrix4f.h">
+    <ClInclude Include="Math\Matrix4.h">
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Math\Math_.h">
@@ -152,12 +141,6 @@
     <ClInclude Include="Math\vint8.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="Math\vlong2.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\vlong4.h">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Math\vsbyte32.h">
       <Filter>Math</Filter>
     </ClInclude>
@@ -176,9 +159,6 @@
     <ClInclude Include="Mesh\Surface.h">
       <Filter>Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh\Triangle.h">
-      <Filter>Mesh</Filter>
-    </ClInclude>
     <ClInclude Include="Mesh\Vertex.h">
       <Filter>Mesh</Filter>
     </ClInclude>
@@ -190,6 +170,22 @@
     </ClInclude>
     <ClInclude Include="Rasterizer\WireframeRasterizer.h">
       <Filter>Rasterizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper\FPSCounter.h">
+      <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper\Stopwatch.h">
+      <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh\Texture.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper\Buffer.h">
+      <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkPartition.h" />
+    <ClInclude Include="Math\vuint4.h">
+      <Filter>Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

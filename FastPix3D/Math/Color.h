@@ -19,24 +19,29 @@ struct FASTPIX3D_API Color
 		int32 RGB;
 	};
 
+	readonly_property(byte, Grayscale)
+	{
+		return (byte)((R + G + B) / 3);
+	}
+
 	__forceinline Color() :
 		RGB(0)
 	{
 	}
-	__forceinline Color(const Color &value) :
-		RGB(value.RGB)
+	__forceinline Color(const Color &other) :
+		RGB(other.RGB)
 	{
 	}
-	__forceinline explicit Color(const vint3 &value) :
-		R(value.X),
-		G(value.Y),
-		B(value.Z)
+	__forceinline explicit Color(const vint3 &other) :
+		R(other.X),
+		G(other.Y),
+		B(other.Z)
 	{
 	}
-	__forceinline explicit Color(const vfloat3 &value) :
-		R((byte)value.X),
-		G((byte)value.Y),
-		B((byte)value.Z)
+	__forceinline explicit Color(const vfloat3 &other) :
+		R((byte)other.X),
+		G((byte)other.Y),
+		B((byte)other.Z)
 	{
 	}
 	__forceinline explicit Color(byte r, byte g, byte b) :

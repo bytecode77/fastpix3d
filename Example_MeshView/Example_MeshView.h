@@ -9,7 +9,7 @@ private:
 	Mesh *Meshes[6] = { };
 	int32 CurrentMesh = 0;
 	vfloat3 Position;
-	Matrix4f Rotation;
+	Matrix4 Rotation;
 	vfloat2 RotationVelocity;
 
 public:
@@ -20,7 +20,8 @@ public:
 private:
 	void HandleInput();
 	void Render();
+	void DrawHud();
 
 	void LoadScene();
-	void DrawScene(::RenderStates &renderStates);
+	void DrawScene(::RenderStates &renderStates, WorkPartition workPartition);
 };

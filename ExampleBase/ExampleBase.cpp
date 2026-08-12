@@ -4,9 +4,9 @@
 #include <Interop/Input.h>
 #include <Math/Color.h>
 #include <Math/Math_.h>
-#include <Math/Matrix4f.h>
+#include <Math/Matrix4.h>
 #include <Mesh/Mesh.h>
-#include <Texture.h>
+#include <Mesh/Texture.h>
 
 ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 {
@@ -18,15 +18,20 @@ ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 	lstrcatA(title, name);
 
 	Window = new ::Window(width, height, title);
+	//Window = ::Window::CreateFullScreen();
 	RenderUnit = new ::RenderUnit();
+
+	DepthBuffer = new Buffer<float>(Window->Width * Window->Height);
+	ShadowMap = new Buffer<float>(2048 * 2048 * 6);
 
 	RenderStates = new ::RenderStates();
 	RenderStates->FrameBuffer = RenderTarget(*Window);
-	RenderStates->DepthBuffer = RenderTarget(Window->Width, Window->Height, _aligned_malloc(Window->Width * Window->Height * 4, 32));
+	RenderStates->DepthBuffer = RenderTarget(Window->Width, Window->Height, DepthBuffer->Data);
 	RenderStates->WireframeDepthBias = 1.01f;
 
 	FreeLook = new ::FreeLook();
 	FPSCounter = new ::FPSCounter(500);
+
 	Font10 = new Font("Assets\\Fonts\\inter-10-light.png", 16, 6, 32, 0);
 	Font12 = new Font("Assets\\Fonts\\inter-12-light.png", 16, 6, 32, 1);
 	Font14 = new Font("Assets\\Fonts\\inter-14-light.png", 16, 6, 32, 1);
@@ -52,16 +57,15 @@ ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 }
 ExampleBase::~ExampleBase()
 {
+	delete DepthBuffer;
+	delete ShadowMap;
+
 	delete Window;
-
-	_aligned_free(RenderStates->DepthBuffer.Buffer);
-	if (RenderStates->ShadowMap.Buffer) _aligned_free(RenderStates->ShadowMap.Buffer);
-
 	delete RenderUnit;
 	delete RenderStates;
-
 	delete FreeLook;
 	delete FPSCounter;
+
 	delete Font10;
 	delete Font12;
 	delete Font14;
@@ -91,15 +95,12 @@ void ExampleBase::HandleBaseInput()
 	if (Input::GetKeyPressed(Scancode::X))
 	{
 		Wireframe = !Wireframe;
+		FPSCounter->ResetMinFrameTime();
 	}
 
 	if (Input::GetKeyPressed(Scancode::T))
 	{
 		RenderStates->TextureFilteringEnable = !RenderStates->TextureFilteringEnable;
-	}
-
-	if (Input::GetKeyPressed(Scancode::R))
-	{
 		FPSCounter->ResetMinFrameTime();
 	}
 }
@@ -182,7 +183,7 @@ void ExampleBase::DrawControlsBox(const char *title, int32 x, int32 y, ...) cons
 		texts[rows] = va_arg(args, const char*);
 		checkBoxes[rows] = va_arg(args, int32);
 
-		if (!labels[rows] || !texts[rows])
+		if (!labels[rows])
 		{
 			break;
 		}
@@ -230,51 +231,60 @@ void ExampleBase::DrawControlsBox(const char *title, int32 x, int32 y, ...) cons
 }
 void ExampleBase::DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const
 {
-	width = Math::Min(width, RenderStates->FrameBuffer.Width - 1);
-	height = Math::Min(height, RenderStates->FrameBuffer.Height - 1);
-	zFrom = RenderStates->ClipNear / zFrom;
-	zTo = RenderStates->ClipNear / zTo;
+	int32 frameBufferWidth = RenderStates->FrameBuffer.Width;
+	int32 frameBufferHeight = RenderStates->FrameBuffer.Height;
+	int32 shadowMapWidth = RenderStates->ShadowMap.Width;
+	int32 shadowMapHeight = RenderStates->ShadowMap.Height;
+
+	width = Math::Min(width, frameBufferWidth - x);
+	height = Math::Min(height, frameBufferHeight - y);
+
+	zFrom = 1 / zFrom;
+	zTo = 1 / zTo;
 
 	int32 scale = 0;
-	while (RenderStates->ShadowMap.Width >> scale > width || RenderStates->ShadowMap.Height >> scale > height)
+	while ((shadowMapWidth >> scale) > width || (shadowMapHeight >> scale) > height)
 	{
 		scale++;
 	}
 
-	int32 renderWidth = RenderStates->ShadowMap.Width >> scale;
-	int32 renderHeight = RenderStates->ShadowMap.Height >> scale;
+	int32 sampleStep = 1 << scale;
+	int32 renderWidth = shadowMapWidth >> scale;
+	int32 renderHeight = shadowMapHeight >> scale;
 
-	Color *frameBuffer = RenderStates->FrameBuffer.GetBuffer<Color>(x + y * RenderStates->FrameBuffer.Width);
+	vfloat8 grayMul = vfloat8(255.0f / (zFrom - zTo));
+	vfloat8 grayAdd = vfloat8(zTo * -255.0f / (zFrom - zTo));
+
+	Color *frameBuffer = RenderStates->FrameBuffer.GetBuffer<Color>(x + y * frameBufferWidth);
 	float *shadowMap = RenderStates->ShadowMap.GetBuffer<float>();
 
-	int32 frameBufferStrideY = RenderStates->FrameBuffer.Width - renderWidth;
-	int32 shadowMapStrideX = 1 << scale;
-	int32 shadowMapStrideY = RenderStates->ShadowMap.Width * (shadowMapStrideX - 1);
+	vint8 gatherOffsets(
+		0,
+		sampleStep,
+		sampleStep * 2,
+		sampleStep * 3,
+		sampleStep * 4,
+		sampleStep * 5,
+		sampleStep * 6,
+		sampleStep * 7
+	);
 
 	for (int32 py = 0; py < renderHeight; py++)
 	{
-		for (int32 px = 0; px < renderWidth; px++)
+		Color *dest = frameBuffer + py * frameBufferWidth;
+		float *src = shadowMap + py * shadowMapWidth * sampleStep;
+
+		for (int32 px = 0; px + 8 <= renderWidth; px += 8)
 		{
-			if (*shadowMap > 0)
-			{
-				int32 color = (int32)Math::Interpolate(*shadowMap, zFrom, zTo, 255.0f, 0.0f) & 0xff;
-				frameBuffer->B = color;
-				frameBuffer->G = color;
-				frameBuffer->R = color;
-			}
-			else
-			{
-				frameBuffer->B >>= 1;
-				frameBuffer->G >>= 1;
-				frameBuffer->R >>= 1;
-			}
+			vfloat8 depth = vfloat8::Read(src + px * sampleStep, gatherOffsets);
+			vuint8 pixels = vuint8((uint32*)(dest + px));
 
-			frameBuffer++;
-			shadowMap += shadowMapStrideX;
+			vuint8 depthMask = VectorMath::CmpGt(depth, vfloat8());
+			vuint8 grayPixels = (vuint8)VectorMath::Shuffle((vbyte32)(vint8)VectorMath::MulAdd(depth, grayMul, grayAdd), BroadcastByteToInt32Mask);
+			vuint8 backgroundPixels = (pixels >> 1) & 0x7f7f7f;
+
+			vuint8::Write((uint32*)(dest + px), VectorMath::Select(backgroundPixels, grayPixels, depthMask));
 		}
-
-		frameBuffer += frameBufferStrideY;
-		shadowMap += shadowMapStrideY;
 	}
 
 	char title[100];
@@ -299,27 +309,27 @@ Mesh* ExampleBase::CreateSkybox(const char *path) const
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "UP", 2);
-	skybox->GetSurface(0)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[0]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "DN", 2);
-	skybox->GetSurface(1)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[1]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "LF", 2);
-	skybox->GetSurface(2)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[2]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "RT", 2);
-	skybox->GetSurface(3)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[3]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "FT", 2);
-	skybox->GetSurface(4)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[4]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "BK", 2);
-	skybox->GetSurface(5)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[5]->Texture = Texture::FromFile(fileName);
 
 	return skybox;
 }
@@ -350,20 +360,13 @@ vfloat3 ExampleBase::GetCubemapDirection(int32 face) const
 {
 	switch (face)
 	{
-		case 0:
-			return vfloat3(90, 0, 0);
-		case 1:
-			return vfloat3(-90, 0, 0);
-		case 2:
-			return vfloat3(0, -90, 0);
-		case 3:
-			return vfloat3(0, 90, 0);
-		case 4:
-			return vfloat3();
-		case 5:
-			return vfloat3(180, 0, 0);
-		default:
-			throw std::out_of_range("Cubemap face must be between 0 and 5.");
+		case 0: return vfloat3(90, 0, 0);
+		case 1: return vfloat3(-90, 0, 0);
+		case 2: return vfloat3(0, -90, 0);
+		case 3: return vfloat3(0, 90, 0);
+		case 4: return vfloat3();
+		case 5: return vfloat3(180, 0, 0);
+		default: throw std::out_of_range("Cubemap face must be between 0 and 5.");
 	}
 }
 

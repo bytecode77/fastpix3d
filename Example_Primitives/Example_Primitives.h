@@ -7,7 +7,7 @@ class PrimitivesExample : public ExampleBase
 {
 private:
 	Mesh *Meshes[8] = { };
-	Matrix4f Rotation;
+	Matrix4 Rotation;
 	vfloat2 RotationVelocity;
 
 public:
@@ -18,6 +18,7 @@ public:
 private:
 	void HandleInput();
 	void Render();
+	void DrawHud();
 
 	void LoadScene();
 	void DrawScene(::RenderStates &renderStates, int32 meshIndex);

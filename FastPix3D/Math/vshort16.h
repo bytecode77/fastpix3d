@@ -15,8 +15,8 @@ public:
 		MM(_mm256_setzero_si256())
 	{
 	}
-	__forceinline vshort16(const vshort16 &value) :
-		MM(value.MM)
+	__forceinline vshort16(const vshort16 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vshort16(_vshort16 mm) :
@@ -24,7 +24,7 @@ public:
 	{
 	}
 	__forceinline explicit vshort16(const int16 *ptr) :
-		MM(_mm256_loadu_si256((_vshort16*)ptr))
+		MM(_mm256_loadu_si256((const _vshort16*)ptr))
 	{
 	}
 	__forceinline explicit vshort16(const vshort16 *ptr) :
@@ -44,6 +44,10 @@ public:
 	{
 	}
 
+	__forceinline static void Write(int16 *dest, const vshort16 &src)
+	{
+		_mm256_storeu_si256((_vshort16*)dest, src.MM);
+	}
 	__forceinline static void Write(vshort16 *dest, const vshort16 &src)
 	{
 		_mm256_store_si256((_vshort16*)dest, src.MM);
@@ -316,9 +320,6 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };

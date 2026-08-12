@@ -16,8 +16,8 @@ public:
 		MM(_mm_setzero_si128())
 	{
 	}
-	__forceinline vint4(const vint4 &value) :
-		MM(value.MM)
+	__forceinline vint4(const vint4 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vint4(_vint4 mm) :
@@ -25,7 +25,7 @@ public:
 	{
 	}
 	__forceinline explicit vint4(const int32 *ptr) :
-		MM(_mm_loadu_si128((_vint4*)ptr))
+		MM(_mm_loadu_si128((const _vint4*)ptr))
 	{
 	}
 	__forceinline explicit vint4(const vint4 *ptr) :
@@ -36,8 +36,8 @@ public:
 		MM(_mm_load_si128(ptr))
 	{
 	}
-	__forceinline explicit vint4(const vfloat4 &value) :
-		MM(_mm_cvtps_epi32(value))
+	__forceinline explicit vint4(const vfloat4 &other) :
+		MM(_mm_cvtps_epi32(other))
 	{
 	}
 	__forceinline explicit vint4(int32 uniform) :
@@ -57,6 +57,10 @@ public:
 	{
 		return _mm_mask_i32gather_epi32(vint4(), src, offsets, mask, 4);
 	}
+	__forceinline static void Write(int32 *dest, const vint4 &src)
+	{
+		_mm_storeu_si128((_vint4*)dest, src.MM);
+	}
 	__forceinline static void Write(vint4 *dest, const vint4 &src)
 	{
 		_mm_store_si128((_vint4*)dest, src.MM);
@@ -64,6 +68,10 @@ public:
 	__forceinline static void Write(_vint4 *dest, const vint4 &src)
 	{
 		_mm_store_si128((_vint4*)dest, src.MM);
+	}
+	__forceinline static void Write(int32 *dest, const vint4 &src, _vuint4 mask)
+	{
+		_mm_maskstore_epi32(dest, mask, src.MM);
 	}
 	__forceinline static void Write(vint4 *dest, const vint4 &src, _vuint4 mask)
 	{
@@ -125,27 +133,27 @@ public:
 	}
 	__forceinline vint4 operator ^(const vint4 &other) const
 	{
-		return _mm_xor_epi32(MM, other.MM);
+		return _mm_xor_si128(MM, other.MM);
 	}
 	__forceinline vint4 operator ^(int32 scalar) const
 	{
-		return _mm_xor_epi32(MM, _mm_set1_epi32(scalar));
+		return _mm_xor_si128(MM, _mm_set1_epi32(scalar));
 	}
 	__forceinline vint4 operator |(const vint4 &other) const
 	{
-		return _mm_or_epi32(MM, other.MM);
+		return _mm_or_si128(MM, other.MM);
 	}
 	__forceinline vint4 operator |(int32 scalar) const
 	{
-		return _mm_or_epi32(MM, _mm_set1_epi32(scalar));
+		return _mm_or_si128(MM, _mm_set1_epi32(scalar));
 	}
 	__forceinline vint4 operator &(const vint4 &other) const
 	{
-		return _mm_and_epi32(MM, other.MM);
+		return _mm_and_si128(MM, other.MM);
 	}
 	__forceinline vint4 operator &(int32 scalar) const
 	{
-		return _mm_and_epi32(MM, _mm_set1_epi32(scalar));
+		return _mm_and_si128(MM, _mm_set1_epi32(scalar));
 	}
 	__forceinline vint4 operator ~() const
 	{
@@ -219,32 +227,32 @@ public:
 	}
 	__forceinline vint4& operator ^=(const vint4 &other)
 	{
-		MM = _mm_xor_epi32(MM, other.MM);
+		MM = _mm_xor_si128(MM, other.MM);
 		return *this;
 	}
 	__forceinline vint4& operator ^=(int32 scalar)
 	{
-		MM = _mm_xor_epi32(MM, _mm_set1_epi32(scalar));
+		MM = _mm_xor_si128(MM, _mm_set1_epi32(scalar));
 		return *this;
 	}
 	__forceinline vint4& operator |=(const vint4 &other)
 	{
-		MM = _mm_or_epi32(MM, other.MM);
+		MM = _mm_or_si128(MM, other.MM);
 		return *this;
 	}
 	__forceinline vint4& operator |=(int32 scalar)
 	{
-		MM = _mm_or_epi32(MM, _mm_set1_epi32(scalar));
+		MM = _mm_or_si128(MM, _mm_set1_epi32(scalar));
 		return *this;
 	}
 	__forceinline vint4& operator &=(const vint4 &other)
 	{
-		MM = _mm_and_epi32(MM, other.MM);
+		MM = _mm_and_si128(MM, other.MM);
 		return *this;
 	}
 	__forceinline vint4& operator &=(int32 scalar)
 	{
-		MM = _mm_and_epi32(MM, _mm_set1_epi32(scalar));
+		MM = _mm_and_si128(MM, _mm_set1_epi32(scalar));
 		return *this;
 	}
 	__forceinline vint4& operator <<=(const vint4 &other)
@@ -363,10 +371,7 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };
 

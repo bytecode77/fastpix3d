@@ -1,71 +1,168 @@
 #include "Bitmap.h"
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_image.h>
+#include "../Math/vuint8.h"
+#include <wincodec.h>
+
+INIT_ONCE Bitmap::InitOnce = INIT_ONCE_STATIC_INIT;
+IWICImagingFactory *Bitmap::ImagingFactory;
 
 Bitmap::Bitmap(int32 width, int32 height) :
 	_Width(width),
 	_Height(height),
-	_Pixels(new Color[width * height])
+	_Pixels((Color*)_aligned_malloc(width * height * sizeof(Color), 32))
 {
+}
+Bitmap::Bitmap(const Bitmap &other) :
+	_Width(other._Width),
+	_Height(other._Height),
+	_Pixels((Color*)_aligned_malloc(other._Width * other._Height * sizeof(Color), 32))
+{
+	memcpy(_Pixels, other._Pixels, other._Width * other._Height * sizeof(Color));
 }
 Bitmap::~Bitmap()
 {
-	delete[] _Pixels;
+	_aligned_free(_Pixels);
 }
 
 Bitmap* Bitmap::FromFile(const char *path)
 {
 	if (!path) throw std::invalid_argument("path cannot be null.");
 
-	SDL_Surface *surface = IMG_Load(path);
-	if (!surface) throw std::runtime_error("Failed to load image.");
+	EnsureInitialized();
 
-	Bitmap *bitmap = FromSurface(surface);
-	SDL_DestroySurface(surface);
+	Bitmap *bitmap = nullptr;
+
+	IStream *stream;
+	if (SUCCEEDED(SHCreateStreamOnFileA(path, STGM_READ | STGM_SHARE_DENY_WRITE, &stream)))
+	{
+		bitmap = FromStream(stream);
+		stream->Release();
+	}
 
 	return bitmap;
 }
 Bitmap* Bitmap::FromMemory(const void *buffer, int32 size)
 {
-	SDL_IOStream *stream = SDL_IOFromConstMem(buffer, size);
-	if (!stream) throw std::runtime_error("Failed to load image.");
+	if (!buffer) throw std::invalid_argument("buffer cannot be null.");
+	if (size <= 0) throw std::invalid_argument("size must be greater than zero.");
 
-	SDL_Surface *surface = IMG_Load_IO(stream, true);
-	if (!surface) throw std::runtime_error("Failed to load image.");
+	EnsureInitialized();
 
-	Bitmap *bitmap = FromSurface(surface);
-	SDL_DestroySurface(surface);
+	Bitmap *bitmap = nullptr;
+
+	IWICStream *stream;
+	if (SUCCEEDED(ImagingFactory->CreateStream(&stream)))
+	{
+		if (SUCCEEDED(stream->InitializeFromMemory((BYTE*)buffer, (DWORD)size)))
+		{
+			bitmap = FromStream(stream);
+		}
+
+		stream->Release();
+	}
 
 	return bitmap;
 }
-Bitmap* Bitmap::FromSurface(SDL_Surface *surface)
+Bitmap* Bitmap::FromStream(IStream *stream)
 {
-	Bitmap* bitmap = new Bitmap(surface->w, surface->h);
-	SDL_Surface* dest = SDL_CreateSurfaceFrom(bitmap->_Width, bitmap->_Height, SDL_PIXELFORMAT_XRGB8888, bitmap->_Pixels, bitmap->_Width * 4);
+	Bitmap *bitmap = nullptr;
 
-	if (!dest)
+	IWICBitmapDecoder *decoder;
+	if (SUCCEEDED(ImagingFactory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &decoder)))
 	{
-		delete bitmap;
-		throw std::runtime_error("Failed to load image.");
-	}
+		IWICBitmapFrameDecode *frame = nullptr;
+		if (SUCCEEDED(decoder->GetFrame(0, &frame)))
+		{
+			UINT width;
+			UINT height;
+			if (SUCCEEDED(frame->GetSize(&width, &height)))
+			{
+				IWICFormatConverter *converter;
+				if (SUCCEEDED(ImagingFactory->CreateFormatConverter(&converter)))
+				{
+					if (SUCCEEDED(converter->Initialize(frame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom)))
+					{
+						bitmap = new Bitmap((int32)width, (int32)height);
 
-	if (!SDL_BlitSurface(surface, nullptr, dest, nullptr))
-	{
-		SDL_DestroySurface(dest);
-		delete bitmap;
-		throw std::runtime_error("Failed to load image.");
-	}
+						if (SUCCEEDED(converter->CopyPixels(nullptr, width * sizeof(Color), width * height * sizeof(Color), (LPBYTE)bitmap->Pixels)))
+						{
+							// Remove alpha channel to avoid spilling of alpha values into the RGB channels.
+							int32 *ptr = (int32*)bitmap->Pixels;
+							int32 count = bitmap->_Width * bitmap->_Height;
+							vuint8 mask = vuint8(0xffffff);
 
-	SDL_DestroySurface(dest);
+							while (count >= 8)
+							{
+								vuint8::Write((uint32*)ptr, vuint8((vuint8*)ptr) & mask);
+								ptr += 8;
+								count -= 8;
+							}
 
-	// Remove alpha channel to avoid spilling of alpha values into the RGB channels.
-	int32 *ptr = (int32*)bitmap->Pixels;
-	int32 count = bitmap->_Width * bitmap->_Height;
+							while (count--)
+							{
+								*ptr++ &= 0xffffff;
+							}
+						}
+						else
+						{
+							delete bitmap;
+							bitmap = nullptr;
+						}
+					}
 
-	for (int32 i = 0; i < count; i++)
-	{
-		*ptr++ &= 0xffffff;
+					converter->Release();
+				}
+			}
+
+			frame->Release();
+		}
+
+		decoder->Release();
 	}
 
 	return bitmap;
+}
+
+void Bitmap::EnsureInitialized()
+{
+	if (!InitOnceExecuteOnce(&InitOnce, Initialize, nullptr, nullptr))
+	{
+		throw std::runtime_error("Failed to initialize COM.");
+	}
+}
+BOOL CALLBACK Bitmap::Initialize(PINIT_ONCE initOnce, PVOID parameter, PVOID *context)
+{
+	HRESULT result = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	bool uninitializeCom = SUCCEEDED(result);
+
+	if (FAILED(result) && result != RPC_E_CHANGED_MODE)
+	{
+		return FALSE;
+	}
+
+	if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&ImagingFactory))))
+	{
+		if (uninitializeCom)
+		{
+			CoUninitialize();
+		}
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+Bitmap& Bitmap::operator =(const Bitmap &other)
+{
+	if (this != &other)
+	{
+		_aligned_free(_Pixels);
+
+		_Width = other._Width;
+		_Height = other._Height;
+		_Pixels = (Color*)_aligned_malloc(other._Width * other._Height * sizeof(Color), 32);
+		memcpy(_Pixels, other._Pixels, other._Width * other._Height * sizeof(Color));
+	}
+
+	return *this;
 }

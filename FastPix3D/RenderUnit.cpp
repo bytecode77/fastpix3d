@@ -9,7 +9,7 @@ void RenderUnit::ClearFrameBuffer(const RenderStates &renderStates) const
 {
 	ClearFrameBuffer(renderStates, Color());
 }
-void RenderUnit::ClearFrameBuffer(const RenderStates &renderStates, int32 r, int32 g, int32 b) const
+void RenderUnit::ClearFrameBuffer(const RenderStates &renderStates, byte r, byte g, byte b) const
 {
 	ClearFrameBuffer(renderStates, Color(r, g, b));
 }
@@ -23,22 +23,26 @@ void RenderUnit::ClearDepthBuffer(const RenderStates &renderStates) const
 }
 void RenderUnit::ClearShadowMap(const RenderStates &renderStates) const
 {
-	std::fill_n(renderStates.ShadowMap.GetBuffer<float>(), renderStates.ShadowMap.Width * renderStates.ShadowMap.Height, 0);
+	std::fill_n(renderStates.ShadowMap.GetBuffer<float>(), renderStates.ShadowMap.Width * renderStates.ShadowMap.Height, 0.0f);
 }
 
-void RenderUnit::DrawMesh(const RenderStates &renderStates, const Mesh& mesh, const Matrix4f &modelMatrix)
+void RenderUnit::DrawMesh(const RenderStates &renderStates, WorkPartition workPartition, const Mesh &mesh, const Matrix4 &modelMatrix)
 {
 	::RenderStates renderStatesCopy = renderStates;
 	renderStatesCopy.ModelMatrix = modelMatrix;
 
 	bool hasTransparentSurfaces = false;
+	int32 totalTriangleCount = 0;
+	int32 renderedTriangleCount = 0;
 
 	// 1.) Render opaque surfaces first.
 	for (int32 i = 0; i < mesh.SurfaceCount; i++)
 	{
-		Surface *surface = mesh.GetSurface(i);
+		Surface *surface = mesh.Surfaces[i];
 
-		if (surface->BlendMode == BlendMode::Alpha && surface->Alpha < 1 || surface->BlendMode == BlendMode::Multiply || surface->BlendMode == BlendMode::Add)
+		if (surface->BlendMode == BlendMode::Alpha && surface->Alpha < 1 ||
+			surface->BlendMode == BlendMode::Add ||
+			surface->BlendMode == BlendMode::Multiply)
 		{
 			hasTransparentSurfaces = true;
 		}
@@ -55,9 +59,12 @@ void RenderUnit::DrawMesh(const RenderStates &renderStates, const Mesh& mesh, co
 			{
 				DrawTriangle(
 					renderStatesCopy,
+					workPartition,
 					*surface->GetTriangleVertex(j, 0),
 					*surface->GetTriangleVertex(j, 1),
-					*surface->GetTriangleVertex(j, 2)
+					*surface->GetTriangleVertex(j, 2),
+					totalTriangleCount,
+					renderedTriangleCount
 				);
 			}
 		}
@@ -68,9 +75,11 @@ void RenderUnit::DrawMesh(const RenderStates &renderStates, const Mesh& mesh, co
 	{
 		for (int32 i = 0; i < mesh.SurfaceCount; i++)
 		{
-			Surface *surface = mesh.GetSurface(i);
+			Surface *surface = mesh.Surfaces[i];
 
-			if (surface->BlendMode == BlendMode::Alpha && surface->Alpha < 1 || surface->BlendMode == BlendMode::Multiply || surface->BlendMode == BlendMode::Add)
+			if (surface->BlendMode == BlendMode::Alpha && surface->Alpha > 0 && surface->Alpha < 1 ||
+				surface->BlendMode == BlendMode::Add ||
+				surface->BlendMode == BlendMode::Multiply)
 			{
 				renderStatesCopy.DepthMode = renderStatesCopy.DepthMode == DepthMode::None ? DepthMode::None : DepthMode::Read;
 				renderStatesCopy.BlendMode = surface->BlendMode;
@@ -85,66 +94,52 @@ void RenderUnit::DrawMesh(const RenderStates &renderStates, const Mesh& mesh, co
 				{
 					DrawTriangle(
 						renderStatesCopy,
+						workPartition,
 						*surface->GetTriangleVertex(j, 0),
 						*surface->GetTriangleVertex(j, 1),
-						*surface->GetTriangleVertex(j, 2)
+						*surface->GetTriangleVertex(j, 2),
+						totalTriangleCount,
+						renderedTriangleCount
 					);
 				}
 			}
 		}
 	}
+
+	switch (renderStatesCopy.Rasterizer)
+	{
+		case Rasterizer::Fragments:
+			Statistics.TotalTriangleCount += totalTriangleCount;
+			Statistics.RenderedTriangleCount += renderedTriangleCount;
+			break;
+		case Rasterizer::ShadowMap:
+			Statistics.RenderedTriangleCount += renderedTriangleCount;
+			break;
+	}
 }
-void RenderUnit::DrawTriangle(const RenderStates &renderStates, const Vertex &v1, const Vertex &v2, const Vertex &v3)
+void RenderUnit::DrawTriangle(const RenderStates &renderStates, WorkPartition workPartition, const Vertex &v1, const Vertex &v2, const Vertex &v3)
 {
-	bool countTriangles = RasterizerMath::GetWorkloadThreadIndex(renderStates.Workload) == 0;
-	bool countRenderedTriangles = countTriangles && renderStates.CountRenderedTriangles;
-	bool countTotalTriangles = countTriangles && renderStates.CountTotalTriangles;
+	int32 totalTriangleCount = 0;
+	int32 renderedTriangleCount = 0;
+	DrawTriangle(renderStates, workPartition, v1, v2, v3, totalTriangleCount, renderedTriangleCount);
 
 	switch (renderStates.Rasterizer)
 	{
 		case Rasterizer::Fragments:
-		{
-			FragmentRasterizer rasterizer = FragmentRasterizer(renderStates);
-			if (rasterizer.DrawTriangle(v1, v2, v3) && countRenderedTriangles)
-			{
-				Statistics.RenderedTriangleCount++;
-			}
+			Statistics.TotalTriangleCount += totalTriangleCount;
+			Statistics.RenderedTriangleCount += renderedTriangleCount;
 			break;
-		}
-		case Rasterizer::Wireframe:
-		{
-			WireframeRasterizer rasterizer = WireframeRasterizer(renderStates);
-			if (rasterizer.DrawTriangle(v1, v2, v3) && countRenderedTriangles)
-			{
-				Statistics.RenderedTriangleCount++;
-			}
-			break;
-		}
 		case Rasterizer::ShadowMap:
-		{
-			ShadowMapRasterizer rasterizer = ShadowMapRasterizer(renderStates);
-			if (rasterizer.DrawTriangle(v1, v2, v3) && countRenderedTriangles)
-			{
-				Statistics.RenderedTriangleCount++;
-			}
+			Statistics.RenderedTriangleCount += renderedTriangleCount;
 			break;
-		}
-	}
-
-	if (countTotalTriangles)
-	{
-		Statistics.TotalTriangleCount++;
 	}
 }
-void RenderUnit::RenderFog(const RenderStates &renderStates) const
+void RenderUnit::RenderFog(const RenderStates &renderStates, WorkPartition workPartition) const
 {
 	if (renderStates.FogEnable)
 	{
-		int32 workloadOffset;
-		int32 workloadIncrement;
-		RasterizerMath::GetWorkloadParameters(renderStates.Workload, 0, workloadOffset, workloadIncrement);
-		workloadOffset = halfspace_mul(workloadOffset);
-		workloadIncrement = halfspace_mul(workloadIncrement);
+		int32 partitionOffset = halfspace_mul(workPartition.GetOffset(0));
+		int32 partitionIncrement = halfspace_mul(workPartition.ThreadCount);
 
 		float d = 255 / (renderStates.FogFar - renderStates.FogNear);
 		vfloat8 clipNear = vfloat8(renderStates.ClipNear * d);
@@ -153,11 +148,11 @@ void RenderUnit::RenderFog(const RenderStates &renderStates) const
 
 		vushort16 fogColor = vuint8(renderStates.FogColor.RGB).Low8;
 
-		Color *frameBuffer = renderStates.FrameBuffer.GetBuffer<Color>(workloadOffset * renderStates.FrameBuffer.Width);
-		float *depthBuffer = renderStates.DepthBuffer.GetBuffer<float>(workloadOffset * renderStates.FrameBuffer.Width);
-		int32 stride = renderStates.FrameBuffer.Width * (workloadIncrement - halfspace_mul(1));
+		Color *frameBuffer = renderStates.FrameBuffer.GetBuffer<Color>(partitionOffset * renderStates.FrameBuffer.Width);
+		float *depthBuffer = renderStates.DepthBuffer.GetBuffer<float>(partitionOffset * renderStates.FrameBuffer.Width);
+		int32 stride = renderStates.FrameBuffer.Width * (partitionIncrement - halfspace_mul(1));
 
-		for (int32 y = workloadOffset; y < renderStates.FrameBuffer.Height; y += workloadIncrement)
+		for (int32 y = partitionOffset; y < renderStates.FrameBuffer.Height; y += partitionIncrement)
 		{
 			for (int32 x = 0; x < renderStates.FrameBuffer.Width; x++)
 			{
@@ -165,12 +160,17 @@ void RenderUnit::RenderFog(const RenderStates &renderStates) const
 				vfloat8 depth = vfloat8((vfloat8*)depthBuffer);
 				vuint8 writeMask = VectorMath::CmpGt(depth, clearDepthValue); // Write only where Z-Buffer is not cleared to prevent skyboxes from disappearing in fog.
 
-				vbyte32 alpha = VectorMath::Shuffle((vbyte32)VectorMath::Clamp((vint8)(clipNear / depth - fogNear), 0, 255), BroadcastByteToInt32Mask);
-				vbyte32 oneMinusAlpha = vbyte32(255) - alpha;
+				vbyte32 alpha = VectorMath::Shuffle((vbyte32)VectorMath::Clamp((vint8)VectorMath::MulSub(clipNear, depth.Reciprocal, fogNear), 0, 255), BroadcastByteToInt32Mask);
+				vbyte32 oneMinusAlpha = ~alpha;
 
-				vushort16 blendedLo = (fogColor * alpha.Low8 >> 8) + (pixels.Low8 * oneMinusAlpha.Low8 >> 8);
-				vushort16 blendedHi = (fogColor * alpha.High8 >> 8) + (pixels.High8 * oneMinusAlpha.High8 >> 8);
-				vuint8::Write((vuint8*)frameBuffer, VectorMath::Pack(blendedLo, blendedHi), writeMask);
+				vuint8::Write(
+					(vuint8*)frameBuffer,
+					(vuint8)VectorMath::Pack(
+						(fogColor * alpha.Low8) + (pixels.Low8 * oneMinusAlpha.Low8) >> 8,
+						(fogColor * alpha.High8) + (pixels.High8 * oneMinusAlpha.High8) >> 8
+					),
+					writeMask
+				);
 
 				frameBuffer += halfspace_mul(1);
 				depthBuffer += halfspace_mul(1);
@@ -178,6 +178,45 @@ void RenderUnit::RenderFog(const RenderStates &renderStates) const
 
 			frameBuffer += stride;
 			depthBuffer += stride;
+		}
+	}
+}
+
+void RenderUnit::DrawTriangle(const RenderStates &renderStates, WorkPartition workPartition, const Vertex &v1, const Vertex &v2, const Vertex &v3, int32 &totalTriangleCount, int32 &renderedTriangleCount)
+{
+	if (workPartition.ThreadIndex == 0)
+	{
+		totalTriangleCount++;
+	}
+
+	switch (renderStates.Rasterizer)
+	{
+		case Rasterizer::Fragments:
+		{
+			FragmentRasterizer rasterizer = FragmentRasterizer(renderStates, workPartition);
+			if (rasterizer.DrawTriangle(v1, v2, v3) && workPartition.ThreadIndex == 0)
+			{
+				renderedTriangleCount++;
+			}
+			break;
+		}
+		case Rasterizer::Wireframe:
+		{
+			WireframeRasterizer rasterizer = WireframeRasterizer(renderStates, workPartition);
+			if (rasterizer.DrawTriangle(v1, v2, v3) && workPartition.ThreadIndex == 0)
+			{
+				renderedTriangleCount++;
+			}
+			break;
+		}
+		case Rasterizer::ShadowMap:
+		{
+			ShadowMapRasterizer rasterizer = ShadowMapRasterizer(renderStates, workPartition);
+			if (rasterizer.DrawTriangle(v1, v2, v3) && workPartition.ThreadIndex == 0)
+			{
+				renderedTriangleCount++;
+			}
+			break;
 		}
 	}
 }

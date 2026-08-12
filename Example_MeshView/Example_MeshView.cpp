@@ -17,49 +17,19 @@ MeshViewExample::MeshViewExample(int32 width, int32 height) : ExampleBase(width,
 
 	LoadScene();
 
-	Rotation = Matrix4f::Identity();
+	Rotation = Matrix4::Identity();
 	Input::CenterMouse(*Window);
 }
 
 void MeshViewExample::Run()
 {
-	while (!Input::HasExited() && !Input::GetKeyPressed(Scancode::Escape))
+	while (!Input::HasExited && !Input::GetKeyPressed(Scancode::Escape))
 	{
-		Window->Lock();
-
 		HandleInput();
 		Render();
+		DrawHud();
 
-		DrawPerformanceBox(10, 10);
-		DrawControlsBox(
-			"Controls",
-			10,
-			-10,
-			"Mouse",
-			"Move Object",
-			-1,
-			"Click right/left",
-			"Rotate X/Y",
-			-1,
-			"1 - 6",
-			"Select Mesh",
-			-1,
-			nullptr);
-		DrawControlsBox(
-			"Render",
-			-10,
-			-10,
-			"T",
-			"Texture Filtering",
-			RenderStates->TextureFilteringEnable ? 1 : 0,
-			"X",
-			"Wireframe",
-			Wireframe ? 1 : 0,
-			nullptr);
-
-		Window->Unlock();
 		Window->Flip();
-
 		Input::Update();
 		FPSCounter->Frame();
 	}
@@ -69,60 +39,85 @@ void MeshViewExample::HandleInput()
 {
 	HandleBaseInput();
 
-	float speed = Math::Max(FPSCounter->LastFrameTime, 1) * .000005f;
-
 	vfloat3 positionVelocity = vfloat3(
-		(Input::GetMousePosition().X - Window->Width / 2) * 10.0f / Window->Width,
-		(Window->Height / 2 - Input::GetMousePosition().Y) * 10.0f / Window->Width,
-		Input::GetMousePosition().Z * .25f
+		(Input::MousePosition.X - Window->Width / 2) * 10.0f / Window->Width,
+		(Window->Height / 2 - Input::MousePosition.Y) * 10.0f / Window->Width,
+		Input::MousePosition.Z * .25f
 	);
 
-	RotationVelocity = (RotationVelocity + vfloat2(
-		(float)Input::GetMouseDown(MouseButton::Right),
-		(float)Input::GetMouseDown(MouseButton::Left)
-	) * speed) * .95f;
+	float speed = Math::Max(FPSCounter->LastFrameTime, 1) * .000005f;
+	RotationVelocity = (RotationVelocity + vfloat2((float)Input::GetMouseDown(MouseButton::Right), (float)Input::GetMouseDown(MouseButton::Left)) * speed) * .95f;
 
 	Position = Position * (1 - speed) + positionVelocity * speed;
-	Rotation *= Matrix4f::RotateY(RotationVelocity.Y) * Matrix4f::RotateX(RotationVelocity.X);
+	Rotation *= Matrix4::RotateY(RotationVelocity.Y) * Matrix4::RotateX(RotationVelocity.X);
 
 	for (int32 i = 1; i <= sizeof(Meshes) / sizeof(Mesh*); i++)
 	{
 		if (Input::GetKeyPressed((Scancode)((int32)Scancode::D1 - 1 + i)) && CurrentMesh != i - 1)
 		{
 			CurrentMesh = i - 1;
-			Rotation = Matrix4f::Identity();
+			Rotation = Matrix4::Identity();
+			FPSCounter->ResetMinFrameTime();
 		}
 	}
 }
 void MeshViewExample::Render()
 {
 	RenderUnit->Statistics.Clear();
-	RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170);
-	RenderUnit->ClearDepthBuffer(*RenderStates);
 
-	int32 threadIds[4];
-	for (int32 i = 0; i < 4; i++)
-	{
-		threadIds[i] = ThreadPool::Start([this, i]
-		{
-			::RenderStates meshRenderStates = *RenderStates;
-			meshRenderStates.SetWorkload(i, 4);
-			DrawScene(meshRenderStates);
-
-			if (Wireframe)
-			{
-				meshRenderStates.Rasterizer = Rasterizer::Wireframe;
-				meshRenderStates.CountTotalTriangles = false;
-				meshRenderStates.CountRenderedTriangles = false;
-				DrawScene(meshRenderStates);
-			}
+	ThreadPool::Run({
+		[&] { RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170); },
+		[&] { RenderUnit->ClearDepthBuffer(*RenderStates); }
 		});
-	}
 
-	for (int32 i = 0; i < 4; i++)
+	ThreadPool::Run(4, [this](WorkPartition workPartition)
 	{
-		ThreadPool::Join(threadIds[i]);
-	}
+		::RenderStates meshRenderStates = *RenderStates;
+		DrawScene(meshRenderStates, workPartition);
+
+		if (Wireframe)
+		{
+			meshRenderStates.Rasterizer = Rasterizer::Wireframe;
+			DrawScene(meshRenderStates, workPartition);
+		}
+	});
+}
+void MeshViewExample::DrawHud()
+{
+	ThreadPool::Run({
+		[&] { DrawPerformanceBox(10, 10); },
+		[&]
+		{
+			DrawControlsBox(
+				"Controls",
+				10,
+				-10,
+				"Mouse",
+				"Move Object",
+				-1,
+				"Click right/left",
+				"Rotate X/Y",
+				-1,
+				"1 - 6",
+				"Select Mesh",
+				-1,
+				nullptr);
+		},
+		[&]
+		{
+			DrawControlsBox(
+				"Render",
+				-10,
+				-10,
+				"T",
+				"Texture Filtering",
+				RenderStates->TextureFilteringEnable ? 1 : 0,
+				"X",
+				"Wireframe",
+				Wireframe ? 1 : 0,
+				nullptr);
+		}
+		});
 }
 
 void MeshViewExample::LoadScene()
@@ -132,27 +127,27 @@ void MeshViewExample::LoadScene()
 
 	Meshes[1] = Mesh::Load("Assets\\Models\\Tyre\\Tyre.obj");
 	Meshes[1]->FitToBoundingBox(Box3f(2), true);
-	Meshes[1]->TransformVertices(Matrix4f::RotateY(-90));
+	Meshes[1]->TransformVertices(Matrix4::RotateY(-90));
 	Meshes[1]->NormalizeNormals();
 
 	Meshes[2] = Mesh::Load("Assets\\Models\\Computer\\Computer.obj");
 	Meshes[2]->FitToBoundingBox(Box3f(2), true);
-	Meshes[2]->TransformVertices(Matrix4f::RotateY(180));
+	Meshes[2]->TransformVertices(Matrix4::RotateY(180));
 
 	Meshes[3] = Mesh::Load("Assets\\Models\\half-life-2-dog\\scene.gltf");
 	Meshes[3]->SetCullMode(CullMode::Back);
 	Meshes[3]->FitToBoundingBox(Box3f(2), true);
-	Meshes[3]->TransformVertices(Matrix4f::RotateY(180));
+	Meshes[3]->TransformVertices(Matrix4::RotateY(180));
 
 	Meshes[4] = Mesh::Load("Assets\\Models\\half-life-headcrab\\half-life-headcrab.obj");
 	Meshes[4]->FitToBoundingBox(Box3f(2), true);
-	Meshes[4]->TransformVertices(Matrix4f::RotateY(180));
+	Meshes[4]->TransformVertices(Matrix4::RotateY(180));
 
 	Meshes[5] = Mesh::Load("Assets\\Models\\half-life-houndeye\\half-life-houndeye.obj");
 	Meshes[5]->FitToBoundingBox(Box3f(2), true);
-	Meshes[5]->TransformVertices(Matrix4f::RotateY(180));
+	Meshes[5]->TransformVertices(Matrix4::RotateY(180));
 }
-void MeshViewExample::DrawScene(::RenderStates &renderStates)
+void MeshViewExample::DrawScene(::RenderStates &renderStates, WorkPartition workPartition)
 {
-	RenderUnit->DrawMesh(renderStates, *Meshes[CurrentMesh], Rotation * Matrix4f::Translate(Position + vfloat3(0, 0, 4)));
+	RenderUnit->DrawMesh(renderStates, workPartition, *Meshes[CurrentMesh], Rotation * Matrix4::Translate(Position + vfloat3(0, 0, 4)));
 }

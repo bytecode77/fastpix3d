@@ -13,39 +13,38 @@
   <ItemGroup>
     <ClCompile Include="2D\Font.cpp" />
     <ClCompile Include="2D\Graphics.cpp" />
+    <ClCompile Include="Helper\FPSCounter.cpp" />
     <ClCompile Include="Helper\FreeLook.cpp" />
     <ClCompile Include="Helper\PrimitiveFactory.cpp" />
+    <ClCompile Include="Helper\Stopwatch.cpp" />
     <ClCompile Include="Interop\Bitmap.cpp" />
-    <ClCompile Include="Interop\FPSCounter.cpp" />
     <ClCompile Include="Interop\Input.cpp" />
-    <ClCompile Include="Interop\Stopwatch.cpp" />
     <ClCompile Include="Interop\System.cpp" />
-    <ClCompile Include="Interop\Thread.cpp" />
     <ClCompile Include="Interop\ThreadPool.cpp" />
     <ClCompile Include="Interop\Window.cpp" />
     <ClCompile Include="Math\Math_.cpp" />
     <ClCompile Include="Mesh\Mesh.cpp" />
     <ClCompile Include="Mesh\Surface.cpp" />
+    <ClCompile Include="Mesh\Texture.cpp" />
     <ClCompile Include="Rasterizer\FragmentRasterizer.cpp" />
     <ClCompile Include="Rasterizer\ShadowMapRasterizer.cpp" />
     <ClCompile Include="Rasterizer\WireframeRasterizer.cpp" />
     <ClCompile Include="RenderStates.cpp" />
     <ClCompile Include="RenderStatistics.cpp" />
     <ClCompile Include="RenderUnit.cpp" />
-    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="2D\Font.h" />
     <ClInclude Include="2D\Graphics.h" />
     <ClInclude Include="FastPix3D.h" />
+    <ClInclude Include="Helper\Buffer.h" />
+    <ClInclude Include="Helper\FPSCounter.h" />
     <ClInclude Include="Helper\FreeLook.h" />
     <ClInclude Include="Helper\PrimitiveFactory.h" />
+    <ClInclude Include="Helper\Stopwatch.h" />
     <ClInclude Include="Interop\Bitmap.h" />
-    <ClInclude Include="Interop\FPSCounter.h" />
     <ClInclude Include="Interop\Input.h" />
-    <ClInclude Include="Interop\Stopwatch.h" />
     <ClInclude Include="Interop\System.h" />
-    <ClInclude Include="Interop\Thread.h" />
     <ClInclude Include="Interop\ThreadPool.h" />
     <ClInclude Include="Interop\Window.h" />
     <ClInclude Include="Math\Box2f.h" />
@@ -53,7 +52,7 @@
     <ClInclude Include="Math\Box3f.h" />
     <ClInclude Include="Math\Color.h" />
     <ClInclude Include="Math\Math_.h" />
-    <ClInclude Include="Math\Matrix4f.h" />
+    <ClInclude Include="Math\Matrix4.h" />
     <ClInclude Include="Math\vbyte32.h" />
     <ClInclude Include="Math\VectorMath.h" />
     <ClInclude Include="Math\vfloat2.h" />
@@ -64,15 +63,14 @@
     <ClInclude Include="Math\vint3.h" />
     <ClInclude Include="Math\vint4.h" />
     <ClInclude Include="Math\vint8.h" />
-    <ClInclude Include="Math\vlong2.h" />
-    <ClInclude Include="Math\vlong4.h" />
     <ClInclude Include="Math\vsbyte32.h" />
     <ClInclude Include="Math\vshort16.h" />
+    <ClInclude Include="Math\vuint4.h" />
     <ClInclude Include="Math\vuint8.h" />
     <ClInclude Include="Math\vushort16.h" />
     <ClInclude Include="Mesh\Mesh.h" />
     <ClInclude Include="Mesh\Surface.h" />
-    <ClInclude Include="Mesh\Triangle.h" />
+    <ClInclude Include="Mesh\Texture.h" />
     <ClInclude Include="Mesh\Vertex.h" />
     <ClInclude Include="RasterizerMath.h" />
     <ClInclude Include="Rasterizer\FragmentRasterizer.h" />
@@ -82,7 +80,7 @@
     <ClInclude Include="RenderStatistics.h" />
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="RenderUnit.h" />
-    <ClInclude Include="Texture.h" />
+    <ClInclude Include="WorkPartition.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -119,11 +117,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -136,12 +134,13 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>Shlwapi.lib;SDL3.lib;SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)$Build\FastPix3D\include"
@@ -149,8 +148,7 @@ xcopy /S /Y /I "$(ProjectDir)*.h" "$(SolutionDir)$Build\FastPix3D\include\"
 
 mkdir "$(SolutionDir)$Build\FastPix3D\lib"
 copy /Y "$(TargetDir)FastPix3D.dll" "$(SolutionDir)$Build\FastPix3D\lib\"
-copy /Y "$(TargetDir)FastPix3D.lib" "$(SolutionDir)$Build\FastPix3D\lib\"
-xcopy /S /Y /I "$(SolutionDir)lib\*.dll" "$(SolutionDir)$Build\FastPix3D\lib\"</Command>
+copy /Y "$(TargetDir)FastPix3D.lib" "$(SolutionDir)$Build\FastPix3D\lib\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -168,6 +166,7 @@ xcopy /S /Y /I "$(SolutionDir)lib\*.dll" "$(SolutionDir)$Build\FastPix3D\lib\"</
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,7 +174,7 @@ xcopy /S /Y /I "$(SolutionDir)lib\*.dll" "$(SolutionDir)$Build\FastPix3D\lib\"</
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>Shlwapi.lib;SDL3.lib;SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)$Build\FastPix3D\include"
@@ -183,8 +182,7 @@ xcopy /S /Y /I "$(ProjectDir)*.h" "$(SolutionDir)$Build\FastPix3D\include\"
 
 mkdir "$(SolutionDir)$Build\FastPix3D\lib"
 copy /Y "$(TargetDir)FastPix3D.dll" "$(SolutionDir)$Build\FastPix3D\lib\"
-copy /Y "$(TargetDir)FastPix3D.lib" "$(SolutionDir)$Build\FastPix3D\lib\"
-xcopy /S /Y /I "$(SolutionDir)lib\*.dll" "$(SolutionDir)$Build\FastPix3D\lib\"</Command>
+copy /Y "$(TargetDir)FastPix3D.lib" "$(SolutionDir)$Build\FastPix3D\lib\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

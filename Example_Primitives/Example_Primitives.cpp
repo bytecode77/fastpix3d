@@ -16,43 +16,19 @@ PrimitivesExample::PrimitivesExample(int32 width, int32 height) : ExampleBase(wi
 
 	LoadScene();
 
-	Rotation = Matrix4f::Identity();
+	Rotation = Matrix4::Identity();
 	Input::CenterMouse(*Window);
 }
 
 void PrimitivesExample::Run()
 {
-	while (!Input::HasExited() && !Input::GetKeyPressed(Scancode::Escape))
+	while (!Input::HasExited && !Input::GetKeyPressed(Scancode::Escape))
 	{
-		Window->Lock();
-
 		HandleInput();
 		Render();
+		DrawHud();
 
-		DrawPerformanceBox(10, 10);
-		DrawControlsBox(
-			"Controls",
-			10,
-			-10,
-			"Space",
-			"Textures",
-			RenderStates->TextureEnable ? 1 : 0,
-			nullptr);
-		DrawControlsBox(
-			"Render",
-			-10,
-			-10,
-			"T",
-			"Texture Filtering",
-			RenderStates->TextureFilteringEnable ? 1 : 0,
-			"X",
-			"Wireframe",
-			Wireframe ? 1 : 0,
-			nullptr);
-
-		Window->Unlock();
 		Window->Flip();
-
 		Input::Update();
 		FPSCounter->Frame();
 	}
@@ -63,15 +39,8 @@ void PrimitivesExample::HandleInput()
 	HandleBaseInput();
 
 	float speed = Math::Max(FPSCounter->LastFrameTime, 1) * .00002f;
-
-	RotationVelocity = (RotationVelocity - vfloat2(
-		(float)Input::GetMouseSpeed().X,
-		(float)Input::GetMouseSpeed().Y
-	) * speed) * .95f;
-
-	Rotation *=
-		Matrix4f::RotateY(RotationVelocity.X) *
-		Matrix4f::RotateX(RotationVelocity.Y);
+	RotationVelocity = (RotationVelocity - vfloat2((float)Input::MouseSpeed.X, (float)Input::MouseSpeed.Y) * speed) * .95f;
+	Rotation *= Matrix4::RotateY(RotationVelocity.X) * Matrix4::RotateX(RotationVelocity.Y);
 
 	if (Input::GetKeyPressed(Scancode::Space))
 	{
@@ -95,41 +64,64 @@ void PrimitivesExample::HandleInput()
 			Meshes[6]->SetVertexColors(31, 65, 175);
 			Meshes[7]->SetVertexColors(253, 224, 71);
 		}
+
+		FPSCounter->ResetMinFrameTime();
 	}
 }
 void PrimitivesExample::Render()
 {
 	RenderUnit->Statistics.Clear();
-	RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170);
-	RenderUnit->ClearDepthBuffer(*RenderStates);
 
-	int32 threadIds[4];
-	for (int32 i = 0; i < 4; i++)
-	{
-		threadIds[i] = ThreadPool::Start([this, i]
-		{
-			// Since none of the meshes intersect, this makes it an embarrassingly parallel problem,
-			// by rendering each mesh in a seperate thread.
-
-			::RenderStates meshRenderStates = *RenderStates;
-			DrawScene(meshRenderStates, i * 2);
-			DrawScene(meshRenderStates, i * 2 + 1);
-
-			if (Wireframe)
-			{
-				meshRenderStates.Rasterizer = Rasterizer::Wireframe;
-				meshRenderStates.CountTotalTriangles = false;
-				meshRenderStates.CountRenderedTriangles = false;
-				DrawScene(meshRenderStates, i * 2);
-				DrawScene(meshRenderStates, i * 2 + 1);
-			}
+	ThreadPool::Run({
+		[&] { RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170); },
+		[&] { RenderUnit->ClearDepthBuffer(*RenderStates); }
 		});
-	}
 
-	for (int32 i = 0; i < 4; i++)
+	ThreadPool::Run(8, [this](int32 threadIndex)
 	{
-		ThreadPool::Join(threadIds[i]);
-	}
+		// Since none of the meshes intersect, this makes it an embarrassingly parallel problem,
+		// by rendering each mesh in a seperate thread.
+
+		::RenderStates meshRenderStates = *RenderStates;
+		DrawScene(meshRenderStates, threadIndex);
+
+		if (Wireframe)
+		{
+			meshRenderStates.Rasterizer = Rasterizer::Wireframe;
+			DrawScene(meshRenderStates, threadIndex);
+		}
+	});
+}
+void PrimitivesExample::DrawHud()
+{
+	ThreadPool::Run({
+		[&] { DrawPerformanceBox(10, 10); },
+		[&]
+		{
+			DrawControlsBox(
+				"Controls",
+				10,
+				-10,
+				"Space",
+				"Textures",
+				RenderStates->TextureEnable ? 1 : 0,
+				nullptr);
+		},
+		[&]
+		{
+			DrawControlsBox(
+				"Render",
+				-10,
+				-10,
+				"T",
+				"Texture Filtering",
+				RenderStates->TextureFilteringEnable ? 1 : 0,
+				"X",
+				"Wireframe",
+				Wireframe ? 1 : 0,
+				nullptr);
+		}
+		});
 }
 
 void PrimitivesExample::LoadScene()
@@ -158,5 +150,5 @@ void PrimitivesExample::DrawScene(::RenderStates &renderStates, int32 meshIndex)
 	int32 x = meshIndex % 4;
 	int32 y = meshIndex / 4;
 
-	RenderUnit->DrawMesh(renderStates, *Meshes[meshIndex], Rotation * Matrix4f::Translate((x - 1.5f) * 1.7f, (y - .5f) * -1.7f, 3.8f));
+	RenderUnit->DrawMesh(renderStates, WorkPartition(), *Meshes[meshIndex], Rotation * Matrix4::Translate((x - 1.5f) * 1.7f, (y - .5f) * -1.7f, 3.8f));
 }

@@ -20,12 +20,16 @@ public:
 		MM(_mm256_setzero_ps())
 	{
 	}
-	__forceinline vfloat8(const vfloat8 &value) :
-		MM(value.MM)
+	__forceinline vfloat8(const vfloat8 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vfloat8(_vfloat8 mm) :
 		MM(mm)
+	{
+	}
+	__forceinline vfloat8(_vfloat4 mm) :
+		MM(_mm256_castps128_ps256(mm))
 	{
 	}
 	__forceinline explicit vfloat8(const float *ptr) :
@@ -57,6 +61,10 @@ public:
 	{
 		return _mm256_mask_i32gather_ps(vfloat8(), src, offsets, _mm256_castsi256_ps(mask), 4);
 	}
+	__forceinline static void Write(float *dest, const vfloat8 &src)
+	{
+		_mm256_storeu_ps(dest, src.MM);
+	}
 	__forceinline static void Write(vfloat8 *dest, const vfloat8 &src)
 	{
 		_mm256_store_ps((float*)dest, src.MM);
@@ -64,6 +72,10 @@ public:
 	__forceinline static void Write(_vfloat8 *dest, const vfloat8 &src)
 	{
 		_mm256_store_ps((float*)dest, src.MM);
+	}
+	__forceinline static void Write(float *dest, const vfloat8 &src, _vuint8 mask)
+	{
+		_mm256_maskstore_ps(dest, mask, src.MM);
 	}
 	__forceinline static void Write(vfloat8 *dest, const vfloat8 &src, _vuint8 mask)
 	{
@@ -97,7 +109,7 @@ public:
 	}
 	__forceinline vfloat8 operator -() const
 	{
-		return _mm256_castsi256_ps(_mm256_xor_epi32(_mm256_castps_si256(MM), _mm256_set1_epi32(0x80000000)));
+		return _mm256_castsi256_ps(_mm256_xor_si256(_mm256_castps_si256(MM), _mm256_set1_epi32(0x80000000)));
 	}
 	__forceinline vfloat8 operator *(const vfloat8 &other) const
 	{
@@ -221,9 +233,6 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };

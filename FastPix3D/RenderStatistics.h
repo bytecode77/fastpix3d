@@ -8,7 +8,7 @@ public:
 	std::atomic<int32> RenderedTriangleCount;
 
 	RenderStatistics();
-	RenderStatistics(const RenderStatistics &renderStatistics);
+	RenderStatistics(const RenderStatistics &other);
 
 	void Clear();
 

@@ -1,23 +1,10 @@
 #pragma once
 #include "FastPix3D.h"
 #include "Math/Color.h"
-#include "Math/Matrix4f.h"
+#include "Math/Matrix4.h"
 #include "Math/VectorMath.h"
 #include "RenderTarget.h"
-#include "Texture.h"
-
-enum class Workload
-{
-	// Byte 1: Thread index
-	// Byte 2: Thread count
-	Full = 0 | 1 << 8,
-	Half1 = 0 | 2 << 8,
-	Half2 = 1 | 2 << 8,
-	Quarter1 = 0 | 4 << 8,
-	Quarter2 = 1 | 4 << 8,
-	Quarter3 = 2 | 4 << 8,
-	Quarter4 = 3 | 4 << 8
-};
+#include "Mesh/Texture.h"
 
 enum class Rasterizer
 {
@@ -45,8 +32,8 @@ enum class BlendMode
 	None,
 	TransparencyKey,
 	Alpha,
-	Multiply,
-	Add
+	Add,
+	Multiply
 };
 
 enum class ShadowMapFunc
@@ -69,26 +56,27 @@ enum class LightType
 	Spot
 };
 
-class PrecomputedLight
-{
-public:
-	float SpecularIntensity;
-	vfloat3 ColorF;
-	vfloat3 PositionViewSpace;
-	vfloat3 DirectionViewSpace;
-	float DirectionViewSpaceDotIntensity;
-};
-
 class RenderStates;
 
 class FASTPIX3D_API Light
 {
 private:
+	struct Precomputed
+	{
+		vfloat3 ColorIntensity;
+		vfloat3 ConeAngleCos;
+		vfloat3 ConeAngleScale;
+		vfloat3 ColorSpecularIntensity;
+		vfloat3 PositionViewSpace;
+		vfloat3 DirectionViewSpace;
+	};
+
 	RenderStates *Parent;
-	PrecomputedLight Precomputed;
+	Light::Precomputed Precomputed;
 	bool _Enabled;
 	LightType _Type;
 	float _Intensity;
+	float _ConeAngle;
 	Color _Color;
 	vfloat3 _Position;
 	vfloat3 _Rotation;
@@ -98,6 +86,7 @@ private:
 		_Enabled(false),
 		_Type(LightType::Directional),
 		_Intensity(1),
+		_ConeAngle(45),
 		_Color(::Color(255, 255, 255))
 	{
 	}
@@ -128,6 +117,15 @@ public:
 	property_set(float, Intensity)
 	{
 		_Intensity = value;
+		LightChanged();
+	}
+	property_get(float, ConeAngle)
+	{
+		return _ConeAngle;
+	}
+	property_set(float, ConeAngle)
+	{
+		_ConeAngle = value;
 		LightChanged();
 	}
 	property_get(::Color, Color)
@@ -165,32 +163,32 @@ private:
 	friend class FragmentRasterizer;
 };
 
-class PrecomputedRenderStates
-{
-public:
-	Matrix4f ModelViewMatrix;
-	Matrix4f NormalMatrix;
-	float InverseClipNear;
-	vfloat2 InverseTextureSize;
-	int32 LightsMaxIndex = -1;
-	Matrix4f ShadowLightMatrix;
-	Matrix4f ShadowLightModelMatrix;
-};
-
 class FASTPIX3D_API RenderStates
 {
 private:
-	PrecomputedRenderStates Precomputed;
+	struct Precomputed
+	{
+		vfloat3 ProjectionScale;
+		vfloat3 ProjectionScaleShadowMap;
+		Matrix4 ModelViewMatrix;
+		Matrix4 NormalMatrix;
+		float InverseClipNear;
+		vfloat2 InverseTextureSize;
+		int32 LightsMaxIndex = -1;
+		Matrix4 ShadowLightMatrix;
+		Matrix4 ShadowLightModelMatrix;
+	};
 
-	Workload _Workload = Workload::Full;
+	RenderStates::Precomputed Precomputed;
+
 	Rasterizer _Rasterizer = Rasterizer::Fragments;
 
 	RenderTarget _FrameBuffer;
 	RenderTarget _DepthBuffer;
 	RenderTarget _ShadowMap;
 
-	Matrix4f _ViewMatrix = Matrix4f::Identity();
-	Matrix4f _ModelMatrix = Matrix4f::Identity();
+	Matrix4 _ViewMatrix = Matrix4::Identity();
+	Matrix4 _ModelMatrix = Matrix4::Identity();
 	float _ClipNear = 1;
 	float _ClipFar = 1000;
 	float _Zoom = 1;
@@ -220,20 +218,9 @@ private:
 	::ShadowMapProjection _ShadowMapProjection = ShadowMapProjection::Perspective;
 	int32 _ShadowLightIndex = 0;
 	float _ShadowLightZoom = 1;
-	float _ShadowMapDepthBias = 0;
-
-	bool _CountTotalTriangles = true;
-	bool _CountRenderedTriangles = true;
+	float _ShadowMapDepthBias = 1;
 
 public:
-	property_get(::Workload, Workload)
-	{
-		return _Workload;
-	}
-	property_set(::Workload, Workload)
-	{
-		_Workload = value;
-	}
 	property_get(::Rasterizer, Rasterizer)
 	{
 		return _Rasterizer;
@@ -250,6 +237,7 @@ public:
 	property_set(const RenderTarget&, FrameBuffer)
 	{
 		_FrameBuffer = value;
+		PrecomputeProjectionScale();
 	}
 	property_get(RenderTarget, DepthBuffer)
 	{
@@ -268,25 +256,25 @@ public:
 		_ShadowMap = value;
 	}
 
-	property_get(Matrix4f, ViewMatrix)
+	property_get(Matrix4, ViewMatrix)
 	{
 		return _ViewMatrix;
 	}
-	property_set(const Matrix4f&, ViewMatrix)
+	property_set(const Matrix4&, ViewMatrix)
 	{
 		_ViewMatrix = value;
-		UpdateModelViewMatrix();
+		PrecomputeModelViewMatrix();
 		PrecomputeLights();
 	}
-	property_get(Matrix4f, ModelMatrix)
+	property_get(Matrix4, ModelMatrix)
 	{
 		return _ModelMatrix;
 	}
-	property_set(const Matrix4f&, ModelMatrix)
+	property_set(const Matrix4&, ModelMatrix)
 	{
 		_ModelMatrix = value;
-		UpdateModelViewMatrix();
-		UpdateShadowLightMatrix();
+		PrecomputeModelViewMatrix();
+		PrecomputeShadowLightMatrix();
 	}
 	property_get(float, ClipNear)
 	{
@@ -295,7 +283,8 @@ public:
 	property_set(float, ClipNear)
 	{
 		_ClipNear = value;
-		UpdateClipNear();
+		PrecomputeInverseClipNear();
+		PrecomputeProjectionScale();
 	}
 	property_get(float, ClipFar)
 	{
@@ -312,6 +301,7 @@ public:
 	property_set(float, Zoom)
 	{
 		_Zoom = value;
+		PrecomputeProjectionScale();
 	}
 	property_get(::DepthMode, DepthMode)
 	{
@@ -377,7 +367,7 @@ public:
 	property_set(const vfloat2&, TextureSize)
 	{
 		_TextureSize = value;
-		UpdateTextureSize();
+		PrecomputeInverseTextureSize();
 	}
 	property_get(::BlendMode, BlendMode)
 	{
@@ -487,7 +477,7 @@ public:
 	property_set(int32, ShadowLightIndex)
 	{
 		_ShadowLightIndex = value;
-		UpdateShadowLightMatrix();
+		PrecomputeShadowLightMatrix();
 	}
 	property_get(float, ShadowLightZoom)
 	{
@@ -496,6 +486,7 @@ public:
 	property_set(float, ShadowLightZoom)
 	{
 		_ShadowLightZoom = value;
+		PrecomputeProjectionScaleShadowMap();
 	}
 	property_get(float, ShadowMapDepthBias)
 	{
@@ -504,38 +495,23 @@ public:
 	property_set(float, ShadowMapDepthBias)
 	{
 		_ShadowMapDepthBias = value;
-	}
-
-	property_get(bool, CountTotalTriangles)
-	{
-		return _CountTotalTriangles;
-	}
-	property_set(bool, CountTotalTriangles)
-	{
-		_CountTotalTriangles = value;
-	}
-	property_get(bool, CountRenderedTriangles)
-	{
-		return _CountRenderedTriangles;
-	}
-	property_set(bool, CountRenderedTriangles)
-	{
-		_CountRenderedTriangles = value;
+		PrecomputeProjectionScaleShadowMap();
 	}
 
 	RenderStates();
-	RenderStates(const RenderStates &renderStates);
-
-	void SetWorkload(int32 threadIndex, int32 threadCount);
-
-	RenderStates& operator=(const RenderStates& renderStates);
+	RenderStates(const RenderStates &other);
 
 private:
-	void UpdateClipNear();
-	void UpdateTextureSize();
-	void UpdateModelViewMatrix();
-	void UpdateShadowLightMatrix();
+	void PrecomputeInverseClipNear();
+	void PrecomputeProjectionScale();
+	void PrecomputeProjectionScaleShadowMap();
+	void PrecomputeInverseTextureSize();
+	void PrecomputeModelViewMatrix();
+	void PrecomputeShadowLightMatrix();
 	void PrecomputeLights();
+
+public:
+	RenderStates& operator =(const RenderStates& other);
 
 	friend class Light;
 	friend class FragmentRasterizer;

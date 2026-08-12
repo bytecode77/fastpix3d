@@ -1,13 +1,19 @@
 #pragma once
 #include "../FastPix3D.h"
 #include "../RenderStates.h"
-#include "../Texture.h"
-#include "Triangle.h"
+#include "Texture.h"
 #include "Vertex.h"
 
 class FASTPIX3D_API Surface
 {
 private:
+	struct Triangle
+	{
+		int32 Vertex1Index;
+		int32 Vertex2Index;
+		int32 Vertex3Index;
+	};
+
 	const int32 _VertexCount;
 	const int32 _TriangleCount;
 	Vertex *_Vertices;
@@ -28,6 +34,12 @@ public:
 	readonly_property(int32, TriangleCount)
 	{
 		return _TriangleCount;
+	}
+	readonly_indexed_property(Vertex*, Vertices, int32 index)
+	{
+		if (index < 0 || index >= _VertexCount) throw std::out_of_range("Vertex index is out of range.");
+
+		return &_Vertices[index];
 	}
 	property_get(::CullMode, CullMode)
 	{
@@ -87,14 +99,9 @@ public:
 	}
 
 	explicit Surface(int32 vertexCount, int32 triangleCount);
+	Surface(const Surface&) = delete;
 	~Surface();
 
-	Vertex* GetVertex(int32 index) const
-	{
-		if (index < 0 || index >= _VertexCount) throw std::out_of_range("Vertex index is out of range.");
-
-		return &_Vertices[index];
-	}
 	Vertex* GetTriangleVertex(int32 triangleIndex, int32 vertexNumber) const
 	{
 		if (triangleIndex < 0 || triangleIndex >= _TriangleCount) throw std::out_of_range("Triangle index is out of range.");
@@ -145,4 +152,6 @@ public:
 	void NormalizeNormals();
 	void FlipNormals();
 	void FlipTriangles();
+
+	Surface& operator =(const Surface&) = delete;
 };
