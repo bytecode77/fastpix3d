@@ -24,8 +24,7 @@ struct FASTPIX3D_API vfloat2
 	}
 	readonly_property(float, InverseSquaredLength)
 	{
-		float inverseLength = __rsqrt_ss(X * X + Y * Y);
-		return inverseLength * inverseLength;
+		return _mm_cvtss_f32(_mm_rcp_ss(_mm_set_ss(X * X + Y * Y)));
 	}
 
 	__forceinline vfloat2() :
@@ -33,9 +32,9 @@ struct FASTPIX3D_API vfloat2
 		Y(0)
 	{
 	}
-	__forceinline vfloat2(const vfloat2 &value) :
-		X(value.X),
-		Y(value.Y)
+	__forceinline vfloat2(const vfloat2 &other) :
+		X(other.X),
+		Y(other.Y)
 	{
 	}
 	__forceinline explicit vfloat2(const float *ptr) :

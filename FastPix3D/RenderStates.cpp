@@ -4,71 +4,49 @@ RenderStates::RenderStates()
 {
 	for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
 	{
-		Lights[i].OnChanged = [this]()
-		{
-			PrecomputeLights();
-		};
+		Lights[i].Parent = this;
 	}
 
-	Workload = Workload::Full;
-	Rasterizer = Rasterizer::Fragments;
-	ViewMatrix = Matrix4f::Identity();
-	ModelMatrix = Matrix4f::Identity();
-	ClipNear = 1;
-	ClipFar = 1000;
-	Zoom = 1;
-	CullMode = CullMode::Back;
-	WireframeColor = Color(255, 255, 255);
-	WireframeDepthBias = 1;
-	ZEnable = true;
-	ZWriteEnable = true;
-	TextureEnable = true;
-	Texture = nullptr;
-	TextureFilteringEnable = false;
-	TextureSize = vfloat2(1);
-	BlendMode = BlendMode::None;
-	Alpha = 1;
-	SpecularExponent = 0;
-	SpecularIntensity = 0;
-	FogEnable = false;
-	FogNear = 0;
-	FogFar = 1000;
-	LightsEnable = false;
-	AmbientLight = Color(127, 127, 127);
-	ShadowMapFunc = ShadowMapFunc::None;
-	ShadowMapProjection = ShadowMapProjection::Perspective;
-	ShadowLightIndex = 0;
-	ShadowLightZoom = 1;
-	ShadowMapDepthBias = 0;
-
-	Precomputed.LightsMaxIndex = -1;
+	PrecomputeInverseClipNear();
+	PrecomputeProjectionScale();
+	PrecomputeProjectionScaleShadowMap();
+	PrecomputeInverseTextureSize();
+	PrecomputeModelViewMatrix();
 }
-RenderStates::RenderStates(const RenderStates &renderStates)
+RenderStates::RenderStates(const RenderStates &other)
 {
-	*this = renderStates;
+	*this = other;
 }
 
-void RenderStates::SetWorkload(int32 threadIndex, int32 threadCount)
+void RenderStates::PrecomputeInverseClipNear()
 {
-	if (threadIndex < 0 || threadIndex >= threadCount) throw;
-	if (threadCount != 1 && threadCount != 2 && threadCount != 4 && threadCount != 8 && threadCount != 16 && threadCount != 32) throw;
-
-	Workload = (::Workload)(threadIndex | threadCount << 8);
+	Precomputed.InverseClipNear = 1 / _ClipNear;
 }
-
-void RenderStates::UpdateModelViewMatrix()
+void RenderStates::PrecomputeProjectionScale()
+{
+	Precomputed.ProjectionScale = vfloat3(_Zoom, _Zoom * _FrameBuffer.Width / _FrameBuffer.Height, _ClipNear);
+}
+void RenderStates::PrecomputeProjectionScaleShadowMap()
+{
+	Precomputed.ProjectionScaleShadowMap = vfloat3(_ShadowLightZoom, _ShadowLightZoom, 1 / _ShadowMapDepthBias);
+}
+void RenderStates::PrecomputeInverseTextureSize()
+{
+	Precomputed.InverseTextureSize = vfloat2(1 / _TextureSize.X, 1 / _TextureSize.Y);
+}
+void RenderStates::PrecomputeModelViewMatrix()
 {
 	Precomputed.ModelViewMatrix = _ModelMatrix * _ViewMatrix;
 	Precomputed.NormalMatrix = Precomputed.ModelViewMatrix.RotationPart;
 }
-void RenderStates::UpdateShadowLightMatrix()
+void RenderStates::PrecomputeShadowLightMatrix()
 {
-	Precomputed.ShadowLightMatrix = Matrix4f::Translate(-Lights[ShadowLightIndex].Position) * Matrix4f::RotateY(-Lights[ShadowLightIndex].Rotation.X) * Matrix4f::RotateX(-Lights[ShadowLightIndex].Rotation.Y);
+	Precomputed.ShadowLightMatrix = Matrix4::Translate(-Lights[ShadowLightIndex].Position) * Matrix4::RotateY(-Lights[ShadowLightIndex].Rotation.X) * Matrix4::RotateX(-Lights[ShadowLightIndex].Rotation.Y);
 	Precomputed.ShadowLightModelMatrix = _ModelMatrix * Precomputed.ShadowLightMatrix;
 }
 void RenderStates::PrecomputeLights()
 {
-	Matrix4f viewMatrixRotationPart = ViewMatrix.RotationPart;
+	Matrix4 viewMatrixRotationPart = ViewMatrix.RotationPart;
 	Precomputed.LightsMaxIndex = -1;
 
 	for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
@@ -77,68 +55,70 @@ void RenderStates::PrecomputeLights()
 
 		if (light.Enabled)
 		{
-			light.Precomputed.SpecularIntensity = light.Intensity * SpecularIntensity;
-			light.Precomputed.ColorF = (vfloat3)light.Color;
+			light.Precomputed.ColorIntensity = (vfloat3)light.Color * light.Intensity;
+			float coneAngleCos = Math::Cos(light.ConeAngle);
+			light.Precomputed.ConeAngleCos = vfloat3(coneAngleCos);
+			light.Precomputed.ConeAngleScale = vfloat3(1 / (1 - coneAngleCos));
+			light.Precomputed.ColorSpecularIntensity = light.Precomputed.ColorIntensity * SpecularIntensity;
 			light.Precomputed.PositionViewSpace = ViewMatrix * light.Position;
-			light.Precomputed.DirectionViewSpace = Matrix4f::RotateX(light.Rotation.Y) * Matrix4f::RotateY(light.Rotation.X) * viewMatrixRotationPart * vfloat3(0, 0, -1);
-			light.Precomputed.DirectionViewSpaceDotIntensity = light.Precomputed.DirectionViewSpace.SquaredLength * Lights[i].Intensity;
+			light.Precomputed.DirectionViewSpace = Matrix4::RotateX(light.Rotation.Y) * Matrix4::RotateY(light.Rotation.X) * viewMatrixRotationPart * vfloat3(0, 0, -1);
 
 			Precomputed.LightsMaxIndex = i;
 		}
 	}
 
-	UpdateShadowLightMatrix();
+	PrecomputeShadowLightMatrix();
 }
 
-RenderStates& RenderStates::operator=(const RenderStates& renderStates)
+RenderStates& RenderStates::operator =(const RenderStates& other)
 {
-	if (this != &renderStates)
+	if (this != &other)
 	{
-		Precomputed = renderStates.Precomputed;
-		_Workload = renderStates._Workload;
-		_Rasterizer = renderStates._Rasterizer;
-		_FrameBuffer = renderStates._FrameBuffer;
-		_DepthBuffer = renderStates._DepthBuffer;
-		_ShadowMap = renderStates._ShadowMap;
-		_ViewMatrix = renderStates._ViewMatrix;
-		_ModelMatrix = renderStates._ModelMatrix;
-		_ClipNear = renderStates._ClipNear;
-		_ClipFar = renderStates._ClipFar;
-		_Zoom = renderStates._Zoom;
-		_CullMode = renderStates._CullMode;
-		_WireframeColor = renderStates._WireframeColor;
-		_WireframeDepthBias = renderStates._WireframeDepthBias;
-		_ZEnable = renderStates._ZEnable;
-		_ZWriteEnable = renderStates._ZWriteEnable;
-		_TextureEnable = renderStates._TextureEnable;
-		_Texture = renderStates._Texture;
-		_TextureFilteringEnable = renderStates._TextureFilteringEnable;
-		_TextureSize = renderStates._TextureSize;
-		_BlendMode = renderStates._BlendMode;
-		_Alpha = renderStates._Alpha;
-		_SpecularExponent = renderStates._SpecularExponent;
-		_SpecularIntensity = renderStates._SpecularIntensity;
-		_FogEnable = renderStates._FogEnable;
-		_FogNear = renderStates._FogNear;
-		_FogFar = renderStates._FogFar;
-		_FogColor = renderStates._FogColor;
-		_LightsEnable = renderStates._LightsEnable;
-		_AmbientLight = renderStates._AmbientLight;
-		_ShadowMapFunc = renderStates._ShadowMapFunc;
-		_ShadowMapProjection = renderStates._ShadowMapProjection;
-		_ShadowLightIndex = renderStates._ShadowLightIndex;
-		_ShadowLightZoom = renderStates._ShadowLightZoom;
-		_ShadowMapDepthBias = renderStates._ShadowMapDepthBias;
+		Precomputed = other.Precomputed;
+		_Rasterizer = other._Rasterizer;
+		_FrameBuffer = other._FrameBuffer;
+		_DepthBuffer = other._DepthBuffer;
+		_ShadowMap = other._ShadowMap;
+		_ViewMatrix = other._ViewMatrix;
+		_ModelMatrix = other._ModelMatrix;
+		_ClipNear = other._ClipNear;
+		_ClipFar = other._ClipFar;
+		_Zoom = other._Zoom;
+		_DepthMode = other._DepthMode;
+		_CullMode = other._CullMode;
+		_WireframeColor = other._WireframeColor;
+		_WireframeDepthBias = other._WireframeDepthBias;
+		_TextureEnable = other._TextureEnable;
+		_Texture = other._Texture;
+		_TextureFilteringEnable = other._TextureFilteringEnable;
+		_TextureSize = other._TextureSize;
+		_BlendMode = other._BlendMode;
+		_Alpha = other._Alpha;
+		_SpecularExponent = other._SpecularExponent;
+		_SpecularIntensity = other._SpecularIntensity;
+		_FogEnable = other._FogEnable;
+		_FogNear = other._FogNear;
+		_FogFar = other._FogFar;
+		_FogColor = other._FogColor;
+		_LightsEnable = other._LightsEnable;
+		_AmbientLight = other._AmbientLight;
+		_ShadowMapFunc = other._ShadowMapFunc;
+		_ShadowMapProjection = other._ShadowMapProjection;
+		_ShadowLightIndex = other._ShadowLightIndex;
+		_ShadowLightZoom = other._ShadowLightZoom;
+		_ShadowMapDepthBias = other._ShadowMapDepthBias;
 
 		for (int32 i = 0; i < sizeof(Lights) / sizeof(Light); i++)
 		{
-			Lights[i] = renderStates.Lights[i];
-			Lights[i].OnChanged = [this]()
-			{
-				PrecomputeLights();
-			};
+			Lights[i] = other.Lights[i];
+			Lights[i].Parent = this;
 		}
 	}
 
 	return *this;
+}
+
+void Light::LightChanged()
+{
+	Parent->PrecomputeLights();
 }

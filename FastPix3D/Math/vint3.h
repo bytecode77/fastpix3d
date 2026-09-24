@@ -29,16 +29,15 @@ __declspec(align(16)) struct FASTPIX3D_API vint3
 	}
 	readonly_property(float, InverseSquaredLength)
 	{
-		float inverseLength = __rsqrt_ss((float)(X * X + Y * Y + Z * Z));
-		return inverseLength * inverseLength;
+		return _mm_cvtss_f32(_mm_rcp_ss(_mm_set_ss((float)(X * X + Y * Y + Z * Z))));
 	}
 
 	__forceinline vint3() :
 		MM(_mm_setzero_si128())
 	{
 	}
-	__forceinline vint3(const vint3 &value) :
-		MM(value.MM)
+	__forceinline vint3(const vint3 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vint3(_vint3 mm) :
@@ -46,7 +45,7 @@ __declspec(align(16)) struct FASTPIX3D_API vint3
 	{
 	}
 	__forceinline explicit vint3(const int32 *ptr) :
-		MM(_mm_loadu_si128((_vint3*)ptr))
+		MM(_mm_loadu_si128((const _vint3*)ptr))
 	{
 	}
 	__forceinline explicit vint3(const vint3 *ptr) :
@@ -57,8 +56,8 @@ __declspec(align(16)) struct FASTPIX3D_API vint3
 		MM(_mm_load_si128(ptr))
 	{
 	}
-	__forceinline explicit vint3(const vfloat3 &value) :
-		MM(_mm_cvtps_epi32(value))
+	__forceinline explicit vint3(const vfloat3 &other) :
+		MM(_mm_cvtps_epi32(other))
 	{
 	}
 	__forceinline explicit vint3(int32 uniform) :
@@ -229,10 +228,7 @@ __declspec(align(16)) struct FASTPIX3D_API vint3
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };
 

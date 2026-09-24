@@ -4,25 +4,34 @@
 #include <Interop/Input.h>
 #include <Math/Color.h>
 #include <Math/Math_.h>
-#include <Math/Matrix4f.h>
+#include <Math/Matrix4.h>
 #include <Mesh/Mesh.h>
-#include <Texture.h>
+#include <Mesh/Texture.h>
 
 ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 {
+	// Apply this when benchmarking to reduce interference from other processes:
+	//SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+
 	char title[100];
 	lstrcpyA(title, "FastPix3D: ");
 	lstrcatA(title, name);
 
 	Window = new ::Window(width, height, title);
-
+	//Window = ::Window::CreateFullScreen();
 	RenderUnit = new ::RenderUnit();
-	RenderUnit->RenderStates.FrameBuffer = RenderTarget(*Window);
-	RenderUnit->RenderStates.DepthBuffer = RenderTarget(Window->Width, Window->Height, _aligned_malloc(Window->Width * Window->Height * 4, 32));
-	RenderUnit->RenderStates.WireframeDepthBias = 1.01f;
+
+	DepthBuffer = new Buffer<float>(Window->Width * Window->Height);
+	ShadowMap = new Buffer<float>(2048 * 2048 * 6);
+
+	RenderStates = new ::RenderStates();
+	RenderStates->FrameBuffer = RenderTarget(*Window);
+	RenderStates->DepthBuffer = RenderTarget(Window->Width, Window->Height, DepthBuffer->Data);
+	RenderStates->WireframeDepthBias = 1.01f;
 
 	FreeLook = new ::FreeLook();
 	FPSCounter = new ::FPSCounter(500);
+
 	Font10 = new Font("Assets\\Fonts\\inter-10-light.png", 16, 6, 32, 0);
 	Font12 = new Font("Assets\\Fonts\\inter-12-light.png", 16, 6, 32, 1);
 	Font14 = new Font("Assets\\Fonts\\inter-14-light.png", 16, 6, 32, 1);
@@ -48,13 +57,15 @@ ExampleBase::ExampleBase(int32 width, int32 height, const char *name)
 }
 ExampleBase::~ExampleBase()
 {
+	delete DepthBuffer;
+	delete ShadowMap;
+
 	delete Window;
-
-	_aligned_free(RenderUnit->RenderStates.DepthBuffer.Buffer);
 	delete RenderUnit;
-
+	delete RenderStates;
 	delete FreeLook;
 	delete FPSCounter;
+
 	delete Font10;
 	delete Font12;
 	delete Font14;
@@ -84,15 +95,12 @@ void ExampleBase::HandleBaseInput()
 	if (Input::GetKeyPressed(Scancode::X))
 	{
 		Wireframe = !Wireframe;
+		FPSCounter->ResetMinFrameTime();
 	}
 
 	if (Input::GetKeyPressed(Scancode::T))
 	{
-		RenderUnit->RenderStates.TextureFilteringEnable = !RenderUnit->RenderStates.TextureFilteringEnable;
-	}
-
-	if (Input::GetKeyPressed(Scancode::R))
-	{
+		RenderStates->TextureFilteringEnable = !RenderStates->TextureFilteringEnable;
 		FPSCounter->ResetMinFrameTime();
 	}
 }
@@ -118,48 +126,36 @@ void ExampleBase::DrawPerformanceBox(int32 x, int32 y, vfloat3 cameraPosition) c
 	}
 
 	Graphics g = Graphics(*Window);
-	char tmp[100];
-
-	char fpsString[10];
-	_itoa(FPSCounter->FPS, fpsString, 10);
-
-	char minFrameTimeString[10];
-	_itoa(FPSCounter->MinFrameTime / 1000, minFrameTimeString, 10);
-	lstrcatA(minFrameTimeString, ".");
-	lstrcatA(minFrameTimeString, _itoa(FPSCounter->MinFrameTime % 1000, tmp, 10));
-
-	char triangleCountString[20];
-	_itoa(RenderUnit->Statistics.TotalTriangleCount, triangleCountString, 10);
+	char str[100];
 
 	char renderedTriangleCountString[20];
 	lstrcpyA(renderedTriangleCountString, "(");
-	lstrcatA(renderedTriangleCountString, _itoa(RenderUnit->Statistics.RenderedTriangleCount, tmp, 10));
+	lstrcatA(renderedTriangleCountString, FormatNumber(RenderUnit->Statistics.RenderedTriangleCount, str, true));
 	lstrcatA(renderedTriangleCountString, ")");
 
 	g.FillRectangle(x, y, width, height, Color(), .75f, 8);
 	g.DrawRectangle(x - 1, y - 1, width + 2, height + 2, Color(255, 255, 255), .3f, 8);
 	g.DrawString(x + 10, y + 10, *Font14Bold, "Performance");
 
-	g.DrawString(x + 10, y + 30, *Font30Bold, fpsString, Color(127, 255, 127));
-	g.DrawString(x + 18 + g.MeasureString(*Font30Bold, fpsString), y + 45, *Font14, "FPS");
+	g.DrawString(x + 10, y + 30, *Font30Bold, FormatNumber(FPSCounter->FPS, str), Color(127, 255, 127));
+	g.DrawString(x + 18 + g.MeasureString(*Font30Bold, str), y + 45, *Font14, "FPS");
 
 	g.DrawString(x + 10, y + 70, *Font12, "Best Frame Time", Color(230, 230, 230));
-	g.DrawString(x + 130, y + 70, *Font12, minFrameTimeString, Color(127, 255, 127));
-	g.DrawString(x + 135 + g.MeasureString(*Font12, minFrameTimeString), y + 70, *Font12, "ms", Color(230, 230, 230));
+	g.DrawString(x + 130, y + 70, *Font12, FormatFixed3Number(FPSCounter->MinFrameTime, str), Color(127, 255, 127));
+	g.DrawString(x + 135 + g.MeasureString(*Font12, str), y + 70, *Font12, "ms", Color(230, 230, 230));
 
 	g.DrawString(x + 10, y + 90, *Font12, "Triangles", Color(230, 230, 230));
-	g.DrawString(x + 130, y + 90, *Font12, triangleCountString, Color(127, 255, 127));
-	g.DrawString(x + 135 + g.MeasureString(*Font12, triangleCountString), y + 90, *Font12, renderedTriangleCountString);
+	g.DrawString(x + 130, y + 90, *Font12, FormatNumber(RenderUnit->Statistics.TotalTriangleCount, str, true), Color(127, 255, 127));
+	g.DrawString(x + 135 + g.MeasureString(*Font12, str), y + 90, *Font12, renderedTriangleCountString);
 
 	if (hasCameraPosition)
 	{
-
 		char cameraPositionString[20];
-		_itoa((int32)cameraPosition.X, cameraPositionString, 10);
+		FormatNumber((int32)cameraPosition.X, cameraPositionString);
 		lstrcatA(cameraPositionString, ", ");
-		lstrcatA(cameraPositionString, _itoa((int32)cameraPosition.Y, tmp, 10));
+		lstrcatA(cameraPositionString, FormatNumber((int32)cameraPosition.Y, str));
 		lstrcatA(cameraPositionString, ", ");
-		lstrcatA(cameraPositionString, _itoa((int32)cameraPosition.Z, tmp, 10));
+		lstrcatA(cameraPositionString, FormatNumber((int32)cameraPosition.Z, str));
 
 		g.DrawString(x + 10, y + 110, *Font12, "Camera", Color(230, 230, 230));
 		g.DrawString(x + 130, y + 110, *Font12, cameraPositionString, Color(127, 255, 127));
@@ -187,7 +183,7 @@ void ExampleBase::DrawControlsBox(const char *title, int32 x, int32 y, ...) cons
 		texts[rows] = va_arg(args, const char*);
 		checkBoxes[rows] = va_arg(args, int32);
 
-		if (!labels[rows] || !texts[rows])
+		if (!labels[rows])
 		{
 			break;
 		}
@@ -235,58 +231,67 @@ void ExampleBase::DrawControlsBox(const char *title, int32 x, int32 y, ...) cons
 }
 void ExampleBase::DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const
 {
-	width = Math::Min(width, RenderUnit->RenderStates.FrameBuffer.Width - 1);
-	height = Math::Min(height, RenderUnit->RenderStates.FrameBuffer.Height - 1);
-	zFrom = RenderUnit->RenderStates.ClipNear / zFrom;
-	zTo = RenderUnit->RenderStates.ClipNear / zTo;
+	int32 frameBufferWidth = RenderStates->FrameBuffer.Width;
+	int32 frameBufferHeight = RenderStates->FrameBuffer.Height;
+	int32 shadowMapWidth = RenderStates->ShadowMap.Width;
+	int32 shadowMapHeight = RenderStates->ShadowMap.Height;
+
+	width = Math::Min(width, frameBufferWidth - x);
+	height = Math::Min(height, frameBufferHeight - y);
+
+	zFrom = 1 / zFrom;
+	zTo = 1 / zTo;
 
 	int32 scale = 0;
-	while (RenderUnit->RenderStates.ShadowMap.Width >> scale > width || RenderUnit->RenderStates.ShadowMap.Height >> scale > height)
+	while ((shadowMapWidth >> scale) > width || (shadowMapHeight >> scale) > height)
 	{
 		scale++;
 	}
 
-	int32 renderWidth = RenderUnit->RenderStates.ShadowMap.Width >> scale;
-	int32 renderHeight = RenderUnit->RenderStates.ShadowMap.Height >> scale;
+	int32 sampleStep = 1 << scale;
+	int32 renderWidth = shadowMapWidth >> scale;
+	int32 renderHeight = shadowMapHeight >> scale;
 
-	Color *frameBuffer = RenderUnit->RenderStates.FrameBuffer.GetBuffer<Color>(x + y * RenderUnit->RenderStates.FrameBuffer.Width);
-	float *shadowMap = RenderUnit->RenderStates.ShadowMap.GetBuffer<float>();
+	vfloat8 grayMul = vfloat8(255.0f / (zFrom - zTo));
+	vfloat8 grayAdd = vfloat8(zTo * -255.0f / (zFrom - zTo));
 
-	int32 frameBufferStrideY = RenderUnit->RenderStates.FrameBuffer.Width - renderWidth;
-	int32 shadowMapStrideX = 1 << scale;
-	int32 shadowMapStrideY = RenderUnit->RenderStates.ShadowMap.Width * (shadowMapStrideX - 1);
+	Color *frameBuffer = RenderStates->FrameBuffer.GetBuffer<Color>(x + y * frameBufferWidth);
+	float *shadowMap = RenderStates->ShadowMap.GetBuffer<float>();
+
+	vint8 gatherOffsets(
+		0,
+		sampleStep,
+		sampleStep * 2,
+		sampleStep * 3,
+		sampleStep * 4,
+		sampleStep * 5,
+		sampleStep * 6,
+		sampleStep * 7
+	);
 
 	for (int32 py = 0; py < renderHeight; py++)
 	{
-		for (int32 px = 0; px < renderWidth; px++)
+		Color *dest = frameBuffer + py * frameBufferWidth;
+		float *src = shadowMap + py * shadowMapWidth * sampleStep;
+
+		for (int32 px = 0; px + 8 <= renderWidth; px += 8)
 		{
-			if (*shadowMap > 0)
-			{
-				int32 color = (int32)Math::Interpolate(*shadowMap, zFrom, zTo, 255.0f, 0.0f) & 0xff;
-				frameBuffer->B = color;
-				frameBuffer->G = color;
-				frameBuffer->R = color;
-			}
-			else
-			{
-				frameBuffer->B >>= 1;
-				frameBuffer->G >>= 1;
-				frameBuffer->R >>= 1;
-			}
+			vfloat8 depth = vfloat8::Read(src + px * sampleStep, gatherOffsets);
+			vuint8 pixels = vuint8((uint32*)(dest + px));
 
-			frameBuffer++;
-			shadowMap += shadowMapStrideX;
+			vuint8 depthMask = VectorMath::CmpGt(depth, vfloat8());
+			vuint8 grayPixels = (vuint8)VectorMath::Shuffle((vbyte32)(vint8)VectorMath::MulAdd(depth, grayMul, grayAdd), BroadcastByteToInt32Mask);
+			vuint8 backgroundPixels = (pixels >> 1) & 0x7f7f7f;
+
+			vuint8::Write((uint32*)(dest + px), VectorMath::Select(backgroundPixels, grayPixels, depthMask));
 		}
-
-		frameBuffer += frameBufferStrideY;
-		shadowMap += shadowMapStrideY;
 	}
 
 	char title[100];
-	char tmp[100];
-	lstrcpyA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Width, tmp, 10));
+	char str[100];
+	lstrcpyA(title, FormatNumber(RenderStates->ShadowMap.Width, str));
 	lstrcatA(title, "x");
-	lstrcatA(title, _itoa(RenderUnit->RenderStates.ShadowMap.Height, tmp, 10));
+	lstrcatA(title, FormatNumber(RenderStates->ShadowMap.Height, str));
 
 	Graphics g = Graphics(*Window);
 	g.DrawString(x + 10, y + 10, *Font14Bold, "Shadow Map");
@@ -304,27 +309,93 @@ Mesh* ExampleBase::CreateSkybox(const char *path) const
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "UP", 2);
-	skybox->GetSurface(0)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[0]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "DN", 2);
-	skybox->GetSurface(1)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[1]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "LF", 2);
-	skybox->GetSurface(2)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[2]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "RT", 2);
-	skybox->GetSurface(3)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[3]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "FT", 2);
-	skybox->GetSurface(4)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[4]->Texture = Texture::FromFile(fileName);
 
 	lstrcpyA(fileName, path);
 	memcpy(&fileName[sideIndex], "BK", 2);
-	skybox->GetSurface(5)->Texture = Texture::FromFile(fileName);
+	skybox->Surfaces[5]->Texture = Texture::FromFile(fileName);
 
 	return skybox;
+}
+
+char* ExampleBase::FormatNumber(int32 number, char *buffer) const
+{
+	return FormatNumber(number, buffer, false);
+}
+char* ExampleBase::FormatNumber(int32 number, char *buffer, bool thousandsSeparator) const
+{
+	if (thousandsSeparator && number >= 1000)
+	{
+		FormatFixed3Number(number, buffer, "'");
+	}
+	else
+	{
+		_itoa(number, buffer, 10);
+	}
+
+	return buffer;
+}
+char* ExampleBase::FormatFixed3Number(int32 number, char *buffer) const
+{
+	FormatFixed3Number(number, buffer, ".");
+	return buffer;
+}
+vfloat3 ExampleBase::GetCubemapDirection(int32 face) const
+{
+	switch (face)
+	{
+		case 0: return vfloat3(90, 0, 0);
+		case 1: return vfloat3(-90, 0, 0);
+		case 2: return vfloat3(0, -90, 0);
+		case 3: return vfloat3(0, 90, 0);
+		case 4: return vfloat3();
+		case 5: return vfloat3(180, 0, 0);
+		default: throw std::out_of_range("Cubemap face must be between 0 and 5.");
+	}
+}
+
+void ExampleBase::FormatFixed3Number(int32 number, char *buffer, const char *separator) const
+{
+	if (number >= 0)
+	{
+		buffer[0] = '\0';
+	}
+	else
+	{
+		number = -number;
+		buffer[0] = '-';
+		buffer[1] = '\0';
+	}
+
+	_itoa(number / 1000, &buffer[lstrlenA(buffer)], 10);
+	lstrcatA(buffer, separator);
+
+	int32 fraction = number % 1000;
+
+	if (fraction < 10)
+	{
+		lstrcatA(buffer, "00");
+	}
+	else if (fraction < 100)
+	{
+		lstrcatA(buffer, "0");
+	}
+
+	_itoa(fraction, &buffer[lstrlenA(buffer)], 10);
 }

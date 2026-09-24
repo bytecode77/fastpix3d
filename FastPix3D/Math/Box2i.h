@@ -26,9 +26,9 @@ struct FASTPIX3D_API Box2i
 		Min = -halfSize;
 		Max = halfSize;
 	}
-	__forceinline explicit Box2i(float size)
+	__forceinline explicit Box2i(int32 size)
 	{
-		vint2 halfSize = vint2((int32)(size * .5f));
+		vint2 halfSize = vint2(size >> 1);
 		Min = -halfSize;
 		Max = halfSize;
 	}

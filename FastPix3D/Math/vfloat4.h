@@ -20,8 +20,8 @@ public:
 		MM(_mm_setzero_ps())
 	{
 	}
-	__forceinline vfloat4(const vfloat4 &value) :
-		MM(value.MM)
+	__forceinline vfloat4(const vfloat4 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vfloat4(_vfloat4 mm) :
@@ -57,17 +57,25 @@ public:
 	{
 		return _mm_mask_i32gather_ps(vfloat4(), src, offsets, _mm_castsi128_ps(mask), 4);
 	}
-	__forceinline static void Write(vfloat4 *dest, const vfloat4 &src, _vuint4 mask)
+	__forceinline static void Write(float *dest, const vfloat4 &src)
 	{
-		_mm_maskstore_ps((float*)dest, mask, src.MM);
+		_mm_storeu_ps(dest, src.MM);
+	}
+	__forceinline static void Write(vfloat4 *dest, const vfloat4 &src)
+	{
+		_mm_store_ps((float*)dest, src.MM);
 	}
 	__forceinline static void Write(_vfloat4 *dest, const vfloat4 &src)
 	{
 		_mm_store_ps((float*)dest, src.MM);
 	}
-	__forceinline static void Write(vfloat4 *dest, const vfloat4 &src)
+	__forceinline static void Write(float *dest, const vfloat4 &src, _vuint4 mask)
 	{
-		_mm_store_ps((float*)dest, src.MM);
+		_mm_maskstore_ps(dest, mask, src.MM);
+	}
+	__forceinline static void Write(vfloat4 *dest, const vfloat4 &src, _vuint4 mask)
+	{
+		_mm_maskstore_ps((float*)dest, mask, src.MM);
 	}
 	__forceinline static void Write(_vfloat4 *dest, const vfloat4 &src, _vuint4 mask)
 	{
@@ -97,7 +105,7 @@ public:
 	}
 	__forceinline vfloat4 operator -() const
 	{
-		return _mm_castsi128_ps(_mm_xor_epi32(_mm_castps_si128(MM), _mm_set1_epi32(0x80000000)));
+		return _mm_castsi128_ps(_mm_xor_si128(_mm_castps_si128(MM), _mm_set1_epi32(0x80000000)));
 	}
 	__forceinline vfloat4 operator *(const vfloat4 &other) const
 	{
@@ -221,9 +229,6 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };

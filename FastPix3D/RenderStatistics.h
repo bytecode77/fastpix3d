@@ -8,11 +8,9 @@ public:
 	std::atomic<int32> RenderedTriangleCount;
 
 	RenderStatistics();
-	RenderStatistics(const RenderStatistics &renderStatistics);
+	RenderStatistics(const RenderStatistics &other);
 
 	void Clear();
-	void Merge(const RenderStatistics &statistics);
-	void Merge(const RenderStatistics &statistics, bool totalTriangleCount, bool renderedTriangleCount);
 
 	RenderStatistics& operator =(const RenderStatistics &other);
 };

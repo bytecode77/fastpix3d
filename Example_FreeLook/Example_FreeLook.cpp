@@ -9,7 +9,7 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 FreeLookExample::FreeLookExample(int32 width, int32 height) : ExampleBase(width, height, "Freelook")
 {
-	RenderUnit->RenderStates.ClipNear = .5f;
+	RenderStates->ClipNear = .5f;
 
 	LoadScene(CurrentMap);
 
@@ -19,43 +19,13 @@ FreeLookExample::FreeLookExample(int32 width, int32 height) : ExampleBase(width,
 
 void FreeLookExample::Run()
 {
-	while (!Input::HasExited() && !Input::GetKeyPressed(Scancode::Escape))
+	while (!Input::HasExited && !Input::GetKeyPressed(Scancode::Escape))
 	{
-		Window->Lock();
-
 		HandleInput();
 		Render();
+		DrawHud();
 
-		DrawPerformanceBox(10, 10, FreeLook->Position);
-		DrawControlsBox(
-			"Controls",
-			10,
-			-10,
-			"WSAD",
-			"Move",
-			-1,
-			"Shift",
-			"Run",
-			-1,
-			"1 - 8",
-			"Select Map",
-			-1,
-			nullptr);
-		DrawControlsBox(
-			"Render",
-			-10,
-			-10,
-			"T",
-			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
-			"X",
-			"Wireframe",
-			Wireframe ? 1 : 0,
-			nullptr);
-
-		Window->Unlock();
 		Window->Flip();
-
 		Input::Update();
 		Input::CenterMouse(*Window);
 		FPSCounter->Frame();
@@ -74,67 +44,93 @@ void FreeLookExample::HandleInput()
 		{
 			CurrentMap = i - 1;
 			LoadScene(CurrentMap);
+			FPSCounter->ResetMinFrameTime();
 		}
 	}
 }
 void FreeLookExample::Render()
 {
-	RenderUnit->ClearDepthBuffer();
-	if (!Skybox) RenderUnit->ClearFrameBuffer();
 	RenderUnit->Statistics.Clear();
 
-	RenderUnit->RenderStates.ViewMatrix = FreeLook->ViewMatrix;
-
-	int32 threadIds[4];
-	for (int32 i = 0; i < 4; i++)
+	if (Skybox)
 	{
-		threadIds[i] = ThreadPool::Start([this, i]
+		RenderUnit->ClearDepthBuffer(*RenderStates);
+	}
+	else
+	{
+		ThreadPool::Run({
+			[&] { RenderUnit->ClearFrameBuffer(*RenderStates); },
+			[&] { RenderUnit->ClearDepthBuffer(*RenderStates); }
+			});
+	}
+
+	RenderStates->ViewMatrix = FreeLook->ViewMatrix;
+
+	ThreadPool::Run(4, [this](WorkPartition workPartition)
+	{
+		if (Skybox)
 		{
-			if (Skybox)
-			{
-				::RenderUnit skyboxRenderUnit = *RenderUnit;
-				skyboxRenderUnit.Statistics.Clear();
-
-				skyboxRenderUnit.RenderStates.SetWorkload(i, 4);
-				skyboxRenderUnit.RenderStates.ViewMatrix = skyboxRenderUnit.RenderStates.ViewMatrix.RotationPart;
-				skyboxRenderUnit.RenderStates.ZEnable = false;
-				skyboxRenderUnit.RenderStates.ZWriteEnable = false;
-
-				DrawScene(skyboxRenderUnit, 0);
-
-				RenderUnit->Statistics.Merge(skyboxRenderUnit.Statistics);
-
-				if (Wireframe)
-				{
-					skyboxRenderUnit.RenderStates.Rasterizer = Rasterizer::Wireframe;
-					DrawScene(skyboxRenderUnit, 0);
-				}
-			}
-
-			::RenderUnit mapRenderUnitCopy = *RenderUnit;
-			mapRenderUnitCopy.Statistics.Clear();
-
-			mapRenderUnitCopy.RenderStates.SetWorkload(i, 4);
-
-			DrawScene(mapRenderUnitCopy, 1);
-
-			RenderUnit->Statistics.Merge(mapRenderUnitCopy.Statistics);
+			::RenderStates skyboxRenderStates = *RenderStates;
+			skyboxRenderStates.ViewMatrix = skyboxRenderStates.ViewMatrix.RotationPart;
+			skyboxRenderStates.DepthMode = DepthMode::None;
+			DrawScene(skyboxRenderStates, workPartition, 0);
 
 			if (Wireframe)
 			{
-				mapRenderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				mapRenderUnitCopy.RenderStates.ZWriteEnable = mapRenderUnitCopy.RenderStates.FogEnable;
-				DrawScene(mapRenderUnitCopy, 1);
+				skyboxRenderStates.Rasterizer = Rasterizer::Wireframe;
+				DrawScene(skyboxRenderStates, workPartition, 0);
 			}
+		}
 
-			mapRenderUnitCopy.RenderFog();
+		::RenderStates mapRenderStates = *RenderStates;
+		DrawScene(mapRenderStates, workPartition, 1);
+
+		if (Wireframe)
+		{
+			mapRenderStates.Rasterizer = Rasterizer::Wireframe;
+			mapRenderStates.DepthMode = mapRenderStates.FogEnable ? DepthMode::ReadWrite : DepthMode::Read;
+			DrawScene(mapRenderStates, workPartition, 1);
+		}
+
+		RenderUnit->RenderFog(mapRenderStates, workPartition);
+	});
+}
+void FreeLookExample::DrawHud()
+{
+	ThreadPool::Run({
+		[&] { DrawPerformanceBox(10, 10, FreeLook->Position); },
+		[&]
+		{
+			DrawControlsBox(
+				"Controls",
+				10,
+				-10,
+				"WSAD",
+				"Move",
+				-1,
+				"Shift",
+				"Run",
+				-1,
+				"1 - 8",
+				"Select Map",
+				-1,
+				nullptr);
+		},
+		[&]
+		{
+			DrawControlsBox(
+				"Render",
+				-10,
+				-10,
+				"T",
+				"Texture Filtering",
+				RenderStates->TextureFilteringEnable ? 1 : 0,
+				"X",
+				"Wireframe",
+				Wireframe ? 1 : 0,
+				nullptr);
+		}
 		});
-	}
-
-	for (int32 i = 0; i < 4; i++)
-	{
-		ThreadPool::Join(threadIds[i]);
-	}
 }
 
 void FreeLookExample::LoadScene(int32 mapNumber)
@@ -151,14 +147,15 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 		Skybox = nullptr;
 	}
 
-	RenderUnit->RenderStates.FogEnable = false;
+	RenderStates->FogEnable = false;
 
 	switch (mapNumber)
 	{
 		case 0:
+		{
 			Map = Mesh::Load("Assets\\Maps\\de_dust2\\de_dust2.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1) * Matrix4f::RotateX(-90));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1) * Matrix4::RotateX(-90));
 			Map->FlipTriangles();
 
 			Skybox = CreateSkybox("Assets\\Skyboxes\\Dust_XX.png");
@@ -166,19 +163,23 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(63, 0, -30);
 			FreeLook->Rotation = vfloat2(220, 0);
 			break;
+		}
 		case 1:
+		{
 			Map = Mesh::Load("Assets\\Maps\\hl_c1a0\\hl_c1a0.obj");
 			Map->FitToBoundingBox(Box3f(100), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1) * Matrix4f::RotateX(-90));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1) * Matrix4::RotateX(-90));
 			Map->FlipTriangles();
 
 			FreeLook->Position = vfloat3(-25, -9, -11);
 			FreeLook->Rotation = vfloat2(135, 0);
 			break;
+		}
 		case 2:
+		{
 			Map = Mesh::Load("Assets\\Maps\\de_inferno\\de_inferno.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1) * Matrix4f::RotateX(-90));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1) * Matrix4::RotateX(-90));
 			Map->FlipTriangles();
 
 			Skybox = CreateSkybox("Assets\\Skyboxes\\Inferno_XX.png");
@@ -186,10 +187,12 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(-83, 6, -49);
 			FreeLook->Rotation = vfloat2(50, 0);
 			break;
+		}
 		case 3:
+		{
 			Map = Mesh::Load("Assets\\Maps\\cs_siege\\cs_siege.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1) * Matrix4f::RotateX(-90));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1) * Matrix4::RotateX(-90));
 			Map->FlipTriangles();
 
 			Skybox = CreateSkybox("Assets\\Skyboxes\\Siege_XX.png");
@@ -197,10 +200,12 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(-12, 5, 16);
 			FreeLook->Rotation = vfloat2(90, 0);
 			break;
+		}
 		case 4:
+		{
 			Map = Mesh::Load("Assets\\Maps\\cs_italy\\cs_italy.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1) * Matrix4f::RotateX(-90));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1) * Matrix4::RotateX(-90));
 			Map->FlipTriangles();
 
 			Skybox = CreateSkybox("Assets\\Skyboxes\\Inferno_XX.png");
@@ -208,45 +213,56 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(-26, -1, -82);
 			FreeLook->Rotation = vfloat2(90, 0);
 			break;
+		}
 		case 5:
+		{
 			Map = Mesh::Load("Assets\\Maps\\cs_office\\cs_office.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1) * Matrix4f::RotateX(-90));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1) * Matrix4::RotateX(-90));
 			Map->FlipTriangles();
-
-			for (int32 i = 0; i < Map->SurfaceCount; i++)
-			{
-				Surface *surface = Map->GetSurface(i);
-				if (!lstrcmpA(surface->Texture->FileName, "office_material_153.png"))
-				{
-					// Overhead projector
-					surface->BlendMode = BlendMode::Add;
-				}
-			}
+			Map->FindSurface("office_material_153")->BlendMode = BlendMode::Add;
 
 			Skybox = CreateSkybox("Assets\\Skyboxes\\Office_XX.png");
 
 			FreeLook->Position = vfloat3(49, 5, 12);
 			FreeLook->Rotation = vfloat2(-90, 0);
 
-			RenderUnit->RenderStates.FogEnable = true;
-			RenderUnit->RenderStates.FogNear = 20;
-			RenderUnit->RenderStates.FogFar = 100;
-			RenderUnit->RenderStates.FogColor = Color(230, 225, 220);
+			RenderStates->FogEnable = true;
+			RenderStates->FogNear = 20;
+			RenderStates->FogFar = 100;
+			RenderStates->FogColor = Color(230, 225, 220);
 			break;
+		}
 		case 6:
+		{
 			Map = Mesh::Load("Assets\\Maps\\Apartment\\Apartment.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-.3f, .3f, .3f));
+			Map->TransformVertices(Matrix4::Scale(-.3f, .3f, .3f));
 			Map->FlipTriangles();
+
+			int32 found = 0;
+			for (int32 i = 0; i < Map->SurfaceCount; i++)
+			{
+				Surface *surface = Map->Surfaces[i];
+				if (!lstrcmpA(surface->Texture->FileName, "door01a.jpg"))
+				{
+					if (found++ > 0)
+					{
+						Map->RemoveSurface(surface);
+						i--;
+					}
+				}
+			}
 
 			FreeLook->Position = vfloat3(15, 2, 8);
 			FreeLook->Rotation = vfloat2(180, 15);
 			break;
+		}
 		case 7:
+		{
 			Map = Mesh::Load("Assets\\Maps\\DoomHangar\\DoomHangar.obj");
 			Map->FitToBoundingBox(Box3f(200), true);
-			Map->TransformVertices(Matrix4f::Scale(-1, 1, 1));
+			Map->TransformVertices(Matrix4::Scale(-1, 1, 1));
 			Map->FlipTriangles();
 
 			Skybox = CreateSkybox("Assets\\Skyboxes\\Doom_XX.png");
@@ -254,22 +270,23 @@ void FreeLookExample::LoadScene(int32 mapNumber)
 			FreeLook->Position = vfloat3(-20, -1, -7);
 			FreeLook->Rotation = vfloat2();
 
-			RenderUnit->RenderStates.FogEnable = true;
-			RenderUnit->RenderStates.FogNear = 20;
-			RenderUnit->RenderStates.FogFar = 100;
-			RenderUnit->RenderStates.FogColor = Color();
+			RenderStates->FogEnable = true;
+			RenderStates->FogNear = 20;
+			RenderStates->FogFar = 100;
+			RenderStates->FogColor = Color();
 			break;
+		}
 	}
 }
-void FreeLookExample::DrawScene(::RenderUnit &renderUnit, int32 part)
+void FreeLookExample::DrawScene(::RenderStates &renderStates, WorkPartition workPartition, int32 part)
 {
 	switch (part)
 	{
 		case 0:
-			renderUnit.DrawMesh(*Skybox, Matrix4f::Scale(10));
+			RenderUnit->DrawMesh(renderStates, workPartition, *Skybox, Matrix4::Scale(10));
 			break;
 		case 1:
-			renderUnit.DrawMesh(*Map, Matrix4f::Identity());
+			RenderUnit->DrawMesh(renderStates, workPartition, *Map, Matrix4::Identity());
 			break;
 	}
 }

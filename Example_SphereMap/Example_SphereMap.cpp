@@ -9,11 +9,11 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE previousInstance,
 
 SphereMapExample::SphereMapExample(int32 width, int32 height) : ExampleBase(width, height, "Sphere Mapping")
 {
-	RenderUnit->RenderStates.ViewMatrix = Matrix4f::Translate(0, -1, 3) * Matrix4f::RotateX(-20);
-	RenderUnit->RenderStates.LightsEnable = true;
-	RenderUnit->RenderStates.AmbientLight = Color(40, 40, 40);
-	RenderUnit->RenderStates.Lights[0].Enabled = true;
-	RenderUnit->RenderStates.Lights[0].Intensity = .7f;
+	RenderStates->ViewMatrix = Matrix4::Translate(0, -1, 3) * Matrix4::RotateX(-20);
+	RenderStates->LightsEnable = true;
+	RenderStates->AmbientLight = Color(40, 40, 40);
+	RenderStates->Lights[0].Enabled = true;
+	RenderStates->Lights[0].Intensity = .7f;
 
 	LoadScene();
 
@@ -22,40 +22,13 @@ SphereMapExample::SphereMapExample(int32 width, int32 height) : ExampleBase(widt
 
 void SphereMapExample::Run()
 {
-	while (!Input::HasExited() && !Input::GetKeyPressed(Scancode::Escape))
+	while (!Input::HasExited && !Input::GetKeyPressed(Scancode::Escape))
 	{
-		Window->Lock();
-
 		HandleInput();
 		Render();
+		DrawHud();
 
-		DrawPerformanceBox(10, 10);
-		DrawControlsBox(
-			"Controls",
-			10,
-			-10,
-			"Space",
-			"Animation",
-			RotationStopwatch.IsRunning ? 1 : 0,
-			"M",
-			"High Poly Mesh",
-			UseHighPolyModel ? 1 : 0,
-			nullptr);
-		DrawControlsBox(
-			"Render",
-			-10,
-			-10,
-			"T",
-			"Texture Filtering",
-			RenderUnit->RenderStates.TextureFilteringEnable ? 1 : 0,
-			"X",
-			"Wireframe",
-			Wireframe ? 1 : 0,
-			nullptr);
-
-		Window->Unlock();
 		Window->Flip();
-
 		Input::Update();
 		FPSCounter->Frame();
 	}
@@ -73,40 +46,63 @@ void SphereMapExample::HandleInput()
 	if (Input::GetKeyPressed(Scancode::M))
 	{
 		UseHighPolyModel = !UseHighPolyModel;
+		FPSCounter->ResetMinFrameTime();
 	}
 }
 void SphereMapExample::Render()
 {
-	RenderUnit->ClearFrameBuffer(0, 100, 170);
-	RenderUnit->ClearDepthBuffer();
 	RenderUnit->Statistics.Clear();
 
-	int32 threadIds[4];
-	for (int32 i = 0; i < 4; i++)
-	{
-		threadIds[i] = ThreadPool::Start([this, i]
-		{
-			::RenderUnit renderUnitCopy = *RenderUnit;
-			renderUnitCopy.Statistics.Clear();
-
-			renderUnitCopy.RenderStates.SetWorkload(i, 4);
-
-			DrawScene(renderUnitCopy);
-
-			RenderUnit->Statistics.Merge(renderUnitCopy.Statistics);
-
-			if (Wireframe)
-			{
-				renderUnitCopy.RenderStates.Rasterizer = Rasterizer::Wireframe;
-				DrawScene(renderUnitCopy);
-			}
+	ThreadPool::Run({
+		[&] { RenderUnit->ClearFrameBuffer(*RenderStates, 0, 100, 170); },
+		[&] { RenderUnit->ClearDepthBuffer(*RenderStates); }
 		});
-	}
 
-	for (int32 i = 0; i < 4; i++)
+	ThreadPool::Run(4, [this](WorkPartition workPartition)
 	{
-		ThreadPool::Join(threadIds[i]);
-	}
+		::RenderStates meshRenderStates = *RenderStates;
+		DrawScene(meshRenderStates, workPartition);
+
+		if (Wireframe)
+		{
+			meshRenderStates.Rasterizer = Rasterizer::Wireframe;
+			DrawScene(meshRenderStates, workPartition);
+		}
+	});
+}
+void SphereMapExample::DrawHud()
+{
+	ThreadPool::Run({
+		[&] { DrawPerformanceBox(10, 10); },
+		[&]
+		{
+			DrawControlsBox(
+				"Controls",
+				10,
+				-10,
+				"Space",
+				"Animation",
+				RotationStopwatch.IsRunning ? 1 : 0,
+				"M",
+				"High Poly Mesh",
+				UseHighPolyModel ? 1 : 0,
+				nullptr);
+		},
+		[&]
+		{
+			DrawControlsBox(
+				"Render",
+				-10,
+				-10,
+				"T",
+				"Texture Filtering",
+				RenderStates->TextureFilteringEnable ? 1 : 0,
+				"X",
+				"Wireframe",
+				Wireframe ? 1 : 0,
+				nullptr);
+		}
+		});
 }
 
 void SphereMapExample::LoadScene()
@@ -124,7 +120,7 @@ void SphereMapExample::LoadScene()
 	MeshHighPoly->SetTexture(texture);
 	MeshHighPoly->SetSpecular(50, 1.5f);
 }
-void SphereMapExample::DrawScene(::RenderUnit &renderUnit)
+void SphereMapExample::DrawScene(::RenderStates &renderStates, WorkPartition workPartition)
 {
-	renderUnit.DrawMesh(UseHighPolyModel ? *MeshHighPoly : *Mesh, Matrix4f::RotateY(RotationStopwatch.ElapsedMilliseconds * .03f + 180));
+	RenderUnit->DrawMesh(renderStates, workPartition, UseHighPolyModel ? *MeshHighPoly : *Mesh, Matrix4::RotateY(RotationStopwatch.ElapsedMilliseconds * .03f + 180));
 }

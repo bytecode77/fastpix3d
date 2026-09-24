@@ -32,16 +32,15 @@ __declspec(align(16)) struct FASTPIX3D_API vfloat3
 	}
 	readonly_property(float, InverseSquaredLength)
 	{
-		float inverseLength = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_dp_ps(MM, MM, 0x71)));
-		return inverseLength * inverseLength;
+		return _mm_cvtss_f32(_mm_rcp_ss(_mm_dp_ps(MM, MM, 0x71)));
 	}
 
 	__forceinline vfloat3() :
 		MM(_mm_setzero_ps())
 	{
 	}
-	__forceinline vfloat3(const vfloat3 &value) :
-		MM(value.MM)
+	__forceinline vfloat3(const vfloat3 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vfloat3(_vfloat3 mm) :
@@ -61,7 +60,7 @@ __declspec(align(16)) struct FASTPIX3D_API vfloat3
 	{
 	}
 	__forceinline explicit vfloat3(float uniform) :
-		MM(_mm_setr_ps(uniform, uniform, uniform, 0))
+		MM(_mm_set1_ps(uniform))
 	{
 	}
 	__forceinline explicit vfloat3(float x, float y, float z) :
@@ -79,9 +78,13 @@ __declspec(align(16)) struct FASTPIX3D_API vfloat3
 	}
 	__forceinline vfloat3 CrossProduct(const vfloat3 &other) const
 	{
-		return _mm_sub_ps(
-			_mm_mul_ps(_mm_shuffle_ps(MM, MM, _MM_SHUFFLE(3, 0, 2, 1)), _mm_shuffle_ps(other.MM, other.MM, _MM_SHUFFLE(3, 1, 0, 2))),
-			_mm_mul_ps(_mm_shuffle_ps(MM, MM, _MM_SHUFFLE(3, 1, 0, 2)), _mm_shuffle_ps(other.MM, other.MM, _MM_SHUFFLE(3, 0, 2, 1)))
+		return _mm_fmsub_ps(
+			_mm_shuffle_ps(MM, MM, _MM_SHUFFLE(3, 0, 2, 1)),
+			_mm_shuffle_ps(other.MM, other.MM, _MM_SHUFFLE(3, 1, 0, 2)),
+			_mm_mul_ps(
+				_mm_shuffle_ps(MM, MM, _MM_SHUFFLE(3, 1, 0, 2)),
+				_mm_shuffle_ps(other.MM, other.MM, _MM_SHUFFLE(3, 0, 2, 1))
+			)
 		);
 	}
 
@@ -108,7 +111,7 @@ __declspec(align(16)) struct FASTPIX3D_API vfloat3
 	}
 	__forceinline vfloat3 operator -() const
 	{
-		return _mm_castsi128_ps(_mm_xor_epi32(_mm_castps_si128(MM), _mm_set1_epi32(0x80000000)));
+		return _mm_castsi128_ps(_mm_xor_si128(_mm_castps_si128(MM), _mm_set1_epi32(0x80000000)));
 	}
 	__forceinline vfloat3 operator *(const vfloat3 &other) const
 	{
@@ -224,9 +227,6 @@ __declspec(align(16)) struct FASTPIX3D_API vfloat3
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };

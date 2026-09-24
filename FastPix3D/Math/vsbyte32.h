@@ -25,8 +25,8 @@ public:
 		MM(_mm256_setzero_si256())
 	{
 	}
-	__forceinline vsbyte32(const vsbyte32 &value) :
-		MM(value.MM)
+	__forceinline vsbyte32(const vsbyte32 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vsbyte32(_vsbyte32 mm) :
@@ -34,7 +34,7 @@ public:
 	{
 	}
 	__forceinline explicit vsbyte32(const sbyte *ptr) :
-		MM(_mm256_loadu_si256((_vsbyte32*)ptr))
+		MM(_mm256_loadu_si256((const _vsbyte32*)ptr))
 	{
 	}
 	__forceinline explicit vsbyte32(const vsbyte32 *ptr) :
@@ -54,6 +54,10 @@ public:
 	{
 	}
 
+	__forceinline static void Write(sbyte *dest, const vsbyte32 &src)
+	{
+		_mm256_storeu_si256((_vsbyte32*)dest, src.MM);
+	}
 	__forceinline static void Write(vsbyte32 *dest, const vsbyte32 &src)
 	{
 		_mm256_store_si256((_vsbyte32*)dest, src.MM);
@@ -290,9 +294,6 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };

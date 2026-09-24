@@ -2,13 +2,16 @@
 #include "../FastPix3D.h"
 #include "../Math/Color.h"
 
-struct SDL_Surface;
+struct IWICImagingFactory;
+struct IWICBitmapDecoder;
 
 class FASTPIX3D_API Bitmap
 {
 private:
-	const int32 _Width;
-	const int32 _Height;
+	static INIT_ONCE InitOnce;
+	static IWICImagingFactory *ImagingFactory;
+	int32 _Width;
+	int32 _Height;
 	Color *_Pixels;
 
 public:
@@ -26,11 +29,17 @@ public:
 	}
 
 	explicit Bitmap(int32 width, int32 height);
+	Bitmap(const Bitmap &other);
 	~Bitmap();
 
 	static Bitmap* FromFile(const char *path);
 	static Bitmap* FromMemory(const void *buffer, int32 size);
 
 private:
-	static Bitmap* FromSurface(SDL_Surface *surface);
+	static void EnsureInitialized();
+	static BOOL CALLBACK Initialize(PINIT_ONCE initOnce, PVOID parameter, PVOID *context);
+	static Bitmap* FromStream(IStream *stream);
+
+public:
+	Bitmap& operator =(const Bitmap &other);
 };

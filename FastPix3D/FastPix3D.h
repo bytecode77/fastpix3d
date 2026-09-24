@@ -2,6 +2,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _USE_MATH_DEFINES
 
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "windowscodecs.lib")
+#pragma comment(lib, "ole32.lib")
+
 #pragma warning(disable: 4251) // 'std::[...]' needs to have dll - interface to be used by clients of '[...]'
 
 #ifndef _WIN64
@@ -18,6 +24,10 @@
 #define FASTPIX3D_API __declspec(dllimport)
 #endif
 
+// Compilation time is almost 2 minutes.
+// For quick tests, define this to compile only the pixel shader with plain texture and no other attributes.
+//#define DEBUG_ONE_PIXELSHADER
+
 #include <Windows.h>
 #include <Shlwapi.h>
 #include <math.h>
@@ -26,6 +36,7 @@
 #include <vector>
 #include <atomic>
 #include <functional>
+#include <stdexcept>
 
 using sbyte = signed __int8;
 using int16 = signed __int16;
@@ -43,7 +54,6 @@ using _vint3 = __m128i;
 using _vfloat3 = __m128;
 using _vint4 = __m128i;
 using _vuint4 = __m128i;
-using _vlong4 = __m256i;
 using _vfloat4 = __m128;
 using _vint8 = __m256i;
 using _vuint8 = __m256i;
@@ -57,6 +67,16 @@ using _vbyte32 = __m256i;
 	__declspec(property(get = get_##name))										\
 	type name;																	\
 	__forceinline type get_##name() const
+
+#define readonly_indexed_property(type, name, index)							\
+	__declspec(property(get = get_##name))										\
+	type name[];																\
+	__forceinline type get_##name(index) const
+
+#define readonly_indexed_property2(type, name, index1, index2)					\
+	__declspec(property(get = get_##name))										\
+	type name[][];																\
+	__forceinline type get_##name(index1, index2) const
 
 #define property_get(type, name)												\
 	__declspec(property(get = get_##name, put = set_##name))					\
@@ -97,10 +117,13 @@ using _vbyte32 = __m256i;
 #define ATTRIBUTE_SHADOW_B			5
 
 alignas(32) static const _vbyte32 BroadcastByteToInt32Mask = _mm256_setr_epi8(0, 0, 0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 20, 20, 20, 20, 24, 24, 24, 24, 28, 28, 28, 28);
+alignas(32) static const _vbyte32 BroadcastShortToLow8Mask = _mm256_setr_epi8(0, 1, 0, 1, 0, 1, 0, 1, 4, 5, 4, 5, 4, 5, 4, 5, 0, 1, 0, 1, 0, 1, 0, 1, 4, 5, 4, 5, 4, 5, 4, 5);
+alignas(32) static const _vbyte32 BroadcastShortToHigh8Mask = _mm256_setr_epi8(8, 9, 8, 9, 8, 9, 8, 9, 12, 13, 12, 13, 12, 13, 12, 13, 8, 9, 8, 9, 8, 9, 8, 9, 12, 13, 12, 13, 12, 13, 12, 13);
 alignas(32) static const _vint8 Delta1To8Multiplier = _mm256_setr_epi32(1, 2, 3, 4, 5, 6, 7, 8);
 alignas(32) static const _vfloat8 Delta1To8MultiplierF = _mm256_setr_ps(1, 2, 3, 4, 5, 6, 7, 8);
 
-static const float MipLevels[] = {
+static const float MipLevels[] =
+{
 	1.0f / (1 << 0),
 	1.0f / (1 << 1),
 	1.0f / (1 << 2),

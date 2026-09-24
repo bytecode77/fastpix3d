@@ -18,7 +18,8 @@ public:
 private:
 	void HandleInput();
 	void Render();
+	void DrawHud();
 
 	void LoadScene(int32 mapNumber);
-	void DrawScene(::RenderUnit &renderUnit, int32 part);
+	void DrawScene(::RenderStates &renderStates, WorkPartition workPartition, int32 part);
 };

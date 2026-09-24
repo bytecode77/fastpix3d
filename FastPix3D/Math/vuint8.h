@@ -33,8 +33,8 @@ public:
 		MM(_mm256_setzero_si256())
 	{
 	}
-	__forceinline vuint8(const vuint8 &value) :
-		MM(value.MM)
+	__forceinline vuint8(const vuint8 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vuint8(_vuint8 mm) :
@@ -42,7 +42,7 @@ public:
 	{
 	}
 	__forceinline explicit vuint8(const uint32 *ptr) :
-		MM(_mm256_loadu_si256((_vuint8*)ptr))
+		MM(_mm256_loadu_si256((const _vuint8*)ptr))
 	{
 	}
 	__forceinline explicit vuint8(const vuint8 *ptr) :
@@ -64,11 +64,15 @@ public:
 
 	__forceinline static vuint8 Read(const uint32 *src, _vuint8 offsets)
 	{
-		return _mm256_i32gather_epi32((int32*)src, offsets, 4);
+		return _mm256_i32gather_epi32((const int32*)src, offsets, 4);
 	}
 	__forceinline static vuint8 Read(const uint32 *src, _vuint8 offsets, _vuint8 mask)
 	{
-		return _mm256_mask_i32gather_epi32(vuint8(), (int32*)src, offsets, mask, 4);
+		return _mm256_mask_i32gather_epi32(vuint8(), (const int32*)src, offsets, mask, 4);
+	}
+	__forceinline static void Write(uint32 *dest, const vuint8 &src)
+	{
+		_mm256_storeu_si256((_vuint8*)dest, src.MM);
 	}
 	__forceinline static void Write(vuint8 *dest, const vuint8 &src)
 	{
@@ -77,6 +81,10 @@ public:
 	__forceinline static void Write(_vuint8 *dest, const vuint8 &src)
 	{
 		_mm256_store_si256((_vuint8*)dest, src.MM);
+	}
+	__forceinline static void Write(uint32 *dest, const vuint8 &src, _vuint8 mask)
+	{
+		_mm256_maskstore_epi32((int32*)dest, mask, src.MM);
 	}
 	__forceinline static void Write(vuint8 *dest, const vuint8 &src, _vuint8 mask)
 	{
@@ -164,7 +172,7 @@ public:
 	{
 		return _mm256_sllv_epi32(MM, other.MM);
 	}
-	__forceinline vuint8 operator <<(uint32 count) const
+	__forceinline vuint8 operator <<(int32 count) const
 	{
 		return _mm256_slli_epi32(MM, count);
 	}
@@ -172,7 +180,7 @@ public:
 	{
 		return _mm256_srlv_epi32(MM, other.MM);
 	}
-	__forceinline vuint8 operator >>(uint32 count) const
+	__forceinline vuint8 operator >>(int32 count) const
 	{
 		return _mm256_srli_epi32(MM, count);
 	}
@@ -261,7 +269,7 @@ public:
 		MM = _mm256_sllv_epi32(MM, other.MM);
 		return *this;
 	}
-	__forceinline vuint8& operator <<=(uint32 count)
+	__forceinline vuint8& operator <<=(int32 count)
 	{
 		MM = _mm256_slli_epi32(MM, count);
 		return *this;
@@ -271,7 +279,7 @@ public:
 		MM = _mm256_srlv_epi32(MM, other.MM);
 		return *this;
 	}
-	__forceinline vuint8& operator >>=(uint32 count)
+	__forceinline vuint8& operator >>=(int32 count)
 	{
 		MM = _mm256_srli_epi32(MM, count);
 		return *this;
@@ -332,9 +340,6 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };

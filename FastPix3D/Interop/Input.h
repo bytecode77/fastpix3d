@@ -12,6 +12,7 @@ enum class MouseButton
 
 enum class Scancode
 {
+	Unknown = 0,
 	A = 4,
 	B = 5,
 	C = 6,
@@ -234,8 +235,8 @@ enum class Scancode
 	MediaRecord = 264,
 	MediaFastForward = 265,
 	MediaRewind = 266,
-	MediaNextTrack = 267,
-	MediaPreviousTrack = 268,
+	MediaNext = 267,
+	MediaPrevious = 268,
 	MediaStop = 269,
 	MediaEject = 270,
 	MediaPlayPause = 271,
@@ -263,10 +264,10 @@ enum class Scancode
 class FASTPIX3D_API Input
 {
 private:
-	static bool IsInitialized;
-	static bool Exited;
-	static vint3 MousePosition;
-	static vint3 MouseSpeed;
+	static bool _HasExited;
+	static vint3 _MousePosition;
+	static vint3 _MouseSpeed;
+	static int32 MouseSpeedZRemainder;
 	static bool MouseDown[3];
 	static bool KeyDown[512];
 	static bool KeyPressed[512];
@@ -274,18 +275,10 @@ private:
 public:
 	Input() = delete;
 
-	static bool HasExited()
-	{
-		return Exited;
-	}
-	static vint3 GetMousePosition()
-	{
-		return MousePosition;
-	}
-	static vint3 GetMouseSpeed()
-	{
-		return MouseSpeed;
-	}
+	inline static const bool &HasExited = _HasExited;
+	inline static const vint3 &MousePosition = _MousePosition;
+	inline static const vint3 &MouseSpeed = _MouseSpeed;
+
 	static bool GetMouseDown(MouseButton mouseButton)
 	{
 		return MouseDown[(int32)mouseButton];
@@ -298,10 +291,18 @@ public:
 	{
 		bool pressed = KeyPressed[(int32)scancode];
 		KeyPressed[(int32)scancode] = false;
+
 		return pressed;
 	}
 
 	static void Update();
 	static void SetMousePosition(const Window &window, int32 x, int32 y);
 	static void CenterMouse(const Window &window);
+
+private:
+	static void HandleMessage(const Window &window, UINT message, WPARAM wParam, LPARAM lParam);
+	static void Reset();
+	static Scancode ConvertToScancode(WPARAM virtualKey, LPARAM keyData);
+
+	friend class Window;
 };

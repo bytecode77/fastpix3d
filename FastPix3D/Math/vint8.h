@@ -34,8 +34,8 @@ public:
 		MM(_mm256_setzero_si256())
 	{
 	}
-	__forceinline vint8(const vint8 &value) :
-		MM(value.MM)
+	__forceinline vint8(const vint8 &other) :
+		MM(other.MM)
 	{
 	}
 	__forceinline vint8(_vint8 mm) :
@@ -43,7 +43,7 @@ public:
 	{
 	}
 	__forceinline explicit vint8(const int32 *ptr) :
-		MM(_mm256_loadu_si256((_vint8*)ptr))
+		MM(_mm256_loadu_si256((const _vint8*)ptr))
 	{
 	}
 	__forceinline explicit vint8(const vint8 *ptr) :
@@ -54,8 +54,8 @@ public:
 		MM(_mm256_load_si256(ptr))
 	{
 	}
-	__forceinline explicit vint8(const vfloat8 &value) :
-		MM(_mm256_cvtps_epi32(value))
+	__forceinline explicit vint8(const vfloat8 &other) :
+		MM(_mm256_cvtps_epi32(other))
 	{
 	}
 	__forceinline explicit vint8(int32 uniform) :
@@ -75,6 +75,10 @@ public:
 	{
 		return _mm256_mask_i32gather_epi32(vint8(), src, offsets, mask, 4);
 	}
+	__forceinline static void Write(int32 *dest, const vint8 &src)
+	{
+		_mm256_storeu_si256((_vint8*)dest, src.MM);
+	}
 	__forceinline static void Write(vint8 *dest, const vint8 &src)
 	{
 		_mm256_store_si256((_vint8*)dest, src.MM);
@@ -82,6 +86,10 @@ public:
 	__forceinline static void Write(_vint8 *dest, const vint8 &src)
 	{
 		_mm256_store_si256((_vint8*)dest, src.MM);
+	}
+	__forceinline static void Write(int32 *dest, const vint8 &src, _vuint8 mask)
+	{
+		_mm256_maskstore_epi32(dest, mask, src.MM);
 	}
 	__forceinline static void Write(vint8 *dest, const vint8 &src, _vuint8 mask)
 	{
@@ -381,10 +389,7 @@ public:
 	}
 	void operator delete[](void *ptr)
 	{
-		if (ptr)
-		{
-			_aligned_free(ptr);
-		}
+		_aligned_free(ptr);
 	}
 };
 

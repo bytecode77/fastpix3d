@@ -1,27 +1,34 @@
 #pragma once
 #include <2D/Font.h>
 #include <2D/Graphics.h>
+#include <Helper/Buffer.h>
 #include <Helper/FreeLook.h>
 #include <Helper/PrimitiveFactory.h>
-#include <Interop/FPSCounter.h>
+#include <Helper/Stopwatch.h>
+#include <Helper/FPSCounter.h>
 #include <Interop/Input.h>
-#include <Interop/Stopwatch.h>
 #include <Interop/System.h>
-#include <Interop/Thread.h>
 #include <Interop/ThreadPool.h>
 #include <Interop/Window.h>
 #include <Math/Math_.h>
 #include <Math/VectorMath.h>
 #include <RenderTarget.h>
 #include <RenderUnit.h>
+#include <RenderStates.h>
+#include <WorkPartition.h>
 
 class ExampleBase
 {
 protected:
+	Buffer<float> *DepthBuffer;
+	Buffer<float> *ShadowMap;
+
 	Window *Window;
 	RenderUnit *RenderUnit;
+	RenderStates *RenderStates;
 	FreeLook *FreeLook;
 	FPSCounter *FPSCounter;
+
 	const Font *Font10;
 	const Font *Font12;
 	const Font *Font14;
@@ -49,6 +56,7 @@ protected:
 
 public:
 	explicit ExampleBase(int32 width, int32 height, const char *name);
+	ExampleBase(const ExampleBase&) = delete;
 	~ExampleBase();
 
 	virtual void Run() = 0;
@@ -61,4 +69,15 @@ public:
 	void DrawShadowMapImage(int32 x, int32 y, int32 width, int32 height, float zFrom, float zTo) const;
 
 	Mesh* CreateSkybox(const char *path) const;
+
+	char* FormatNumber(int32 number, char *buffer) const;
+	char* FormatNumber(int32 number, char *buffer, bool thousandsSeparator) const;
+	char* FormatFixed3Number(int32 number, char *buffer) const;
+	vfloat3 GetCubemapDirection(int32 face) const;
+
+private:
+	void FormatFixed3Number(int32 number, char *buffer, const char *separator) const;
+
+public:
+	ExampleBase& operator =(const ExampleBase&) = delete;
 };

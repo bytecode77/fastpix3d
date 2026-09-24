@@ -1,12 +1,12 @@
 #define CGLTF_IMPLEMENTATION
 #include "Mesh.h"
 #include "../Math/Math_.h"
-#include <MeshLoaders/cgltf.h>
-#include <MeshLoaders/ObjLoader.h>
+#include <cgltf.h>
+#include <ObjLoader.h>
 
 Mesh::~Mesh()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		delete surface;
 	}
@@ -14,6 +14,7 @@ Mesh::~Mesh()
 
 Mesh* Mesh::Load(const char *path)
 {
+	if (!path) throw std::invalid_argument("path cannot be null.");
 	const char *extension = PathFindExtensionA(path);
 
 	if (!lstrcmpiA(extension, ".gltf") ||
@@ -27,19 +28,21 @@ Mesh* Mesh::Load(const char *path)
 	}
 	else
 	{
-		throw;
+		throw std::invalid_argument("Unsupported mesh file format.");
 	}
 }
 
-Surface* Mesh::GetSurface(const char *textureFileName) const
+Surface* Mesh::FindSurface(const char *textureFileName) const
 {
+	if (!textureFileName) throw std::invalid_argument("textureFileName cannot be null.");
+
 	// textureFileName can be a filename with or without extension.
 	// Only the filename part without extension is used to find the surface.
 
 	const char *dot = StrChrA(textureFileName, '.');
 	int32 length = dot ? (int32)(dot - textureFileName) : lstrlenA(textureFileName);
 
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		if (surface->Texture)
 		{
@@ -56,20 +59,30 @@ Surface* Mesh::GetSurface(const char *textureFileName) const
 Surface* Mesh::AddSurface(int32 vertexCount, int32 triangleCount)
 {
 	Surface *surface = new Surface(vertexCount, triangleCount);
-	Surfaces.push_back(surface);
+	_Surfaces.push_back(surface);
 	return surface;
+}
+void Mesh::RemoveSurface(int32 index)
+{
+	delete _Surfaces[index];
+	_Surfaces.erase(_Surfaces.begin() + index);
+}
+void Mesh::RemoveSurface(const Surface *surface)
+{
+	std::erase(_Surfaces, surface);
+	delete surface;
 }
 
 void Mesh::SetCullMode(CullMode cullMode)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->CullMode = cullMode;
 	}
 }
 void Mesh::SetTexture(const Texture *texture)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->Texture = texture;
 	}
@@ -80,28 +93,28 @@ void Mesh::SetTextureSize(float x, float y)
 }
 void Mesh::SetTextureSize(const vfloat2 &size)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->TextureSize = size;
 	}
 }
 void Mesh::SetBlendMode(BlendMode blendMode)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->BlendMode = blendMode;
 	}
 }
 void Mesh::SetAlpha(float alpha)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->Alpha = alpha;
 	}
 }
 void Mesh::SetSpecular(float specularExponent, float specularIntensity)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->SpecularExponent = specularExponent;
 		surface->SpecularIntensity = specularIntensity;
@@ -109,14 +122,14 @@ void Mesh::SetSpecular(float specularExponent, float specularIntensity)
 }
 void Mesh::SetSpecularExponent(float specularExponent)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->SpecularExponent = specularExponent;
 	}
 }
 void Mesh::SetSpecularIntensity(float specularIntensity)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->SpecularIntensity = specularIntensity;
 	}
@@ -128,21 +141,21 @@ void Mesh::SetVertexColors(byte r, byte g, byte b)
 }
 void Mesh::SetVertexColors(const Color &color)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			surface->GetVertex(i)->Color = color;
+			surface->Vertices[i]->Color = color;
 		}
 	}
 }
 void Mesh::SetRandomVertexColors()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			surface->GetVertex(i)->Color = Color(Math::Random(0, 256), Math::Random(0, 256), Math::Random(0, 256));
+			surface->Vertices[i]->Color = Color(Math::Random(0, 256), Math::Random(0, 256), Math::Random(0, 256));
 		}
 	}
 }
@@ -151,11 +164,11 @@ Box3f Mesh::GetBoundingBox() const
 {
 	Box3f boundingBox = Box3f(vfloat3(NAN), vfloat3(NAN));
 
-	for (const Surface *surface : Surfaces)
+	for (const Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			Vertex *vertex = surface->GetVertex(i);
+			Vertex *vertex = surface->Vertices[i];
 
 			if (isnan(boundingBox.Min.X) || boundingBox.Min.X > vertex->Position.X) boundingBox.Min.X = vertex->Position.X;
 			if (isnan(boundingBox.Min.Y) || boundingBox.Min.Y > vertex->Position.Y) boundingBox.Min.Y = vertex->Position.Y;
@@ -212,61 +225,61 @@ void Mesh::FitToBoundingBox(const Box3f &boundingBox, bool uniform)
 		}
 	}
 
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
-			Vertex *vertex = surface->GetVertex(i);
+			Vertex *vertex = surface->Vertices[i];
 			vertex->Position = Math::Interpolate(vertex->Position, originalBoundingBox.Min, originalBoundingBox.Max, newBoundingBox.Min, newBoundingBox.Max);
 		}
 	}
 }
-void Mesh::TransformVertices(const Matrix4f &matrix)
+void Mesh::TransformVertices(const Matrix4 &matrix)
 {
 	TransformVertices(matrix, true, true);
 }
-void Mesh::TransformVertices(const Matrix4f &matrix, bool positions, bool normals)
+void Mesh::TransformVertices(const Matrix4 &matrix, bool positions, bool normals)
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		for (int32 i = 0; i < surface->VertexCount; i++)
 		{
 			if (positions)
 			{
-				surface->GetVertex(i)->Position = matrix * surface->GetVertex(i)->Position;
+				surface->Vertices[i]->Position = matrix * surface->Vertices[i]->Position;
 			}
 
 			if (normals)
 			{
-				surface->GetVertex(i)->Normals = matrix * surface->GetVertex(i)->Normals;
+				surface->Vertices[i]->Normals = matrix * surface->Vertices[i]->Normals;
 			}
 		}
 	}
 }
 void Mesh::AutoNormals()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->AutoNormals();
 	}
 }
 void Mesh::NormalizeNormals()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->NormalizeNormals();
 	}
 }
 void Mesh::FlipNormals()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->FlipNormals();
 	}
 }
 void Mesh::FlipTriangles()
 {
-	for (Surface *surface : Surfaces)
+	for (Surface *surface : _Surfaces)
 	{
 		surface->FlipTriangles();
 	}
@@ -278,7 +291,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 	cgltf_data* data = nullptr;
 
 	if (cgltf_parse_file(&options, path, &data) != cgltf_result::cgltf_result_success ||
-		cgltf_load_buffers(&options, data, path) != cgltf_result::cgltf_result_success) throw;
+		cgltf_load_buffers(&options, data, path) != cgltf_result::cgltf_result_success) throw std::runtime_error("Failed to load GLTF file.");
 
 	Mesh *mesh = new Mesh();
 
@@ -287,18 +300,18 @@ Mesh* Mesh::LoadGltf(const char *path)
 		const cgltf_node &node = data->nodes[n];
 		if (!node.mesh) continue;
 
-		Matrix4f matrix;
+		Matrix4 matrix;
 		cgltf_node_transform_world(&node, (float*)&matrix);
 		matrix = matrix.Transpose();
 
-		Matrix4f normalMatrix = matrix.ToNormalMatrix();
+		Matrix4 normalMatrix = matrix.ToNormalMatrix();
 
 		for (int32 p = 0; p < node.mesh->primitives_count; p++)
 		{
 			const cgltf_primitive &primitive = node.mesh->primitives[p];
 
 			if (primitive.type != cgltf_primitive_type::cgltf_primitive_type_triangles) continue;
-			if (!primitive.indices || primitive.indices->count == 0 || primitive.indices->count % 3 != 0) throw;
+			if (!primitive.indices || primitive.indices->count == 0 || primitive.indices->count % 3 != 0) throw std::runtime_error("Invalid GLTF primitive indices.");
 
 			const cgltf_attribute *positionAttribute = nullptr;
 			const cgltf_attribute *normalAttribute = nullptr;
@@ -324,7 +337,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 				}
 			}
 
-			if (!positionAttribute) throw;
+			if (!positionAttribute) throw std::runtime_error("GLTF primitive does not have position attribute.");
 
 			Surface *surface = mesh->AddSurface((int32)positionAttribute->data->count, (int32)primitive.indices->count / 3);
 
@@ -335,10 +348,10 @@ Mesh* Mesh::LoadGltf(const char *path)
 				vfloat2 textureCoordinates;
 				vfloat3 color = vfloat3(1);
 
-				if (!cgltf_accessor_read_float(positionAttribute->data, i, (float*)&position, 3)) throw;
-				if (normalAttribute && !cgltf_accessor_read_float(normalAttribute->data, i, (float*)&normal, 3)) throw;
-				if (textureCoordinateAttribute && !cgltf_accessor_read_float(textureCoordinateAttribute->data, i, (float*)&textureCoordinates, 2)) throw;
-				if (colorAttribute && !cgltf_accessor_read_float(colorAttribute->data, i, (float*)&color, 3)) throw;
+				if (!cgltf_accessor_read_float(positionAttribute->data, i, (float*)&position, 3)) throw std::runtime_error("Failed to read GLTF position attribute.");
+				if (normalAttribute && !cgltf_accessor_read_float(normalAttribute->data, i, (float*)&normal, 3)) throw std::runtime_error("Failed to read GLTF normal attribute.");
+				if (textureCoordinateAttribute && !cgltf_accessor_read_float(textureCoordinateAttribute->data, i, (float*)&textureCoordinates, 2)) throw std::runtime_error("Failed to read GLTF texture coordinate attribute.");
+				if (colorAttribute && !cgltf_accessor_read_float(colorAttribute->data, i, (float*)&color, 3)) throw std::runtime_error("Failed to read GLTF color attribute.");
 
 				surface->SetVertex(
 					i,
@@ -378,7 +391,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 				{
 					for (int32 i = 0; i < surface->VertexCount; i++)
 					{
-						surface->GetVertex(i)->Color *= color;
+						surface->Vertices[i]->Color *= color;
 					}
 				}
 
@@ -417,7 +430,7 @@ Mesh* Mesh::LoadGltf(const char *path)
 Mesh* Mesh::LoadObj(const char *path)
 {
 	objl::Loader loader;
-	if (!loader.LoadFile(path)) throw;
+	if (!loader.LoadFile(path)) throw std::runtime_error("Failed to load OBJ file.");
 
 	Mesh *mesh = new Mesh();
 
@@ -450,6 +463,8 @@ Mesh* Mesh::LoadObj(const char *path)
 }
 Texture* Mesh::LoadTexture(const char *meshPath, const char *textureFileName)
 {
+	if (!meshPath) throw std::invalid_argument("meshPath cannot be null.");
+	if (!textureFileName) throw std::invalid_argument("textureFileName cannot be null.");
 	if (!textureFileName || lstrlenA(textureFileName) == 0) return nullptr;
 
 	// Texture path = directory of mesh + texture filename.

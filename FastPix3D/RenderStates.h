@@ -1,23 +1,10 @@
 #pragma once
 #include "FastPix3D.h"
-#include "Light.h"
-#include "Math/Matrix4f.h"
+#include "Math/Color.h"
+#include "Math/Matrix4.h"
 #include "Math/VectorMath.h"
 #include "RenderTarget.h"
-#include "Texture.h"
-
-enum class Workload
-{
-	// Byte 1: Thread index
-	// Byte 2: Thread count
-	Full = 0 | 1 << 8,
-	Half1 = 0 | 2 << 8,
-	Half2 = 1 | 2 << 8,
-	Quarter1 = 0 | 4 << 8,
-	Quarter2 = 1 | 4 << 8,
-	Quarter3 = 2 | 4 << 8,
-	Quarter4 = 3 | 4 << 8
-};
+#include "Mesh/Texture.h"
 
 enum class Rasterizer
 {
@@ -33,13 +20,20 @@ enum class CullMode
 	Front
 };
 
+enum class DepthMode
+{
+	None,
+	Read,
+	ReadWrite
+};
+
 enum class BlendMode
 {
 	None,
 	TransparencyKey,
 	Alpha,
-	Multiply,
-	Add
+	Add,
+	Multiply
 };
 
 enum class ShadowMapFunc
@@ -55,74 +49,178 @@ enum class ShadowMapProjection
 	Cubemap
 };
 
-class PrecomputedRenderStates
+enum class LightType
 {
+	Directional,
+	Point,
+	Spot
+};
+
+class RenderStates;
+
+class FASTPIX3D_API Light
+{
+private:
+	struct Precomputed
+	{
+		vfloat3 ColorIntensity;
+		vfloat3 ConeAngleCos;
+		vfloat3 ConeAngleScale;
+		vfloat3 ColorSpecularIntensity;
+		vfloat3 PositionViewSpace;
+		vfloat3 DirectionViewSpace;
+	};
+
+	RenderStates *Parent;
+	Light::Precomputed Precomputed;
+	bool _Enabled;
+	LightType _Type;
+	float _Intensity;
+	float _ConeAngle;
+	Color _Color;
+	vfloat3 _Position;
+	vfloat3 _Rotation;
+
+	Light() :
+		Parent(nullptr),
+		_Enabled(false),
+		_Type(LightType::Directional),
+		_Intensity(1),
+		_ConeAngle(45),
+		_Color(::Color(255, 255, 255))
+	{
+	}
+
 public:
-	Matrix4f ModelViewMatrix;
-	Matrix4f NormalMatrix;
-	float InverseClipNear;
-	vfloat2 InverseTextureSize;
-	int32 LightsMaxIndex;
-	Matrix4f ShadowLightMatrix;
-	Matrix4f ShadowLightModelMatrix;
+	property_get(bool, Enabled)
+	{
+		return _Enabled;
+	}
+	property_set(bool, Enabled)
+	{
+		_Enabled = value;
+		LightChanged();
+	}
+	property_get(LightType, Type)
+	{
+		return _Type;
+	}
+	property_set(LightType, Type)
+	{
+		_Type = value;
+		LightChanged();
+	}
+	property_get(float, Intensity)
+	{
+		return _Intensity;
+	}
+	property_set(float, Intensity)
+	{
+		_Intensity = value;
+		LightChanged();
+	}
+	property_get(float, ConeAngle)
+	{
+		return _ConeAngle;
+	}
+	property_set(float, ConeAngle)
+	{
+		_ConeAngle = value;
+		LightChanged();
+	}
+	property_get(::Color, Color)
+	{
+		return _Color;
+	}
+	property_set(const ::Color&, Color)
+	{
+		_Color = value;
+		LightChanged();
+	}
+	property_get(vfloat3, Position)
+	{
+		return _Position;
+	}
+	property_set(const vfloat3&, Position)
+	{
+		_Position = value;
+		LightChanged();
+	}
+	property_get(vfloat3, Rotation)
+	{
+		return _Rotation;
+	}
+	property_set(const vfloat3&, Rotation)
+	{
+		_Rotation = value;
+		LightChanged();
+	}
+
+private:
+	void LightChanged();
+
+	friend class RenderStates;
+	friend class FragmentRasterizer;
 };
 
 class FASTPIX3D_API RenderStates
 {
 private:
-	PrecomputedRenderStates Precomputed;
+	struct Precomputed
+	{
+		vfloat3 ProjectionScale;
+		vfloat3 ProjectionScaleShadowMap;
+		Matrix4 ModelViewMatrix;
+		Matrix4 NormalMatrix;
+		float InverseClipNear;
+		vfloat2 InverseTextureSize;
+		int32 LightsMaxIndex = -1;
+		Matrix4 ShadowLightMatrix;
+		Matrix4 ShadowLightModelMatrix;
+	};
 
-	Workload _Workload;
-	Rasterizer _Rasterizer;
+	RenderStates::Precomputed Precomputed;
+
+	Rasterizer _Rasterizer = Rasterizer::Fragments;
 
 	RenderTarget _FrameBuffer;
 	RenderTarget _DepthBuffer;
 	RenderTarget _ShadowMap;
 
-	Matrix4f _ViewMatrix;
-	Matrix4f _ModelMatrix;
-	float _ClipNear;
-	float _ClipFar;
-	float _Zoom;
-	CullMode _CullMode;
-	Color _WireframeColor;
-	float _WireframeDepthBias;
+	Matrix4 _ViewMatrix = Matrix4::Identity();
+	Matrix4 _ModelMatrix = Matrix4::Identity();
+	float _ClipNear = 1;
+	float _ClipFar = 1000;
+	float _Zoom = 1;
+	DepthMode _DepthMode = DepthMode::ReadWrite;
+	CullMode _CullMode = CullMode::Back;
+	Color _WireframeColor = Color(255, 255, 255);
+	float _WireframeDepthBias = 1;
 
-	bool _ZEnable;
-	bool _ZWriteEnable;
+	bool _TextureEnable = true;
+	const Texture *_Texture = nullptr;
+	bool _TextureFilteringEnable = false;
+	vfloat2 _TextureSize = vfloat2(1);
+	BlendMode _BlendMode = BlendMode::None;
+	float _Alpha = 1;
+	float _SpecularExponent = 0;
+	float _SpecularIntensity = 0;
 
-	bool _TextureEnable;
-	const Texture *_Texture;
-	bool _TextureFilteringEnable;
-	vfloat2 _TextureSize;
-	BlendMode _BlendMode;
-	float _Alpha;
-	float _SpecularExponent;
-	float _SpecularIntensity;
-
-	bool _FogEnable;
-	float _FogNear;
-	float _FogFar;
+	bool _FogEnable = false;
+	float _FogNear = 0;
+	float _FogFar = 1000;
 	Color _FogColor;
 
-	bool _LightsEnable;
-	Color _AmbientLight;
+	bool _LightsEnable = false;
+	Color _AmbientLight = Color(127, 127, 127);
 
-	::ShadowMapFunc _ShadowMapFunc;
-	::ShadowMapProjection _ShadowMapProjection;
-	int32 _ShadowLightIndex;
-	float _ShadowLightZoom;
-	float _ShadowMapDepthBias;
+	::ShadowMapFunc _ShadowMapFunc = ShadowMapFunc::None;
+	::ShadowMapProjection _ShadowMapProjection = ShadowMapProjection::Perspective;
+	int32 _ShadowLightIndex = 0;
+	float _ShadowLightZoom = 1;
+	float _ShadowMapDepthBias = 1;
 
 public:
-	property_get(::Workload, Workload)
-	{
-		return _Workload;
-	}
-	property_set(::Workload, Workload)
-	{
-		_Workload = value;
-	}
 	property_get(::Rasterizer, Rasterizer)
 	{
 		return _Rasterizer;
@@ -139,6 +237,7 @@ public:
 	property_set(const RenderTarget&, FrameBuffer)
 	{
 		_FrameBuffer = value;
+		PrecomputeProjectionScale();
 	}
 	property_get(RenderTarget, DepthBuffer)
 	{
@@ -157,25 +256,25 @@ public:
 		_ShadowMap = value;
 	}
 
-	property_get(Matrix4f, ViewMatrix)
+	property_get(Matrix4, ViewMatrix)
 	{
 		return _ViewMatrix;
 	}
-	property_set(const Matrix4f&, ViewMatrix)
+	property_set(const Matrix4&, ViewMatrix)
 	{
 		_ViewMatrix = value;
-		UpdateModelViewMatrix();
+		PrecomputeModelViewMatrix();
 		PrecomputeLights();
 	}
-	property_get(Matrix4f, ModelMatrix)
+	property_get(Matrix4, ModelMatrix)
 	{
 		return _ModelMatrix;
 	}
-	property_set(const Matrix4f&, ModelMatrix)
+	property_set(const Matrix4&, ModelMatrix)
 	{
 		_ModelMatrix = value;
-		UpdateModelViewMatrix();
-		UpdateShadowLightMatrix();
+		PrecomputeModelViewMatrix();
+		PrecomputeShadowLightMatrix();
 	}
 	property_get(float, ClipNear)
 	{
@@ -184,7 +283,8 @@ public:
 	property_set(float, ClipNear)
 	{
 		_ClipNear = value;
-		Precomputed.InverseClipNear = 1 / _ClipNear;
+		PrecomputeInverseClipNear();
+		PrecomputeProjectionScale();
 	}
 	property_get(float, ClipFar)
 	{
@@ -201,6 +301,15 @@ public:
 	property_set(float, Zoom)
 	{
 		_Zoom = value;
+		PrecomputeProjectionScale();
+	}
+	property_get(::DepthMode, DepthMode)
+	{
+		return _DepthMode;
+	}
+	property_set(::DepthMode, DepthMode)
+	{
+		_DepthMode = value;
 	}
 	property_get(::CullMode, CullMode)
 	{
@@ -225,23 +334,6 @@ public:
 	property_set(float, WireframeDepthBias)
 	{
 		_WireframeDepthBias = value;
-	}
-
-	property_get(bool, ZEnable)
-	{
-		return _ZEnable;
-	}
-	property_set(bool, ZEnable)
-	{
-		_ZEnable = value;
-	}
-	property_get(bool, ZWriteEnable)
-	{
-		return _ZWriteEnable;
-	}
-	property_set(bool, ZWriteEnable)
-	{
-		_ZWriteEnable = value;
 	}
 
 	property_get(bool, TextureEnable)
@@ -275,7 +367,7 @@ public:
 	property_set(const vfloat2&, TextureSize)
 	{
 		_TextureSize = value;
-		Precomputed.InverseTextureSize = vfloat2(1 / _TextureSize.X, 1 / _TextureSize.Y);
+		PrecomputeInverseTextureSize();
 	}
 	property_get(::BlendMode, BlendMode)
 	{
@@ -385,7 +477,7 @@ public:
 	property_set(int32, ShadowLightIndex)
 	{
 		_ShadowLightIndex = value;
-		UpdateShadowLightMatrix();
+		PrecomputeShadowLightMatrix();
 	}
 	property_get(float, ShadowLightZoom)
 	{
@@ -394,6 +486,7 @@ public:
 	property_set(float, ShadowLightZoom)
 	{
 		_ShadowLightZoom = value;
+		PrecomputeProjectionScaleShadowMap();
 	}
 	property_get(float, ShadowMapDepthBias)
 	{
@@ -402,20 +495,25 @@ public:
 	property_set(float, ShadowMapDepthBias)
 	{
 		_ShadowMapDepthBias = value;
+		PrecomputeProjectionScaleShadowMap();
 	}
 
 	RenderStates();
-	RenderStates(const RenderStates &renderStates);
-
-	void SetWorkload(int32 threadIndex, int32 threadCount);
-
-	RenderStates& operator=(const RenderStates& renderStates);
+	RenderStates(const RenderStates &other);
 
 private:
-	void UpdateModelViewMatrix();
-	void UpdateShadowLightMatrix();
+	void PrecomputeInverseClipNear();
+	void PrecomputeProjectionScale();
+	void PrecomputeProjectionScaleShadowMap();
+	void PrecomputeInverseTextureSize();
+	void PrecomputeModelViewMatrix();
+	void PrecomputeShadowLightMatrix();
 	void PrecomputeLights();
 
+public:
+	RenderStates& operator =(const RenderStates& other);
+
+	friend class Light;
 	friend class FragmentRasterizer;
 	friend class WireframeRasterizer;
 	friend class ShadowMapRasterizer;

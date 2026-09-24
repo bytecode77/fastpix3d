@@ -15,14 +15,13 @@ struct FASTPIX3D_API vint2
 	{
 		return X * X + Y * Y;
 	}
-	readonly_property(float, InverseSquaredLength)
+	readonly_property(float, InverseLength)
 	{
 		return __rsqrt_ss((float)(X * X + Y * Y));
 	}
-	readonly_property(float, InverseLength)
+	readonly_property(float, InverseSquaredLength)
 	{
-		float inverseLength = __rsqrt_ss((float)(X * X + Y * Y));
-		return inverseLength * inverseLength;
+		return _mm_cvtss_f32(_mm_rcp_ss(_mm_set_ss((float)(X * X + Y * Y))));
 	}
 
 	__forceinline vint2() :
@@ -30,9 +29,9 @@ struct FASTPIX3D_API vint2
 		Y(0)
 	{
 	}
-	__forceinline vint2(const vint2 &value) :
-		X(value.X),
-		Y(value.Y)
+	__forceinline vint2(const vint2 &other) :
+		X(other.X),
+		Y(other.Y)
 	{
 	}
 	__forceinline explicit vint2(const int32 *ptr) :
@@ -40,9 +39,9 @@ struct FASTPIX3D_API vint2
 		Y(ptr[1])
 	{
 	}
-	__forceinline explicit vint2(const vfloat2 &value) :
-		X((int32)value.X),
-		Y((int32)value.Y)
+	__forceinline explicit vint2(const vfloat2 &other) :
+		X((int32)other.X),
+		Y((int32)other.Y)
 	{
 	}
 	__forceinline explicit vint2(int32 uniform) :
