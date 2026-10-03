@@ -47,12 +47,13 @@ public:
 		// A positive side effect is improved precision of the fill convention.
 
 		// Maximum width OR height of the triangle in screen space.
-		int32 size = (int32)Math::Max(
+		float size = Math::Max(
 			Math::Max(v1.X, v2.X, v3.X) - Math::Min(v1.X, v2.X, v3.X),
 			Math::Max(v1.Y, v2.Y, v3.Y) - Math::Min(v1.Y, v2.Y, v3.Y)
 		);
 
-		return Math::Clamp((int32)__lzcnt(size) - 16, 0, 8);
+		int32 logSize = (std::bit_cast<uint32>(size) >> 23) - 126;
+		return Math::Clamp(16 - logSize, 0, 8);
 	}
 	__forceinline static vint2 ToScreenSpace(const vfloat3 &position, int32 screenWidth, int32 screenHeight)
 	{
