@@ -530,7 +530,6 @@ void FragmentRasterizer::DrawClippedTriangle(RasterizerVertex &v1, RasterizerVer
 		v3.ShadowXyz *= v3.Position.Z;
 	}
 
-
 	if constexpr (hasTexture)
 	{
 		// Scale texture coordinates by texture size.

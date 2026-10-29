@@ -300,9 +300,9 @@ Mesh* Mesh::LoadGltf(const char *path)
 		const cgltf_node &node = data->nodes[n];
 		if (!node.mesh) continue;
 
-		Matrix4 matrix;
-		cgltf_node_transform_world(&node, (float*)&matrix);
-		matrix = matrix.Transpose();
+		float matrixValues[16];
+		cgltf_node_transform_world(&node, matrixValues);
+		Matrix4 matrix = Matrix4(matrixValues).Transpose();
 
 		Matrix4 normalMatrix = matrix.ToNormalMatrix();
 
